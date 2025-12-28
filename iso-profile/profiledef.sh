@@ -12,7 +12,7 @@ install_dir="arch"
 
 # Build modes and boot methods (using current non-deprecated modes)
 buildmodes=('iso')
-bootmodes=('uefi-x64.systemd-boot.esp')
+bootmodes=('uefi.systemd-boot')
 
 # Architecture
 arch="x86_64"

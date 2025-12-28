@@ -60,7 +60,7 @@ iptables-nft
 # =============================================================================
 # INSTALLER
 # =============================================================================
-calamares
+# calamares - Install from AUR after first boot
 arch-install-scripts
 
 # =============================================================================
@@ -70,7 +70,7 @@ mesa
 vulkan-icd-loader
 vulkan-mesa-layers
 libva-mesa-driver
-mesa-vdpau
+libvdpau
 
 # Intel GPU
 intel-media-driver
