@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=NeuronVM Manager
+GenericName=Virtual Machine Manager
+Comment=Manage Windows and macOS applications via GPU-accelerated VMs
+Icon=neuron-vm-manager
+Exec=neuron-vm-manager
+Terminal=false
+Categories=System;Virtualization;
+Keywords=vm;virtual;machine;windows;macos;gpu;passthrough;
+StartupNotify=true

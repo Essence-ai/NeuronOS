@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neuron-os"
+version = "0.1.0"
+description = "NeuronOS - Consumer Linux with Windows/macOS app compatibility"
+readme = "README.md"
+license = {text = "GPL-3.0-or-later"}
+requires-python = ">=3.11"
+authors = [
+    {name = "NeuronOS Team"}
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Operating System",
+]
+dependencies = [
+    "libvirt-python>=9.0.0",
+    "PyGObject>=3.42.0",
+    "Jinja2>=3.1.0",
+    "pyudev>=0.24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+neuron-hardware-detect = "hardware_detect.cli:main"
+neuron-vm-manager = "vm_manager.main:main"
+neuron-store = "store.main:main"
+
+[project.urls]
+Homepage = "https://github.com/neuronos/neuron-os"
+Documentation = "https://docs.neuronos.org"
+Repository = "https://github.com/neuronos/neuron-os"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"

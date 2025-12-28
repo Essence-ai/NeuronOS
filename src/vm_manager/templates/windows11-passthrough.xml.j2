@@ -1,0 +1,228 @@
+<!--
+NeuronOS Windows 11 VM Template with GPU Passthrough
+Jinja2 template for generating libvirt XML
+
+Variables:
+  - vm_name: Name of the VM
+  - memory_mb: Memory in MB (default: 16384)
+  - vcpus: Number of vCPUs (default: 8)
+  - cpu_cores: CPU cores (default: 4)
+  - cpu_threads: Threads per core (default: 2)
+  - disk_path: Path to qcow2 disk image
+  - iso_path: Path to Windows ISO (optional)
+  - gpu_domain: GPU PCI domain (e.g., "0x0000")
+  - gpu_bus: GPU PCI bus (e.g., "0x01")
+  - gpu_slot: GPU PCI slot (e.g., "0x00")
+  - gpu_function: GPU PCI function (e.g., "0x0")
+  - gpu_audio_function: GPU audio PCI function (e.g., "0x1")
+  - looking_glass: Enable Looking Glass (default: true)
+  - tpm_enabled: Enable TPM 2.0 (default: true)
+  - ovmf_code: Path to OVMF_CODE.fd
+  - ovmf_vars: Path to VM-specific OVMF_VARS.fd copy
+-->
+<domain type='kvm'>
+  <name>{{ vm_name }}</name>
+  <metadata>
+    <neuronos:vm xmlns:neuronos="https://neuronos.org/libvirt/1">
+      <neuronos:type>windows-gaming</neuronos:type>
+      <neuronos:gpu-passthrough>true</neuronos:gpu-passthrough>
+    </neuronos:vm>
+  </metadata>
+  <memory unit='MiB'>{{ memory_mb | default(16384) }}</memory>
+  <currentMemory unit='MiB'>{{ memory_mb | default(16384) }}</currentMemory>
+  <memoryBacking>
+    <hugepages/>
+  </memoryBacking>
+  <vcpu placement='static'>{{ vcpus | default(8) }}</vcpu>
+  <iothreads>1</iothreads>
+  <cputune>
+    <emulatorpin cpuset='0'/>
+    <iothreadpin iothread='1' cpuset='0'/>
+  </cputune>
+  <os>
+    <type arch='x86_64' machine='pc-q35-8.0'>hvm</type>
+    <loader readonly='yes' type='pflash'>{{ ovmf_code | default('/usr/share/edk2-ovmf/x64/OVMF_CODE.fd') }}</loader>
+    <nvram>{{ ovmf_vars }}</nvram>
+    <boot dev='hd'/>
+    {% if iso_path %}
+    <boot dev='cdrom'/>
+    {% endif %}
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <hyperv mode='custom'>
+      <relaxed state='on'/>
+      <vapic state='on'/>
+      <spinlocks state='on' retries='8191'/>
+      <vpindex state='on'/>
+      <runtime state='on'/>
+      <synic state='on'/>
+      <stimer state='on'/>
+      <reset state='on'/>
+      <vendor_id state='on' value='NeuronOS'/>
+      <frequencies state='on'/>
+    </hyperv>
+    <kvm>
+      <hidden state='on'/>
+    </kvm>
+    <vmport state='off'/>
+    <ioapic driver='kvm'/>
+  </features>
+  <cpu mode='host-passthrough' check='none' migratable='off'>
+    <topology sockets='1' dies='1' cores='{{ cpu_cores | default(4) }}' threads='{{ cpu_threads | default(2) }}'/>
+    <cache mode='passthrough'/>
+    <feature policy='require' name='topoext'/>
+  </cpu>
+  <clock offset='localtime'>
+    <timer name='rtc' tickpolicy='catchup'/>
+    <timer name='pit' tickpolicy='delay'/>
+    <timer name='hpet' present='no'/>
+    <timer name='hypervclock' present='yes'/>
+    <timer name='tsc' present='yes' mode='native'/>
+  </clock>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+  <pm>
+    <suspend-to-mem enabled='no'/>
+    <suspend-to-disk enabled='no'/>
+  </pm>
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+
+    <!-- Primary Disk -->
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2' cache='writeback' discard='unmap'/>
+      <source file='{{ disk_path }}'/>
+      <target dev='vda' bus='virtio'/>
+      <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>
+    </disk>
+
+    {% if iso_path %}
+    <!-- Windows ISO -->
+    <disk type='file' device='cdrom'>
+      <driver name='qemu' type='raw'/>
+      <source file='{{ iso_path }}'/>
+      <target dev='sda' bus='sata'/>
+      <readonly/>
+      <address type='drive' controller='0' bus='0' target='0' unit='0'/>
+    </disk>
+    {% endif %}
+
+    <!-- VirtIO Drivers ISO -->
+    <disk type='file' device='cdrom'>
+      <driver name='qemu' type='raw'/>
+      <source file='/var/lib/libvirt/images/virtio-win.iso'/>
+      <target dev='sdb' bus='sata'/>
+      <readonly/>
+      <address type='drive' controller='0' bus='0' target='0' unit='1'/>
+    </disk>
+
+    <!-- SATA Controller -->
+    <controller type='sata' index='0'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x1f' function='0x2'/>
+    </controller>
+
+    <!-- USB Controller -->
+    <controller type='usb' index='0' model='qemu-xhci' ports='15'>
+      <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
+    </controller>
+
+    <!-- Network -->
+    <interface type='network'>
+      <mac address='52:54:00:{{ "%02x" | format(range(256) | random) }}:{{ "%02x" | format(range(256) | random) }}:{{ "%02x" | format(range(256) | random) }}'/>
+      <source network='default'/>
+      <model type='virtio'/>
+      <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
+    </interface>
+
+    <!-- GPU Passthrough -->
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <source>
+        <address domain='{{ gpu_domain | default("0x0000") }}' bus='{{ gpu_bus }}' slot='{{ gpu_slot }}' function='{{ gpu_function | default("0x0") }}'/>
+      </source>
+      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0' multifunction='on'/>
+    </hostdev>
+
+    <!-- GPU Audio (HDMI/DP Audio) -->
+    {% if gpu_audio_function %}
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <source>
+        <address domain='{{ gpu_domain | default("0x0000") }}' bus='{{ gpu_bus }}' slot='{{ gpu_slot }}' function='{{ gpu_audio_function }}'/>
+      </source>
+      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x1'/>
+    </hostdev>
+    {% endif %}
+
+    {% if looking_glass | default(true) %}
+    <!-- Looking Glass Shared Memory -->
+    <shmem name='looking-glass'>
+      <model type='ivshmem-plain'/>
+      <size unit='M'>128</size>
+      <address type='pci' domain='0x0000' bus='0x10' slot='0x01' function='0x0'/>
+    </shmem>
+    {% endif %}
+
+    {% if tpm_enabled | default(true) %}
+    <!-- TPM 2.0 -->
+    <tpm model='tpm-crb'>
+      <backend type='emulator' version='2.0'/>
+    </tpm>
+    {% endif %}
+
+    <!-- VirtIO Serial (for guest agent communication) -->
+    <channel type='unix'>
+      <target type='virtio' name='org.qemu.guest_agent.0'/>
+      <address type='virtio-serial' controller='0' bus='0' port='1'/>
+    </channel>
+
+    <!-- NeuronOS Guest Communication Channel -->
+    <channel type='unix'>
+      <source mode='bind' path='/var/lib/libvirt/qemu/channel/target/{{ vm_name }}.neuron'/>
+      <target type='virtio' name='org.neuronos.agent.0'/>
+      <address type='virtio-serial' controller='0' bus='0' port='2'/>
+    </channel>
+
+    <controller type='virtio-serial' index='0'>
+      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>
+    </controller>
+
+    <!-- Keyboard/Mouse via evdev (optional, for lower latency) -->
+    <input type='mouse' bus='virtio'>
+      <address type='pci' domain='0x0000' bus='0x09' slot='0x00' function='0x0'/>
+    </input>
+    <input type='keyboard' bus='virtio'>
+      <address type='pci' domain='0x0000' bus='0x0a' slot='0x00' function='0x0'/>
+    </input>
+
+    <!-- Spice display (fallback when not using Looking Glass) -->
+    <graphics type='spice' autoport='yes'>
+      <listen type='address'/>
+      <image compression='off'/>
+    </graphics>
+
+    <!-- QXL video (minimal, passthrough GPU is primary) -->
+    <video>
+      <model type='none'/>
+    </video>
+
+    <!-- Audio via PulseAudio/PipeWire -->
+    <sound model='ich9'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x1b' function='0x0'/>
+    </sound>
+    <audio id='1' type='pulseaudio' serverName='/run/user/1000/pulse/native'>
+      <input mixingEngine='no'/>
+      <output mixingEngine='no'/>
+    </audio>
+
+    <!-- Watchdog -->
+    <watchdog model='itco' action='reset'/>
+
+    <memballoon model='none'/>
+  </devices>
+  <qemu:commandline xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+    <qemu:arg value='-cpu'/>
+    <qemu:arg value='host,kvm=off,hv_vendor_id=NeuronOS'/>
+  </qemu:commandline>
+</domain>

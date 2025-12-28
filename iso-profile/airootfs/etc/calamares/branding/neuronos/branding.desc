@@ -1,0 +1,27 @@
+---
+componentName: neuronos
+
+strings:
+    productName:         NeuronOS
+    shortProductName:    NeuronOS
+    version:             0.1.0
+    shortVersion:        0.1
+    versionedName:       NeuronOS 0.1
+    shortVersionedName:  NeuronOS 0.1
+    bootloaderEntryName: NeuronOS
+    productUrl:          https://neuronos.org
+    supportUrl:          https://github.com/neuronos/neuronos/issues
+    knownIssuesUrl:      https://github.com/neuronos/neuronos/issues
+    releaseNotesUrl:     https://neuronos.org/releases
+
+images:
+    productLogo:         "neuronos-logo.png"
+    productIcon:         "neuronos-icon.png"
+    productWelcome:      "welcome.png"
+
+slideshow: "show.qml"
+
+style:
+    sidebarBackground:   "#1a1a2e"
+    sidebarText:         "#ffffff"
+    sidebarTextSelect:   "#4fc3f7"

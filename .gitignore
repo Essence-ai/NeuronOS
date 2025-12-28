@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Linting
+.ruff_cache/
+
+# Build artifacts
+output/
+work/
+*.iso
+*.qcow2
+*.img
+*.raw
+
+# Archiso work directories
+/tmp/neuron-archiso-work/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Local configuration
+*.local
+.env.local
+secrets/
+
+# Documentation build
+docs/_build/
+site/
+
+# Misc
+*.log
+*.bak
+*.orig

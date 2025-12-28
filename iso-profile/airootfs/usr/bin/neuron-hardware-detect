@@ -1,0 +1,227 @@
+#!/usr/bin/env python3
+"""
+NeuronOS Hardware Detection CLI
+Entry point for hardware detection and VFIO configuration
+"""
+
+import sys
+import argparse
+from pathlib import Path
+
+# Add our module path
+sys.path.insert(0, '/usr/lib/neuron-os')
+
+from hardware_detect.gpu_scanner import GPUScanner
+from hardware_detect.iommu_parser import IOMMUParser
+from hardware_detect.cpu_detect import CPUDetector
+from hardware_detect.config_generator import ConfigGenerator
+
+
+def cmd_scan(args):
+    """Scan for GPUs and display info."""
+    scanner = GPUScanner()
+    gpus = scanner.scan()
+
+    if not gpus:
+        print("No GPUs detected!")
+        return 1
+
+    print(f"\n=== Detected {len(gpus)} GPU(s) ===\n")
+    for gpu in gpus:
+        print(f"GPU: {gpu.vendor_name} {gpu.device_name}")
+        print(f"  PCI Address: {gpu.pci_address}")
+        print(f"  Vendor:Device: {gpu.vendor_id}:{gpu.device_id}")
+        print(f"  Boot VGA: {gpu.is_boot_vga}")
+        print(f"  Driver: {gpu.driver_in_use or 'None'}")
+        print(f"  IOMMU Group: {gpu.iommu_group}")
+        print()
+
+    # Show passthrough candidate
+    candidate = scanner.get_passthrough_candidate()
+    if candidate:
+        print(f"✅ Passthrough candidate: {candidate.vendor_name} @ {candidate.pci_address}")
+    else:
+        print("⚠️  No suitable GPU for passthrough (all are boot VGA)")
+
+    return 0
+
+
+def cmd_iommu(args):
+    """Display IOMMU groups."""
+    parser = IOMMUParser()
+    groups = parser.parse_all()
+
+    if not groups:
+        print("❌ No IOMMU groups found. IOMMU may not be enabled.")
+        print("\nAdd to kernel parameters:")
+        cpu = CPUDetector().detect()
+        print(f"  {cpu.iommu_param}")
+        return 1
+
+    print(f"\n=== Found {len(groups)} IOMMU Group(s) ===\n")
+    for group in groups:
+        print(f"IOMMU Group {group.group_id}:")
+        for device in group.devices:
+            clean_mark = "✓" if group.is_clean else "✗"
+            print(f"  [{clean_mark}] {device.pci_address} {device.description}")
+        print()
+
+    return 0
+
+
+def cmd_config(args):
+    """Generate VFIO configuration."""
+    generator = ConfigGenerator()
+
+    try:
+        if args.auto:
+            # Auto-apply to current system
+            print("🔧 Generating and applying VFIO configuration...\n")
+            target = Path(args.target) if args.target else Path("/")
+            generator.apply_to_target(target)
+            print("\n✅ Configuration applied!")
+            print("⚠️  Reboot required for changes to take effect")
+            print("\nNext steps:")
+            print("  1. Reboot system")
+            print("  2. Run: sudo mkinitcpio -P")
+            print("  3. Run: sudo grub-mkconfig -o /boot/grub/grub.cfg")
+        else:
+            # Just display configuration
+            config = generator.detect_and_generate()
+
+            print("=== Generated VFIO Configuration ===\n")
+            print("--- /etc/modprobe.d/vfio.conf ---")
+            print(config.vfio_conf)
+
+            print("\n--- /etc/mkinitcpio.conf MODULES ---")
+            print(config.mkinitcpio_modules)
+
+            print("\n--- Kernel Parameters ---")
+            print(config.kernel_params)
+
+            print(f"\n--- Bootloader: {config.bootloader} ---")
+
+            if config.warnings:
+                print("\n--- Warnings ---")
+                for warning in config.warnings:
+                    print(f"  ⚠️  {warning}")
+
+            print("\nTo apply this configuration, run:")
+            print("  sudo neuron-hardware-detect config --auto")
+
+        return 0
+
+    except RuntimeError as e:
+        print(f"❌ Error: {e}")
+        return 1
+
+
+def cmd_check(args):
+    """Check if system is ready for GPU passthrough."""
+    print("🔍 Checking NeuronOS VFIO readiness...\n")
+
+    issues = []
+
+    # Check CPU
+    cpu = CPUDetector().detect()
+    print(f"CPU: {cpu.model_name}")
+    print(f"  Vendor: {cpu.vendor}")
+    print(f"  IOMMU: {'✅ Enabled' if cpu.has_iommu else '❌ Disabled'}")
+    if not cpu.has_iommu:
+        issues.append(f"Enable IOMMU in BIOS and add kernel parameter: {cpu.iommu_param}")
+
+    # Check GPUs
+    scanner = GPUScanner()
+    gpus = scanner.scan()
+    print(f"\nGPUs: {len(gpus)} detected")
+    if len(gpus) < 2:
+        print("  ⚠️  Single GPU detected - will need dynamic rebinding")
+    else:
+        print("  ✅ Multiple GPUs detected")
+
+    candidate = scanner.get_passthrough_candidate()
+    if candidate:
+        print(f"  ✅ Passthrough candidate: {candidate.vendor_name}")
+    else:
+        issues.append("No suitable GPU for passthrough")
+
+    # Check IOMMU groups
+    parser = IOMMUParser()
+    groups = parser.parse_all()
+    if groups:
+        print(f"\nIOMMU Groups: {len(groups)} found")
+        if candidate:
+            gpu_group = parser.get_gpu_group(candidate.pci_address)
+            if gpu_group:
+                if gpu_group.is_clean:
+                    print(f"  ✅ GPU in clean IOMMU group {gpu_group.group_id}")
+                else:
+                    print(f"  ⚠️  GPU in non-clean IOMMU group {gpu_group.group_id}")
+                    issues.append("Consider ACS Override Patch for IOMMU group isolation")
+    else:
+        issues.append("No IOMMU groups detected")
+
+    # Summary
+    print("\n" + "="*50)
+    if issues:
+        print("❌ System NOT ready for GPU passthrough\n")
+        print("Issues to fix:")
+        for i, issue in enumerate(issues, 1):
+            print(f"  {i}. {issue}")
+        return 1
+    else:
+        print("✅ System ready for GPU passthrough!")
+        return 0
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='NeuronOS Hardware Detection & VFIO Configuration',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='''
+Examples:
+  neuron-hardware-detect scan              # List all GPUs
+  neuron-hardware-detect iommu             # Show IOMMU groups
+  neuron-hardware-detect config            # Show VFIO config
+  neuron-hardware-detect config --auto     # Apply VFIO config
+  neuron-hardware-detect check             # Check system readiness
+'''
+    )
+
+    subparsers = parser.add_subparsers(dest='command', help='Command to run')
+
+    # scan command
+    subparsers.add_parser('scan', help='Scan for GPUs')
+
+    # iommu command
+    subparsers.add_parser('iommu', help='Display IOMMU groups')
+
+    # config command
+    config_parser = subparsers.add_parser('config', help='Generate VFIO configuration')
+    config_parser.add_argument('--auto', action='store_true',
+                               help='Automatically apply configuration')
+    config_parser.add_argument('--target', type=str, default='/',
+                               help='Target root directory (default: /)')
+
+    # check command
+    subparsers.add_parser('check', help='Check system readiness for GPU passthrough')
+
+    args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
+        return 1
+
+    # Route to command handler
+    commands = {
+        'scan': cmd_scan,
+        'iommu': cmd_iommu,
+        'config': cmd_config,
+        'check': cmd_check,
+    }
+
+    return commands[args.command](args)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

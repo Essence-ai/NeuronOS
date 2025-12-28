@@ -1,0 +1,152 @@
+# NeuronOS Package List
+# Packages to include in the live ISO and installed system
+
+# =============================================================================
+# BASE SYSTEM
+# =============================================================================
+base
+linux
+linux-firmware
+linux-headers
+mkinitcpio
+sudo
+networkmanager
+btrfs-progs
+dosfstools
+e2fsprogs
+xfsprogs
+ntfs-3g
+
+# =============================================================================
+# BOOTLOADER
+# =============================================================================
+grub
+efibootmgr
+os-prober
+
+# =============================================================================
+# DESKTOP ENVIRONMENT - GNOME
+# =============================================================================
+gnome
+gnome-tweaks
+gdm
+xdg-user-dirs
+xdg-utils
+gnome-terminal
+nautilus
+gnome-text-editor
+gnome-calculator
+gnome-system-monitor
+gnome-disk-utility
+gnome-screenshot
+baobab
+eog
+evince
+file-roller
+
+# =============================================================================
+# VIRTUALIZATION CORE (The Heart of NeuronOS)
+# =============================================================================
+qemu-full
+libvirt
+virt-manager
+edk2-ovmf
+swtpm
+dnsmasq
+bridge-utils
+iptables-nft
+
+# =============================================================================
+# INSTALLER
+# =============================================================================
+calamares
+arch-install-scripts
+
+# =============================================================================
+# GPU DRIVERS
+# =============================================================================
+mesa
+vulkan-icd-loader
+vulkan-mesa-layers
+libva-mesa-driver
+mesa-vdpau
+
+# Intel GPU
+intel-media-driver
+vulkan-intel
+
+# AMD GPU
+libva-mesa-driver
+vulkan-radeon
+
+# NVIDIA (proprietary, user can install)
+# nvidia
+# nvidia-utils
+
+# =============================================================================
+# DEVELOPMENT / SYSTEM TOOLS
+# =============================================================================
+python
+python-pip
+python-pyudev
+python-gobject
+python-jinja
+libvirt-python
+git
+vim
+nano
+base-devel
+htop
+wget
+curl
+rsync
+tmux
+
+# =============================================================================
+# APPLICATIONS
+# =============================================================================
+firefox
+chromium
+vlc
+libreoffice-fresh
+gimp
+inkscape
+thunderbird
+
+# =============================================================================
+# FONTS
+# =============================================================================
+noto-fonts
+noto-fonts-cjk
+noto-fonts-emoji
+ttf-dejavu
+ttf-liberation
+
+# =============================================================================
+# AUDIO
+# =============================================================================
+pipewire
+pipewire-alsa
+pipewire-pulse
+pipewire-jack
+wireplumber
+
+# =============================================================================
+# NETWORKING
+# =============================================================================
+networkmanager
+network-manager-applet
+iwd
+bluez
+bluez-utils
+
+# =============================================================================
+# UTILITIES
+# =============================================================================
+man-db
+man-pages
+bash-completion
+usbutils
+pciutils
+lsof
+strace

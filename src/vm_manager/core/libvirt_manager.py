@@ -1,0 +1,448 @@
+"""
+LibvirtManager - Core libvirt connection and VM lifecycle management.
+
+This module provides the primary interface for interacting with libvirt
+to create, configure, start, and manage virtual machines with GPU passthrough.
+"""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass, field
+from enum import Enum
+from pathlib import Path
+from typing import Optional, List, Callable
+from xml.etree import ElementTree as ET
+
+try:
+    import libvirt
+    LIBVIRT_AVAILABLE = True
+except ImportError:
+    LIBVIRT_AVAILABLE = False
+    libvirt = None
+
+from jinja2 import Environment, FileSystemLoader
+
+logger = logging.getLogger(__name__)
+
+
+class VMState(Enum):
+    """Virtual machine states."""
+    NOSTATE = 0
+    RUNNING = 1
+    BLOCKED = 2
+    PAUSED = 3
+    SHUTDOWN = 4
+    SHUTOFF = 5
+    CRASHED = 6
+    PMSUSPENDED = 7
+
+
+@dataclass
+class VMInfo:
+    """Information about a virtual machine."""
+    name: str
+    uuid: str
+    state: VMState
+    memory_mb: int
+    vcpus: int
+    has_gpu_passthrough: bool = False
+    gpu_pci_address: Optional[str] = None
+
+
+class LibvirtManager:
+    """
+    Manages libvirt connection and VM lifecycle.
+
+    Provides high-level operations for:
+    - Connecting to libvirt (system or session)
+    - Listing and querying VMs
+    - Creating VMs from templates
+    - Starting/stopping VMs
+    - Attaching GPU devices for passthrough
+    """
+
+    def __init__(
+        self,
+        uri: str = "qemu:///system",
+        template_dir: Optional[Path] = None,
+    ):
+        """
+        Initialize LibvirtManager.
+
+        Args:
+            uri: libvirt connection URI
+            template_dir: Path to Jinja2 VM XML templates
+        """
+        if not LIBVIRT_AVAILABLE:
+            raise RuntimeError(
+                "libvirt-python is not installed. "
+                "Install with: pip install libvirt-python"
+            )
+
+        self.uri = uri
+        self.template_dir = template_dir or Path(__file__).parent.parent / "templates"
+        self._conn: Optional[libvirt.virConnect] = None
+        self._event_callbacks: List[Callable] = []
+
+        # Initialize Jinja2 environment
+        if self.template_dir.exists():
+            self._jinja_env = Environment(
+                loader=FileSystemLoader(str(self.template_dir)),
+                autoescape=False,
+            )
+        else:
+            self._jinja_env = None
+            logger.warning(f"Template directory not found: {self.template_dir}")
+
+    def connect(self) -> bool:
+        """
+        Establish connection to libvirt.
+
+        Returns:
+            True if connection successful, False otherwise.
+        """
+        try:
+            self._conn = libvirt.open(self.uri)
+            if self._conn is None:
+                logger.error(f"Failed to connect to {self.uri}")
+                return False
+
+            logger.info(f"Connected to libvirt: {self.uri}")
+            return True
+
+        except libvirt.libvirtError as e:
+            logger.error(f"libvirt connection error: {e}")
+            return False
+
+    def disconnect(self) -> None:
+        """Close the libvirt connection."""
+        if self._conn:
+            self._conn.close()
+            self._conn = None
+            logger.info("Disconnected from libvirt")
+
+    @property
+    def connected(self) -> bool:
+        """Check if connected to libvirt."""
+        return self._conn is not None and self._conn.isAlive()
+
+    def _ensure_connected(self) -> None:
+        """Ensure we have an active connection."""
+        if not self.connected:
+            if not self.connect():
+                raise RuntimeError("Not connected to libvirt")
+
+    def list_vms(self, include_inactive: bool = True) -> List[VMInfo]:
+        """
+        List all virtual machines.
+
+        Args:
+            include_inactive: Include stopped VMs in the list.
+
+        Returns:
+            List of VMInfo objects.
+        """
+        self._ensure_connected()
+        vms = []
+
+        # Get active domains
+        for domain_id in self._conn.listDomainsID():
+            try:
+                domain = self._conn.lookupByID(domain_id)
+                vms.append(self._domain_to_info(domain))
+            except libvirt.libvirtError as e:
+                logger.warning(f"Error getting domain {domain_id}: {e}")
+
+        # Get inactive domains
+        if include_inactive:
+            for name in self._conn.listDefinedDomains():
+                try:
+                    domain = self._conn.lookupByName(name)
+                    vms.append(self._domain_to_info(domain))
+                except libvirt.libvirtError as e:
+                    logger.warning(f"Error getting domain {name}: {e}")
+
+        return vms
+
+    def _domain_to_info(self, domain: libvirt.virDomain) -> VMInfo:
+        """Convert libvirt domain to VMInfo."""
+        state, _ = domain.state()
+        info = domain.info()
+
+        # Check for GPU passthrough by parsing XML
+        has_gpu, gpu_addr = self._check_gpu_passthrough(domain)
+
+        return VMInfo(
+            name=domain.name(),
+            uuid=domain.UUIDString(),
+            state=VMState(state),
+            memory_mb=info[2] // 1024,
+            vcpus=info[3],
+            has_gpu_passthrough=has_gpu,
+            gpu_pci_address=gpu_addr,
+        )
+
+    def _check_gpu_passthrough(
+        self, domain: libvirt.virDomain
+    ) -> tuple[bool, Optional[str]]:
+        """Check if domain has GPU passthrough configured."""
+        try:
+            xml = domain.XMLDesc()
+            root = ET.fromstring(xml)
+
+            for hostdev in root.findall(".//hostdev[@type='pci']"):
+                source = hostdev.find("source/address")
+                if source is not None:
+                    domain_attr = source.get("domain", "0x0000")
+                    bus = source.get("bus", "0x00")
+                    slot = source.get("slot", "0x00")
+                    func = source.get("function", "0x0")
+
+                    pci_addr = f"{domain_attr}:{bus}:{slot}.{func}".replace("0x", "")
+                    return True, pci_addr
+
+        except Exception as e:
+            logger.warning(f"Error parsing domain XML: {e}")
+
+        return False, None
+
+    def get_vm(self, name: str) -> Optional[VMInfo]:
+        """Get VM by name."""
+        self._ensure_connected()
+        try:
+            domain = self._conn.lookupByName(name)
+            return self._domain_to_info(domain)
+        except libvirt.libvirtError:
+            return None
+
+    def start_vm(self, name: str) -> bool:
+        """
+        Start a virtual machine.
+
+        Args:
+            name: VM name
+
+        Returns:
+            True if started successfully.
+        """
+        self._ensure_connected()
+        try:
+            domain = self._conn.lookupByName(name)
+            if domain.isActive():
+                logger.info(f"VM {name} is already running")
+                return True
+
+            domain.create()
+            logger.info(f"Started VM: {name}")
+            return True
+
+        except libvirt.libvirtError as e:
+            logger.error(f"Failed to start VM {name}: {e}")
+            return False
+
+    def stop_vm(self, name: str, force: bool = False) -> bool:
+        """
+        Stop a virtual machine.
+
+        Args:
+            name: VM name
+            force: If True, force shutdown (destroy). If False, graceful shutdown.
+
+        Returns:
+            True if stopped successfully.
+        """
+        self._ensure_connected()
+        try:
+            domain = self._conn.lookupByName(name)
+            if not domain.isActive():
+                logger.info(f"VM {name} is already stopped")
+                return True
+
+            if force:
+                domain.destroy()
+                logger.info(f"Force stopped VM: {name}")
+            else:
+                domain.shutdown()
+                logger.info(f"Initiated graceful shutdown for VM: {name}")
+
+            return True
+
+        except libvirt.libvirtError as e:
+            logger.error(f"Failed to stop VM {name}: {e}")
+            return False
+
+    def create_vm_from_template(
+        self,
+        template_name: str,
+        vm_name: str,
+        **template_vars,
+    ) -> Optional[str]:
+        """
+        Create a new VM from a Jinja2 XML template.
+
+        Args:
+            template_name: Name of template file (e.g., "windows11-passthrough.xml.j2")
+            vm_name: Name for the new VM
+            **template_vars: Variables to pass to template
+
+        Returns:
+            UUID of created VM, or None on failure.
+        """
+        self._ensure_connected()
+
+        if self._jinja_env is None:
+            logger.error("Template environment not initialized")
+            return None
+
+        try:
+            template = self._jinja_env.get_template(template_name)
+            xml = template.render(vm_name=vm_name, **template_vars)
+
+            domain = self._conn.defineXML(xml)
+            logger.info(f"Created VM: {vm_name}")
+            return domain.UUIDString()
+
+        except Exception as e:
+            logger.error(f"Failed to create VM from template: {e}")
+            return None
+
+    def delete_vm(self, name: str, delete_storage: bool = False) -> bool:
+        """
+        Delete a virtual machine.
+
+        Args:
+            name: VM name
+            delete_storage: Also delete associated storage volumes
+
+        Returns:
+            True if deleted successfully.
+        """
+        self._ensure_connected()
+        try:
+            domain = self._conn.lookupByName(name)
+
+            # Stop if running
+            if domain.isActive():
+                domain.destroy()
+
+            # Optionally delete storage
+            if delete_storage:
+                self._delete_vm_storage(domain)
+
+            # Undefine the domain
+            domain.undefine()
+            logger.info(f"Deleted VM: {name}")
+            return True
+
+        except libvirt.libvirtError as e:
+            logger.error(f"Failed to delete VM {name}: {e}")
+            return False
+
+    def _delete_vm_storage(self, domain: libvirt.virDomain) -> None:
+        """Delete storage volumes associated with a VM."""
+        try:
+            xml = domain.XMLDesc()
+            root = ET.fromstring(xml)
+
+            for disk in root.findall(".//disk[@device='disk']/source"):
+                file_path = disk.get("file")
+                if file_path:
+                    path = Path(file_path)
+                    if path.exists():
+                        path.unlink()
+                        logger.info(f"Deleted storage: {file_path}")
+
+        except Exception as e:
+            logger.warning(f"Error deleting VM storage: {e}")
+
+    def attach_gpu(
+        self,
+        vm_name: str,
+        pci_address: str,
+        include_audio: bool = True,
+    ) -> bool:
+        """
+        Attach a GPU to a VM for passthrough.
+
+        Args:
+            vm_name: Name of the VM
+            pci_address: PCI address of GPU (e.g., "0000:01:00.0")
+            include_audio: Also attach the GPU's audio device
+
+        Returns:
+            True if attached successfully.
+        """
+        self._ensure_connected()
+
+        # Parse PCI address
+        parts = pci_address.replace(":", ".").split(".")
+        if len(parts) != 4:
+            logger.error(f"Invalid PCI address format: {pci_address}")
+            return False
+
+        domain_hex, bus, slot, func = parts
+
+        hostdev_xml = f"""
+        <hostdev mode='subsystem' type='pci' managed='yes'>
+          <source>
+            <address domain='0x{domain_hex}' bus='0x{bus}' slot='0x{slot}' function='0x{func}'/>
+          </source>
+        </hostdev>
+        """
+
+        try:
+            domain = self._conn.lookupByName(vm_name)
+
+            flags = libvirt.VIR_DOMAIN_AFFECT_CONFIG
+            if domain.isActive():
+                flags |= libvirt.VIR_DOMAIN_AFFECT_LIVE
+
+            domain.attachDeviceFlags(hostdev_xml, flags)
+            logger.info(f"Attached GPU {pci_address} to VM {vm_name}")
+
+            # Attach audio device if requested
+            if include_audio:
+                audio_addr = pci_address[:-1] + "1"  # Usually .1 for audio
+                self._attach_pci_device(domain, audio_addr, flags)
+
+            return True
+
+        except libvirt.libvirtError as e:
+            logger.error(f"Failed to attach GPU: {e}")
+            return False
+
+    def _attach_pci_device(
+        self,
+        domain: libvirt.virDomain,
+        pci_address: str,
+        flags: int,
+    ) -> None:
+        """Attach a generic PCI device to domain."""
+        parts = pci_address.replace(":", ".").split(".")
+        if len(parts) != 4:
+            return
+
+        domain_hex, bus, slot, func = parts
+
+        hostdev_xml = f"""
+        <hostdev mode='subsystem' type='pci' managed='yes'>
+          <source>
+            <address domain='0x{domain_hex}' bus='0x{bus}' slot='0x{slot}' function='0x{func}'/>
+          </source>
+        </hostdev>
+        """
+
+        try:
+            domain.attachDeviceFlags(hostdev_xml, flags)
+        except libvirt.libvirtError:
+            pass  # Audio device may not exist
+
+
+# Convenience function for simple use cases
+def quick_connect(uri: str = "qemu:///system") -> LibvirtManager:
+    """Create a connected LibvirtManager instance."""
+    manager = LibvirtManager(uri)
+    if not manager.connect():
+        raise RuntimeError(f"Failed to connect to {uri}")
+    return manager

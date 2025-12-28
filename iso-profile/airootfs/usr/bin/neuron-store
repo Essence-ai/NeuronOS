@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+"""
+NeuronStore - Entry point
+Application store with intelligent routing (Native/Wine/VM)
+"""
+
+import sys
+sys.path.insert(0, '/usr/lib/neuron-os')
+
+def main():
+    # Check if GTK4 is available
+    try:
+        import gi
+        gi.require_version('Gtk', '4.0')
+        gi.require_version('Adw', '1')
+        from gi.repository import Gtk, Adw
+
+        # TODO: Implement GUI
+        print("NeuronStore GUI coming soon...")
+        print("For now, use CLI mode with --search")
+
+    except (ImportError, ValueError):
+        pass
+
+    # CLI mode
+    import argparse
+    from store.app_catalog import AppCatalog, CompatibilityLayer
+
+    parser = argparse.ArgumentParser(description='NeuronStore - Application Catalog')
+    parser.add_argument('--search', '-s', type=str, help='Search for apps')
+    parser.add_argument('--list', '-l', action='store_true', help='List all apps')
+    parser.add_argument('--native', action='store_true', help='Show only native apps')
+    parser.add_argument('--wine', action='store_true', help='Show Wine-compatible apps')
+    parser.add_argument('--vm', action='store_true', help='Show apps requiring VM')
+
+    args = parser.parse_args()
+
+    catalog = AppCatalog()
+    if not catalog.load():
+        print("Warning: Could not load app catalog")
+        return 1
+
+    if args.search:
+        results = catalog.search(args.search)
+        print(f"\nSearch results for '{args.search}':")
+        for app in results:
+            layer_icon = {
+                CompatibilityLayer.NATIVE: "🐧",
+                CompatibilityLayer.WINE: "🍷",
+                CompatibilityLayer.PROTON: "🎮",
+                CompatibilityLayer.VM_WINDOWS: "🪟",
+                CompatibilityLayer.VM_MACOS: "🍎",
+                CompatibilityLayer.FLATPAK: "📦",
+            }.get(app.layer, "❓")
+            print(f"  {layer_icon} {app.name} [{app.layer.value}] - {app.description[:50]}...")
+
+    elif args.list or args.native or args.wine or args.vm:
+        if args.native:
+            apps = catalog.native_apps()
+            print("\n🐧 Native Linux Apps:")
+        elif args.wine:
+            apps = catalog.wine_apps()
+            print("\n🍷 Wine-Compatible Apps:")
+        elif args.vm:
+            apps = catalog.vm_required_apps()
+            print("\n🪟 Apps Requiring VM:")
+        else:
+            apps = catalog.all()
+            print("\n📦 All Apps in Catalog:")
+
+        for app in apps:
+            print(f"  - {app.name}: {app.description[:60]}...")
+
+    else:
+        parser.print_help()
+        print("\n" + "=" * 50)
+        print(f"NeuronStore: {len(catalog.all())} apps in catalog")
+        print(f"  Native: {len(catalog.native_apps())}")
+        print(f"  Wine/Proton: {len(catalog.wine_apps())}")
+        print(f"  Requires VM: {len(catalog.vm_required_apps())}")
+
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
