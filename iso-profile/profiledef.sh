@@ -10,11 +10,9 @@ iso_application="NeuronOS Live/Install Media"
 iso_version="$(date +%Y.%m.%d)"
 install_dir="arch"
 
-# Build modes and boot methods
+# Build modes and boot methods (using current non-deprecated modes)
 buildmodes=('iso')
-bootmodes=('bios.syslinux.mbr' 'bios.syslinux.eltorito'
-           'uefi-ia32.grub.esp' 'uefi-x64.grub.esp'
-           'uefi-ia32.grub.eltorito' 'uefi-x64.grub.eltorito')
+bootmodes=('uefi-x64.systemd-boot.esp')
 
 # Architecture
 arch="x86_64"
@@ -25,9 +23,6 @@ pacman_conf="pacman.conf"
 # Root filesystem configuration
 airootfs_image_type="squashfs"
 airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' '1M')
-
-# Bootstrap packages (minimum to bootstrap, rest from packages.x86_64)
-bootstrap_tarball_compression=('zstd' '-c' '-T0' '--long' '-19')
 
 # File permissions
 # Format: [path]="uid:gid:mode"

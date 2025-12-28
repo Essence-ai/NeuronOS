@@ -23,6 +23,7 @@ ntfs-3g
 grub
 efibootmgr
 os-prober
+systemd-ukify
 
 # =============================================================================
 # DESKTOP ENVIRONMENT - GNOME
