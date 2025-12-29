@@ -10,9 +10,17 @@ iso_application="NeuronOS Live/Install Media"
 iso_version="$(date +%Y.%m.%d)"
 install_dir="arch"
 
-# Build modes and boot methods (using current non-deprecated modes)
+# Build modes and boot methods
+# Support both BIOS (syslinux) and UEFI (grub) for maximum compatibility
 buildmodes=('iso')
-bootmodes=('uefi.systemd-boot')
+bootmodes=(
+    'bios.syslinux.mbr'
+    'bios.syslinux.eltorito'
+    'uefi-ia32.grub.esp'
+    'uefi-x64.grub.esp'
+    'uefi-ia32.grub.eltorito'
+    'uefi-x64.grub.eltorito'
+)
 
 # Architecture
 arch="x86_64"

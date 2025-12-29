@@ -2,6 +2,15 @@
 # Packages to include in the live ISO and installed system
 
 # =============================================================================
+# ARCHISO REQUIREMENTS (Critical for live boot)
+# =============================================================================
+archinstall
+mkinitcpio-archiso
+syslinux
+memtest86+
+memtest86+-efi
+
+# =============================================================================
 # BASE SYSTEM
 # =============================================================================
 base
@@ -151,3 +160,54 @@ usbutils
 pciutils
 lsof
 strace
+
+# =============================================================================
+# FLATPAK (For sandboxed app installation)
+# =============================================================================
+flatpak
+xdg-desktop-portal
+xdg-desktop-portal-gnome
+
+# =============================================================================
+# WINE (For lightweight Windows apps without VM)
+# =============================================================================
+wine
+wine-mono
+wine-gecko
+winetricks
+lib32-mesa
+lib32-vulkan-icd-loader
+
+# =============================================================================
+# LOOKING GLASS DEPENDENCIES (For seamless VM display)
+# =============================================================================
+cmake
+gcc
+fontconfig
+libsamplerate
+libxkbcommon
+libxkbcommon-x11
+libxi
+libxss
+libxpresent
+libxcursor
+nettle
+wayland
+wayland-protocols
+libdecor
+libpipewire
+spice-protocol
+
+# =============================================================================
+# USB PASSTHROUGH (For seamless device passthrough)
+# =============================================================================
+libusb
+usbmuxd
+usbredir
+
+# =============================================================================
+# ADDITIONAL VM TOOLS
+# =============================================================================
+virt-viewer
+spice-gtk
+looking-glass-dummy-driver
