@@ -280,3 +280,48 @@ def windows11_productivity_preset(name: str = "Windows11-Work") -> VMConfig:
         tpm_enabled=True,
         uefi=True,
     )
+
+
+def macos_sonoma_preset(
+    name: str = "macOS-Sonoma",
+    gpu_pci: Optional[str] = None,
+) -> VMConfig:
+    """
+    Create a macOS Sonoma VM preset.
+
+    Note: macOS VMs require OpenCore bootloader and work best with AMD GPUs.
+    NVIDIA GPUs are not supported on macOS Monterey and later.
+    """
+    return VMConfig(
+        name=name,
+        vm_type=VMType.MACOS,
+        cpu=CPUConfig(cores=4, threads=2),  # 8 vCPUs
+        memory=MemoryConfig(size_mb=16384, hugepages=True),
+        gpu=GPUPassthroughConfig(
+            enabled=gpu_pci is not None,
+            pci_address=gpu_pci,
+            include_audio=True,
+        ),
+        looking_glass=LookingGlassConfig(
+            enabled=gpu_pci is not None,
+            shm_size_mb=128,
+        ),
+        display=DisplayMode.LOOKING_GLASS if gpu_pci else DisplayMode.SPICE,
+        tpm_enabled=False,  # macOS doesn't use TPM
+        secure_boot=False,
+        uefi=True,
+    )
+
+
+def macos_productivity_preset(name: str = "macOS-Work") -> VMConfig:
+    """Create a macOS productivity VM preset (no GPU passthrough)."""
+    return VMConfig(
+        name=name,
+        vm_type=VMType.MACOS,
+        cpu=CPUConfig(cores=2, threads=2),  # 4 vCPUs
+        memory=MemoryConfig(size_mb=8192),
+        gpu=GPUPassthroughConfig(enabled=False),
+        display=DisplayMode.SPICE,
+        tpm_enabled=False,
+        uefi=True,
+    )

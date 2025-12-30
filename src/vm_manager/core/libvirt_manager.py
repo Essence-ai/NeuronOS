@@ -48,6 +48,7 @@ class VMInfo:
     vcpus: int
     has_gpu_passthrough: bool = False
     gpu_pci_address: Optional[str] = None
+    has_looking_glass: bool = False
 
 
 class LibvirtManager:
@@ -173,6 +174,9 @@ class LibvirtManager:
         # Check for GPU passthrough by parsing XML
         has_gpu, gpu_addr = self._check_gpu_passthrough(domain)
 
+        # Check for Looking Glass
+        has_lg = self._check_looking_glass(domain)
+
         return VMInfo(
             name=domain.name(),
             uuid=domain.UUIDString(),
@@ -181,6 +185,7 @@ class LibvirtManager:
             vcpus=info[3],
             has_gpu_passthrough=has_gpu,
             gpu_pci_address=gpu_addr,
+            has_looking_glass=has_lg,
         )
 
     def _check_gpu_passthrough(
@@ -206,6 +211,23 @@ class LibvirtManager:
             logger.warning(f"Error parsing domain XML: {e}")
 
         return False, None
+
+    def _check_looking_glass(self, domain: libvirt.virDomain) -> bool:
+        """Check if domain has Looking Glass IVSHMEM configured."""
+        try:
+            xml = domain.XMLDesc()
+            root = ET.fromstring(xml)
+
+            # Check for shmem device with looking-glass name
+            for shmem in root.findall(".//shmem"):
+                name = shmem.get("name", "")
+                if "looking-glass" in name.lower():
+                    return True
+
+        except Exception as e:
+            logger.warning(f"Error checking Looking Glass config: {e}")
+
+        return False
 
     def get_vm(self, name: str) -> Optional[VMInfo]:
         """Get VM by name."""

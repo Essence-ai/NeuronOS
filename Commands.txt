@@ -1,0 +1,38 @@
+Archinstall
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+File System:
+
+lsblk
+lsblk -f 
+
+df -h
+
+sudo fdisk -l 
+

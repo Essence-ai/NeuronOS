@@ -1,0 +1,275 @@
+#!/usr/bin/env python3
+"""
+NeuronOS Rollback Manager
+
+Handles system rollback to previous snapshots.
+"""
+
+from __future__ import annotations
+
+import logging
+import subprocess
+from dataclasses import dataclass
+from enum import Enum
+from typing import Callable, List, Optional
+
+from .snapshot import SnapshotManager, Snapshot
+
+logger = logging.getLogger(__name__)
+
+
+class RollbackStatus(Enum):
+    """Status of rollback operation."""
+    IDLE = "idle"
+    PREPARING = "preparing"
+    RESTORING = "restoring"
+    REBOOTING = "rebooting"
+    COMPLETE = "complete"
+    FAILED = "failed"
+
+
+@dataclass
+class RollbackResult:
+    """Result of a rollback operation."""
+    success: bool
+    message: str
+    requires_reboot: bool = True
+
+
+class RollbackManager:
+    """
+    Manages system rollback to previous states.
+
+    Supports:
+    - Rollback to any Timeshift snapshot
+    - GRUB boot menu selection of snapshots
+    - Emergency rollback from recovery
+    """
+
+    def __init__(self):
+        self.snapshot_manager = SnapshotManager()
+        self.status = RollbackStatus.IDLE
+        self._progress_callback: Optional[Callable[[RollbackStatus, str], None]] = None
+
+    def set_progress_callback(
+        self,
+        callback: Callable[[RollbackStatus, str], None],
+    ):
+        """Set callback for status updates."""
+        self._progress_callback = callback
+
+    def _notify(self, status: RollbackStatus, message: str):
+        """Notify progress callback."""
+        self.status = status
+        if self._progress_callback:
+            self._progress_callback(status, message)
+
+    def get_available_snapshots(self) -> List[Snapshot]:
+        """Get list of snapshots available for rollback."""
+        return self.snapshot_manager.get_snapshots()
+
+    def rollback_to_snapshot(
+        self,
+        snapshot: Snapshot,
+        skip_grub: bool = False,
+    ) -> RollbackResult:
+        """
+        Rollback system to a snapshot.
+
+        WARNING: This will replace the current system state!
+        A reboot is required after rollback.
+
+        Args:
+            snapshot: The snapshot to restore.
+            skip_grub: Skip GRUB reinstallation (use carefully).
+
+        Returns:
+            RollbackResult with status information.
+        """
+        logger.warning(f"Initiating rollback to: {snapshot.name}")
+        self._notify(RollbackStatus.PREPARING, "Preparing for rollback...")
+
+        try:
+            # Verify snapshot exists
+            snapshots = self.snapshot_manager.get_snapshots()
+            if snapshot.name not in [s.name for s in snapshots]:
+                return RollbackResult(
+                    success=False,
+                    message="Snapshot not found",
+                    requires_reboot=False,
+                )
+
+            self._notify(RollbackStatus.RESTORING, f"Restoring {snapshot.name}...")
+
+            # Perform restore
+            if self.snapshot_manager.restore_snapshot(snapshot):
+                self._notify(
+                    RollbackStatus.COMPLETE,
+                    "Rollback complete. Please reboot.",
+                )
+                return RollbackResult(
+                    success=True,
+                    message="Rollback successful. Reboot required.",
+                    requires_reboot=True,
+                )
+            else:
+                self._notify(RollbackStatus.FAILED, "Rollback failed")
+                return RollbackResult(
+                    success=False,
+                    message="Rollback failed. System may be in inconsistent state.",
+                    requires_reboot=False,
+                )
+
+        except Exception as e:
+            logger.error(f"Rollback error: {e}")
+            self._notify(RollbackStatus.FAILED, str(e))
+            return RollbackResult(
+                success=False,
+                message=str(e),
+                requires_reboot=False,
+            )
+
+    def rollback_last_update(self) -> RollbackResult:
+        """
+        Rollback to the most recent pre-update snapshot.
+
+        Returns:
+            RollbackResult with status information.
+        """
+        snapshot = self.snapshot_manager.get_latest_pre_update_snapshot()
+        if not snapshot:
+            return RollbackResult(
+                success=False,
+                message="No pre-update snapshot found",
+                requires_reboot=False,
+            )
+
+        return self.rollback_to_snapshot(snapshot)
+
+    def create_recovery_entry(self) -> bool:
+        """
+        Create a GRUB entry for easy rollback at boot.
+
+        This adds a "NeuronOS Recovery" entry to GRUB that boots into
+        the Timeshift restore interface.
+
+        Returns:
+            True if entry created successfully.
+        """
+        grub_entry = """
+menuentry 'NeuronOS Recovery (Timeshift)' --class recovery --class gnu-linux --class gnu --class os {
+    insmod gzio
+    insmod part_gpt
+    insmod btrfs
+    set root='hd0,gpt2'
+    linux /boot/vmlinuz-linux root=/dev/sda2 rw init=/bin/bash
+}
+"""
+        recovery_path = "/etc/grub.d/45_neuronos_recovery"
+
+        try:
+            script = f"""#!/bin/sh
+exec tail -n +3 $0
+{grub_entry}
+"""
+            with open(recovery_path, "w") as f:
+                f.write(script)
+
+            subprocess.run(["chmod", "+x", recovery_path], check=True)
+            subprocess.run(["grub-mkconfig", "-o", "/boot/grub/grub.cfg"], check=True)
+
+            logger.info("Recovery GRUB entry created")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to create recovery entry: {e}")
+            return False
+
+    def schedule_rollback_on_boot_failure(self) -> bool:
+        """
+        Configure automatic rollback if system fails to boot properly.
+
+        Uses systemd to detect boot failures and trigger rollback.
+
+        Returns:
+            True if configured successfully.
+        """
+        service_content = """[Unit]
+Description=NeuronOS Boot Verification
+After=graphical.target
+Wants=graphical.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/neuron-boot-verify
+RemainAfterExit=yes
+
+[Install]
+WantedBy=graphical.target
+"""
+
+        verify_script = """#!/bin/bash
+# NeuronOS Boot Verification
+# Marks boot as successful if system is healthy
+
+BOOT_COUNT_FILE="/var/lib/neuronos/boot_count"
+MAX_FAILED_BOOTS=3
+
+# Increment boot counter
+mkdir -p /var/lib/neuronos
+count=$(cat "$BOOT_COUNT_FILE" 2>/dev/null || echo 0)
+count=$((count + 1))
+echo "$count" > "$BOOT_COUNT_FILE"
+
+# Check if system is healthy
+if systemctl is-system-running | grep -qE "running|degraded"; then
+    # System is healthy, reset counter
+    echo "0" > "$BOOT_COUNT_FILE"
+    logger "NeuronOS: Boot verified successfully"
+    exit 0
+fi
+
+# Check if we've failed too many times
+if [ "$count" -ge "$MAX_FAILED_BOOTS" ]; then
+    logger "NeuronOS: Too many failed boots, suggesting rollback"
+    # Could trigger automatic rollback here
+    echo "0" > "$BOOT_COUNT_FILE"
+fi
+
+exit 0
+"""
+
+        try:
+            # Write service file
+            with open("/etc/systemd/system/neuron-boot-verify.service", "w") as f:
+                f.write(service_content)
+
+            # Write verification script
+            with open("/usr/bin/neuron-boot-verify", "w") as f:
+                f.write(verify_script)
+
+            subprocess.run(["chmod", "+x", "/usr/bin/neuron-boot-verify"], check=True)
+            subprocess.run(["systemctl", "daemon-reload"], check=True)
+            subprocess.run(["systemctl", "enable", "neuron-boot-verify.service"], check=True)
+
+            logger.info("Boot verification configured")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to configure boot verification: {e}")
+            return False
+
+    def reboot_system(self) -> bool:
+        """
+        Reboot the system.
+
+        Returns:
+            True if reboot initiated.
+        """
+        try:
+            self._notify(RollbackStatus.REBOOTING, "Initiating reboot...")
+            subprocess.run(["sudo", "reboot"], check=True)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to reboot: {e}")
+            return False

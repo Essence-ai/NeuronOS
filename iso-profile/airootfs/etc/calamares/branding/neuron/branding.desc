@@ -1,0 +1,33 @@
+---
+componentName: neuron
+
+# Displayed strings
+strings:
+    productName:         "NeuronOS"
+    shortProductName:    "NeuronOS"
+    version:             "1.0"
+    shortVersion:        "1.0"
+    versionedName:       "NeuronOS 1.0"
+    shortVersionedName:  "NeuronOS 1.0"
+    bootloaderEntryName: "NeuronOS"
+    productUrl:          "https://neuronos.org"
+    supportUrl:          "https://github.com/neuronos/neuronos/issues"
+    knownIssuesUrl:      "https://github.com/neuronos/neuronos/issues"
+    releaseNotesUrl:     "https://neuronos.org/releases"
+
+# Images - paths relative to this file
+images:
+    productLogo:         "logo.png"
+    productIcon:         "icon.png"
+    productWelcome:      "welcome.png"
+
+# Slideshow during installation
+slideshow:               "show.qml"
+slideshowAPI:            2
+
+# Style settings
+style:
+   sidebarBackground:    "#2d2d2d"
+   sidebarText:          "#ffffff"
+   sidebarTextSelect:    "#4fc3f7"
+   sidebarTextHighlight: "#81d4fa"

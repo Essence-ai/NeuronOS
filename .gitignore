@@ -77,3 +77,6 @@ site/
 *.log
 *.bak
 *.orig
+
+.VSCodeCounter
+Shared 

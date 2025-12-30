@@ -1,0 +1,144 @@
+<!--
+  NeuronOS macOS Sonoma VM Template - Basic (No GPU Passthrough)
+
+  For macOS apps that don't need GPU acceleration.
+  Uses VGA/Spice for display during setup, then relies on macOS software rendering.
+
+  Variables:
+    - vm_name: Name of the VM
+    - uuid: UUID for the VM
+    - memory_mb: RAM in megabytes (8192+ recommended)
+    - vcpus: Number of virtual CPUs
+    - disk_path: Path to the qcow2 disk image
+    - opencore_iso_path: Path to OpenCore bootloader ISO
+    - macos_iso_path: Path to macOS installer/recovery (optional)
+    - smbios_model: Mac model (default: iMacPro1,1)
+-->
+<domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+  <name>{{ vm_name }}</name>
+  <uuid>{{ uuid }}</uuid>
+  <metadata>
+    <neuronos:vm xmlns:neuronos="https://neuronos.org/libvirt/1">
+      <neuronos:profile>macos-sonoma-basic</neuronos:profile>
+      <neuronos:created>{{ created_date | default('') }}</neuronos:created>
+    </neuronos:vm>
+  </metadata>
+
+  <memory unit='MiB'>{{ memory_mb | default(8192) }}</memory>
+  <currentMemory unit='MiB'>{{ memory_mb | default(8192) }}</currentMemory>
+  <vcpu placement='static'>{{ vcpus | default(4) }}</vcpu>
+
+  <!-- CPU Configuration for macOS -->
+  <cpu mode='host-passthrough' check='none'>
+    <topology sockets='1' dies='1' cores='{{ (vcpus | default(4)) // 2 }}' threads='2'/>
+    <feature policy='require' name='invtsc'/>
+  </cpu>
+
+  <os firmware='efi'>
+    <type arch='x86_64' machine='pc-q35-8.0'>hvm</type>
+    <loader readonly='yes' type='pflash'>/usr/share/edk2/x64/OVMF_CODE.4m.fd</loader>
+    <nvram>/var/lib/libvirt/qemu/nvram/{{ vm_name }}_VARS.fd</nvram>
+    <boot dev='hd'/>
+    <boot dev='cdrom'/>
+  </os>
+
+  <features>
+    <acpi/>
+    <apic/>
+  </features>
+
+  <!-- macOS expects UTC clock -->
+  <clock offset='utc'>
+    <timer name='rtc' tickpolicy='catchup'/>
+    <timer name='pit' tickpolicy='delay'/>
+    <timer name='hpet' present='no'/>
+  </clock>
+
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+
+    <!-- OpenCore Bootloader ISO (required) -->
+    <disk type='file' device='cdrom'>
+      <driver name='qemu' type='raw'/>
+      <source file='{{ opencore_iso_path }}'/>
+      <target dev='sda' bus='sata'/>
+      <readonly/>
+      <boot order='1'/>
+    </disk>
+
+    <!-- Primary Disk -->
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2' cache='writeback' discard='unmap'/>
+      <source file='{{ disk_path }}'/>
+      <target dev='sdb' bus='sata'/>
+      <boot order='2'/>
+    </disk>
+
+    {% if macos_iso_path %}
+    <!-- macOS Installation/Recovery ISO -->
+    <disk type='file' device='cdrom'>
+      <driver name='qemu' type='raw'/>
+      <source file='{{ macos_iso_path }}'/>
+      <target dev='sdc' bus='sata'/>
+      <readonly/>
+    </disk>
+    {% endif %}
+
+    <!-- Network -->
+    <interface type='network'>
+      <source network='default'/>
+      <model type='e1000-82545em'/>
+    </interface>
+
+    <!-- USB Controller -->
+    <controller type='usb' index='0' model='qemu-xhci'>
+      <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
+    </controller>
+
+    <!-- Tablet for seamless mouse -->
+    <input type='tablet' bus='usb'/>
+
+    <!-- VirtIO Serial for guest agent -->
+    <controller type='virtio-serial' index='0'/>
+    <channel type='unix'>
+      <source mode='bind' path='/tmp/neuron-{{ vm_name }}.sock'/>
+      <target type='virtio' name='org.neuronos.guest.0'/>
+    </channel>
+
+    <!-- VGA Video (works with macOS + Spice) -->
+    <video>
+      <model type='vga' vram='65536' heads='1' primary='yes'/>
+    </video>
+
+    <!-- Spice Display -->
+    <graphics type='spice' autoport='yes'>
+      <listen type='address'/>
+      <image compression='auto_glz'/>
+    </graphics>
+
+    <!-- Audio -->
+    <sound model='ich9'/>
+
+    <memballoon model='virtio'/>
+  </devices>
+
+  <!-- QEMU command line for macOS -->
+  <qemu:commandline>
+    <!-- Apple SMC emulation (required) -->
+    <qemu:arg value='-device'/>
+    <qemu:arg value='isa-applesmc,osk=ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc'/>
+
+    <!-- SMBIOS settings -->
+    <qemu:arg value='-smbios'/>
+    <qemu:arg value='type=2,manufacturer=Apple Inc.,product={{ smbios_model | default("iMacPro1,1") }},version=1.0'/>
+
+    <!-- CPU model -->
+    <qemu:arg value='-cpu'/>
+    <qemu:arg value='host,vendor=GenuineIntel,+invtsc,kvm=on'/>
+  </qemu:commandline>
+
+</domain>

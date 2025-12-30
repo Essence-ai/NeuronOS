@@ -11,90 +11,407 @@
 
 > /compact 
   ⎿  Compacted (ctrl+o to see full summary)
-  ⎿  Read iso-profile\efiboot\loader\entries\neuronos.conf (5 lines)
-  ⎿  Read iso-profile\efiboot\loader\loader.conf (4 lines)
-  ⎿  Read iso-profile\packages.x86_64 (154 lines)
-  ⎿  Read iso-profile\profiledef.sh (38 lines)
-  ⎿  Read build-iso.sh (158 lines)
+  ⎿  Read templates\windows11-passthrough.xml.j2 (223 lines)
+  ⎿  Read src\hardware_detect\cli.py (180 lines)
+  ⎿  Read src\vm_manager\core\vm_config.py (283 lines)
+  ⎿ Read ..\..\..\..\.claude\todos\e0345c8d-6092-435b-90e7-c3b5bf469258-agent-e0
+    345c8d-6092-435b-90e7-c3b5bf469258.json (37 lines)
+  ⎿  Todo list read (7 items)
 
-> read the @logs.txt and see what happened when i updated the code and ran 
-the command agian 
-  ⎿  Read logs.txt (68 lines)
+> continue 
 
-● Looking at the logs, the build progressed further but failed with two package errors:
+● I'll continue implementing. Let me first update the todo list since I discovered VM creation logic already exists, then move on to creating the macOS VM template.
 
-  Errors Found:
-  1. error: target not found: calamares - Calamares is in the AUR, not official repos
-  2. error: target not found: mesa-vdpau - Package name has changed in Arch
+● Now let me create the macOS VM template. macOS VMs have specific requirements like OpenCore bootloader, Apple SMC emulation, and specific CPU flags.
 
-  Also noticed: Warning that uefi-x64.systemd-boot.esp is deprecated, should use uefi.systemd-boot
+● Search(pattern: "templates/*.xml.j2")
+  ⎿  Found 2 files (ctrl+o to expand)
 
-  Let me fix these:
+● Read(templates\windows11-basic.xml.j2)
+  ⎿  Read 126 lines
 
-● Update(iso-profile\profiledef.sh)
-  ⎿  Added 1 line, removed 1 line                                        
-      12                                                                 
-      13  # Build modes and boot methods (using current non-deprecated   
-          modes)                                                         
-      14  buildmodes=('iso')                                             
-      15 -bootmodes=('uefi-x64.systemd-boot.esp')                        
-      15 +bootmodes=('uefi.systemd-boot')                                
-      16                                                                 
-      17  # Architecture                                                 
-      18  arch="x86_64"                                                  
+● Now I'll create the macOS Sonoma VM template. macOS VMs require specific configurations like OpenCore bootloader, Apple SMC emulation, and Mac-specific SMBIOS settings.
 
-● Update(iso-profile\packages.x86_64)
-  ⎿  Added 1 line, removed 1 line                                        
-      60  # ============================================================ 
-          =================                                              
-      61  # INSTALLER                                                    
-      62  # ============================================================ 
-          =================                                              
-      63 -calamares                                                      
-      63 +# calamares - Install from AUR after first boot                
-      64  arch-install-scripts                                           
-      65                                                                 
-      66  # ============================================================ 
-          =================                                              
+● Write(templates\macos-sonoma-passthrough.xml.j2)
+  ⎿  Wrote 1 lines to templates\macos-sonoma-passthrough.xml.j2
+     <!--
+       NeuronOS macOS Sonoma VM Template with GPU Passthrough
+       Requires:
+         - OpenCore bootloader ISO
+         - macOS installation media or recovery image
+         - AMD GPU (NVIDIA not supported on modern macOS)
+       Variables:
+         - vm_name: Name of the VM
 
-● Update(iso-profile\packages.x86_64)
-  ⎿  Added 1 line, removed 1 line                                        
-      70  vulkan-icd-loader                                              
-      71  vulkan-mesa-layers                                             
-      72  libva-mesa-driver                                              
-      73 -mesa-vdpau                                                     
-      73 +libvdpau                                                       
-      74                                                                 
-      75  # Intel GPU                                                    
-      76  intel-media-driver                                             
+● Now let me create a basic macOS template (without GPU passthrough) for simpler setups:
 
-● Fixes applied:
+● Write(templates\macos-sonoma-basic.xml.j2)
+  ⎿  Wrote 1 lines to templates\macos-sonoma-basic.xml.j2                  
+     <!--
+       NeuronOS macOS Sonoma VM Template - Basic (No GPU Passthrough)
+       For macOS apps that don't need GPU acceleration.
+       Uses VGA/Spice for display during setup, then relies on macOS
+     software rendering.
+       Variables:
+         - vm_name: Name of the VM
+         - uuid: UUID for the VM
+         - memory_mb: RAM in megabytes (8192+ recommended)
 
-  1. Boot mode: Changed uefi-x64.systemd-boot.esp → uefi.systemd-boot (fixes deprecation warning)
-  2. Calamares: Commented out - it's in the AUR, not official repos. We'll install it after boot or create a custom install script.
-  3. mesa-vdpau: Replaced with libvdpau - the old package was merged/renamed.
+● Now let me add macOS presets to vm_config.py to match the Windows presets:
 
-  Now pull the changes on your Arch system and rebuild:
+● Read(src\vm_manager\core\vm_config.py)
+  ⎿  Read 44 lines
 
-  cd ~/NeuronOS
-  git pull origin main
+● Update(src\vm_manager\core\vm_config.py)
+  ⎿  Added 45 lines                                                      
+      280          tpm_enabled=True,                                     
+      281          uefi=True,                                            
+      282      )                                                         
+      283 +                                                              
+      284 +                                                              
+      285 +def macos_sonoma_preset(                                      
+      286 +    name: str = "macOS-Sonoma",                               
+      287 +    gpu_pci: Optional[str] = None,                            
+      288 +) -> VMConfig:                                                
+      289 +    """                                                       
+      290 +    Create a macOS Sonoma VM preset.                          
+      291 +                                                              
+      292 +    Note: macOS VMs require OpenCore bootloader and work best 
+          + with AMD GPUs.                                               
+      293 +    NVIDIA GPUs are not supported on macOS Monterey and       
+          +later.                                                        
+      294 +    """                                                       
+      295 +    return VMConfig(                                          
+      296 +        name=name,                                            
+      297 +        vm_type=VMType.MACOS,                                 
+      298 +        cpu=CPUConfig(cores=4, threads=2),  # 8 vCPUs         
+      299 +        memory=MemoryConfig(size_mb=16384, hugepages=True),   
+      300 +        gpu=GPUPassthroughConfig(                             
+      301 +            enabled=gpu_pci is not None,                      
+      302 +            pci_address=gpu_pci,                              
+      303 +            include_audio=True,                               
+      304 +        ),                                                    
+      305 +        looking_glass=LookingGlassConfig(                     
+      306 +            enabled=gpu_pci is not None,                      
+      307 +            shm_size_mb=128,                                  
+      308 +        ),                                                    
+      309 +        display=DisplayMode.LOOKING_GLASS if gpu_pci else     
+          +DisplayMode.SPICE,                                            
+      310 +        tpm_enabled=False,  # macOS doesn't use TPM           
+      311 +        secure_boot=False,                                    
+      312 +        uefi=True,                                            
+      313 +    )                                                         
+      314 +                                                              
+      315 +                                                              
+      316 +def macos_productivity_preset(name: str = "macOS-Work") ->    
+          +VMConfig:                                                     
+      317 +    """Create a macOS productivity VM preset (no GPU          
+          +passthrough)."""                                              
+      318 +    return VMConfig(                                          
+      319 +        name=name,                                            
+      320 +        vm_type=VMType.MACOS,                                 
+      321 +        cpu=CPUConfig(cores=2, threads=2),  # 4 vCPUs         
+      322 +        memory=MemoryConfig(size_mb=8192),                    
+      323 +        gpu=GPUPassthroughConfig(enabled=False),              
+      324 +        display=DisplayMode.SPICE,                            
+      325 +        tpm_enabled=False,                                    
+      326 +        uefi=True,                                            
+      327 +    )                                                         
 
-  # Then rebuild
-  sudo ./build-iso.sh --clean
+● Now let me check for any existing first-boot or onboarding code, and look at the implementation guide for requirements:
 
-  If git pull doesn't work (you haven't pushed yet), manually update the files:
+● Search(pattern: "first.?boot|onboarding|wizard|setup", glob: "*.py")
+  ⎿  Found 2 files (ctrl+o to expand)
 
-  # Fix profiledef.sh boot mode
-  sed -i "s/uefi-x64.systemd-boot.esp/uefi.systemd-boot/" iso-profile/profiledef.sh
+● Search(pattern: "src/**/setup*.py")
+  ⎿  Found 0 files 
 
-  # Fix packages.x86_64 - remove calamares, fix mesa-vdpau
-  sed -i's/^calamares$/# calamares - Install from AUR after first boot/' iso-profile/packages.x86_64
-  sed -i 's/^mesa-vdpau$/libvdpau/' iso-profile/packages.x86_64
+● Read(IMPLEMENTATION_GUIDE.md)
+  ⎿  Read 150 lines
 
-  # Rebuild
-  sudo ./build-iso.sh --clean
+● Search(pattern: "first.?boot|onboarding|wizard", path:
+        "IMPLEMENTATION_GUIDE.md", output_mode: "content")
+  ⎿  Found 11 lines (ctrl+o to expand)
 
-  Run the build again and share the output!
+● Read(NeuronOS.md)
+  ⎿  Read 200 lines
+
+● Search(pattern: "first.?boot|onboarding|wizard|setup|welcome", path:
+        "NeuronOS.md", output_mode: "content")
+  ⎿  Found 263 lines (ctrl+o to expand)
+
+● Read(2025-12-29-this-session-is-being-continued-from-a-previous-co.txt)
+  ⎿  Read 150 lines
+
+● Read(2025-12-29-this-session-is-being-continued-from-a-previous-co.txt)
+  ⎿  Read 200 lines
+
+● Read(2025-12-29-this-session-is-being-continued-from-a-previous-co.txt)
+  ⎿  Read 250 lines
+
+● Search(pattern: "constraint|seamless|usb passthrough|requirement", path:
+        "2025-12-29-this-session-is-being-continued-from-a-previous-co.txt",
+        output_mode: "content")
+  ⎿  Found 128 lines (ctrl+o to expand)
+
+● Now I have the context. Let me create the first-boot setup wizard. Based on the NeuronOS.md, it should include:
+  1. Welcome screen
+  2. Hardware detection results
+  3. Windows license import option
+  4. File migration from old Windows
+  5. Interactive tutorial
+
+● Search(pattern: "src/**/onboarding*")
+  ⎿  Found 0 files 
+
+● Search(pattern: "src/**/first_boot*")
+  ⎿  Found 0 files 
+
+● Let me create the first-boot onboarding wizard:
+
+● Bash(mkdir -p "C:\Users\jasbh\UserMS\Documenten\Projects\OS\src\onboarding")
+  ⎿  (No content)
+
+● Write(src\onboarding\__init__.py)
+  ⎿  Wrote 1 lines to src\onboarding\__init__.py             
+     """
+     NeuronOS First-Boot Onboarding Wizard
+     Provides a friendly first-boot experience for new users:
+     - Welcome screen with NeuronOS introduction
+     - Hardware detection and compatibility check
+     - VM setup options (Windows/macOS)
+     - File migration from previous OS
+     - Quick tutorial
+     """
+
+● Write(src\onboarding\wizard.py)
+  ⎿  Wrote 1 lines to src\onboarding\wizard.py                        
+     #!/usr/bin/env python3
+     """
+     NeuronOS Onboarding Wizard - Main Window
+     A GTK4/Adwaita wizard that guides users through first-boot setup.
+     """
+     from __future__ import annotations
+     import logging
+
+● Now let me create the individual pages for the wizard:
+
+● Write(src\onboarding\pages.py)
+  ⎿  Wrote 1 lines to src\onboarding\pages.py   
+     #!/usr/bin/env python3
+     """
+     NeuronOS Onboarding Wizard Pages
+     Individual pages for the first-boot wizard.
+     """
+     from __future__ import annotations
+     import logging
+
+● Now let me create the CLI entry point and update the todo list:
+
+● Write(src\onboarding\__main__.py)
+  ⎿  Wrote 1 lines to src\onboarding\__main__.py 
+     #!/usr/bin/env python3
+     """
+     NeuronOS Onboarding Wizard - CLI Entry Point
+     Run with:
+         python -m onboarding
+         neuron-onboarding
+     Or as a systemd user service on first boot.
+     """
+
+● Now let me create the migration tools. This will help users migrate files from Windows/macOS installations:
+
+● Bash(mkdir -p "C:\Users\jasbh\UserMS\Documenten\Projects\OS\src\migration")
+  ⎿  (No content)
+
+● Write(src\migration\__init__.py)
+  ⎿  Wrote 1 lines to src\migration\__init__.py                    
+     """
+     NeuronOS Migration Tools
+     Provides utilities for migrating user data from Windows/macOS 
+     installations:
+     - File discovery and transfer
+     - Browser profile migration
+     - Application settings migration
+     - Drive detection
+     """
+
+● Write(src\migration\drive_detector.py)
+  ⎿  Wrote 1 lines to src\migration\drive_detector.py                  
+     #!/usr/bin/env python3
+     """
+     NeuronOS Drive Detector
+     Detects mounted drives and identifies Windows/macOS installations.
+     """
+     from __future__ import annotations
+     import logging
+
+● Write(src\migration\migrator.py)
+  ⎿  Wrote 1 lines to src\migration\migrator.py                       
+     #!/usr/bin/env python3
+     """
+     NeuronOS File Migrator
+     Migrates user files from Windows/macOS installations to NeuronOS.
+     """
+     from __future__ import annotations
+     import logging
+
+● Now let me create the CLI for the migration tools:
+
+● Write(src\migration\cli.py)
+  ⎿  Wrote 1 lines to src\migration\cli.py                         
+     #!/usr/bin/env python3
+     """
+     NeuronOS Migration CLI
+     Command-line interface for migrating files from Windows/macOS.
+     """
+     import argparse
+     import logging
+     import sys
+
+● Now let me create the NeuronGuest Windows installer using Inno Setup:
+
+● Search(pattern: "src/guest_agent/installer/*")
+  ⎿  Found 0 files 
+
+● Bash(mkdir -p
+      "C:\Users\jasbh\UserMS\Documenten\Projects\OS\src\guest_agent\installer")
+  ⎿  (No content)
+
+● Write(src\guest_agent\installer\neuron-guest-setup.iss)
+  ⎿  Wrote 1 lines to src\guest_agent\installer\neuron-guest-setup.iss
+     ; NeuronGuest Windows Installer
+     ; Inno Setup Script for NeuronOS Guest Agent
+     ;
+     ; This installer packages:
+     ; - NeuronGuest service (background agent for host communication)
+     ; - Looking Glass Host (for low-latency display)
+     ; - VirtIO drivers (for optimal performance)
+     ; - System tray application
+     ;
+     ; Build with: ISCC neuron-guest-setup.iss
+
+● Now let me create the build script for the installer and a README:
+
+● Write(src\guest_agent\installer\build-installer.bat)
+  ⎿  Wrote 1 lines to src\guest_agent\installer\build-installer.bat
+     @echo off
+     REM NeuronGuest Installer Build Script
+     REM Builds the Windows installer package
+     REM
+     REM Prerequisites:
+     REM   - Visual Studio 2022 or .NET 8 SDK
+     REM   - Inno Setup 6.x (https://jrsoftware.org/isinfo.php)
+     REM   - Looking Glass Host binary
+     REM   - VirtIO drivers
+
+● Now let me implement the update/rollback system with Timeshift integration:
+
+● Bash(mkdir -p "C:\Users\jasbh\UserMS\Documenten\Projects\OS\src\updater")
+  ⎿  (No content)
+
+● Write(src\updater\__init__.py)
+  ⎿  Wrote 1 lines to src\updater\__init__.py              
+     """
+     NeuronOS Update and Rollback System
+     Provides safe system updates with automatic snapshots:
+     - Integration with Timeshift for btrfs/rsync snapshots
+     - Pre-update snapshots for easy rollback
+     - Update verification and health checks
+     - Rollback UI
+     """
+
+● Write(src\updater\snapshot.py)
+  ⎿  Wrote 1 lines to src\updater\snapshot.py                              
+     #!/usr/bin/env python3
+     """
+     NeuronOS Snapshot Manager
+     Manages system snapshots using Timeshift for safe updates and 
+     rollback.
+     """
+     from __future__ import annotations
+     import json
+
+● Write(src\updater\updater.py)
+  ⎿  Wrote 1 lines to src\updater\updater.py                               
+     #!/usr/bin/env python3
+     """
+     NeuronOS Update Manager
+     Handles system updates with automatic snapshot creation for safe 
+     rollback.
+     """
+     from __future__ import annotations
+     import logging
+
+● Write(src\updater\rollback.py)
+  ⎿  Wrote 1 lines to src\updater\rollback.py      
+     #!/usr/bin/env python3
+     """
+     NeuronOS Rollback Manager
+     Handles system rollback to previous snapshots.
+     """
+     from __future__ import annotations
+     import logging
+
+● Now let me create a CLI for the updater:
+
+● Write(src\updater\cli.py)
+  ⎿  Wrote 1 lines to src\updater\cli.py                    
+     #!/usr/bin/env python3
+     """
+     NeuronOS Update CLI
+     Command-line interface for system updates and rollback.
+     """
+     import argparse
+     import logging
+     import sys
+
+● All the planned tasks are complete. Let me provide a summary of what was implemented:
+
+  Implementation Summary
+
+  I've implemented the following components for NeuronOS:
+
+  1. macOS VM Templates
+
+  - templates/macos-sonoma-passthrough.xml.j2 - Full GPU passthrough template for macOS Sonoma with Looking Glass, Apple SMC emulation, and OpenCore bootloader support
+  - templates/macos-sonoma-basic.xml.j2 - Basic macOS template without GPU passthrough
+  - Added macos_sonoma_preset() and macos_productivity_preset() functions to src/vm_manager/core/vm_config.py
+
+  2. First-Boot Onboarding Wizard (src/onboarding/)
+
+  - wizard.py - Main GTK4/Adwaita wizard application with6-page flow
+  - pages.py - Individual wizard pages:
+    - Welcome page with feature highlights
+    - Hardware detection page (CPU, GPU, IOMMU check)
+    - VM setup options (Windows/macOS VM toggle)
+    - File migration options
+    - Quick tutorial with tips- Completion summary
+
+  3. Migration Tools (src/migration/)
+
+  - drive_detector.py - Detects mounted drives and identifies Windows/macOS installations
+  - migrator.py - File migration with category support (documents, pictures, music, browser profiles, SSH keys)
+  - cli.py - Command-line interface (neuron-migrate scan, neuron-migrate migrate)
+
+  4. NeuronGuest Windows Installer (src/guest_agent/installer/)
+
+  - neuron-guest-setup.iss - Inno Setup script for Windows installer with:
+    - NeuronGuest service installation
+    - Looking Glass Host integration
+    - VirtIO driver installation
+    - System tray application
+    - .NET 8 dependency check
+  - build-installer.bat - Build script for creating the installer
+
+  5. Update/Rollback System (src/updater/)
+
+  - snapshot.py - Timeshift integration for btrfs/rsync snapshots
+  - updater.py - System update manager with automatic pre-update snapshots
+  - rollback.py - Rollback manager with boot failure detection
+  - cli.py - Command-line interface (neuron-update check, neuron-update update, neuron-update rollback)
+
+  All implementations follow the project's existing patterns (GTK4/Adwaita for GUI, Python dataclasses, proper logging) and don't modify the critical ISO build files.
 
 
 

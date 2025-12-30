@@ -1,0 +1,224 @@
+<!--
+  NeuronOS macOS Sonoma VM Template with GPU Passthrough
+
+  Requires:
+    - OpenCore bootloader ISO
+    - macOS installation media or recovery image
+    - AMD GPU (NVIDIA not supported on modern macOS)
+
+  Variables:
+    - vm_name: Name of the VM
+    - uuid: UUID for the VM
+    - memory_mb: RAM in megabytes (16384+ recommended)
+    - vcpus: Number of virtual CPUs
+    - disk_path: Path to the qcow2 disk image
+    - opencore_iso_path: Path to OpenCore bootloader ISO
+    - macos_iso_path: Path to macOS installer/recovery (optional)
+    - gpu_pci_bus: GPU PCI bus (e.g., "0x01")
+    - gpu_pci_slot: GPU PCI slot (e.g., "0x00")
+    - gpu_pci_function: GPU PCI function (e.g., "0x0")
+    - gpu_audio_function: GPU audio function (e.g., "0x1")
+    - looking_glass_enabled: Enable Looking Glass IVSHMEM
+    - smbios_model: Mac model (default: iMacPro1,1)
+    - nvram_path: Path to NVRAM file for UEFI
+-->
+<domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
+  <name>{{ vm_name }}</name>
+  <uuid>{{ uuid }}</uuid>
+  <metadata>
+    <neuronos:vm xmlns:neuronos="https://neuronos.org/libvirt/1">
+      <neuronos:profile>macos-sonoma-passthrough</neuronos:profile>
+      <neuronos:created>{{ created_date | default('') }}</neuronos:created>
+    </neuronos:vm>
+  </metadata>
+
+  <memory unit='MiB'>{{ memory_mb | default(16384) }}</memory>
+  <currentMemory unit='MiB'>{{ memory_mb | default(16384) }}</currentMemory>
+  <vcpu placement='static'>{{ vcpus | default(8) }}</vcpu>
+
+  <!-- CPU Configuration for macOS -->
+  <cpu mode='host-passthrough' check='none' migratable='off'>
+    <topology sockets='1' dies='1' cores='{{ (vcpus | default(8)) // 2 }}' threads='2'/>
+    <feature policy='require' name='topoext'/>
+    <!-- Required for macOS Ventura+ on AMD -->
+    <feature policy='require' name='invtsc'/>
+  </cpu>
+
+  <os firmware='efi'>
+    <type arch='x86_64' machine='pc-q35-8.0'>hvm</type>
+    <loader readonly='yes' type='pflash'>/usr/share/edk2/x64/OVMF_CODE.4m.fd</loader>
+    <nvram>{{ nvram_path | default('/var/lib/libvirt/qemu/nvram/' + vm_name + '_VARS.fd') }}</nvram>
+    <boot dev='hd'/>
+    <boot dev='cdrom'/>
+  </os>
+
+  <features>
+    <acpi/>
+    <apic/>
+    <vmport state='off'/>
+  </features>
+
+  <!-- macOS expects UTC clock -->
+  <clock offset='utc'>
+    <timer name='rtc' tickpolicy='catchup'/>
+    <timer name='pit' tickpolicy='delay'/>
+    <timer name='hpet' present='no'/>
+    <timer name='tsc' present='yes' mode='native'/>
+  </clock>
+
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+
+  <pm>
+    <suspend-to-mem enabled='no'/>
+    <suspend-to-disk enabled='no'/>
+  </pm>
+
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+
+    <!-- OpenCore Bootloader ISO (required) -->
+    <disk type='file' device='cdrom'>
+      <driver name='qemu' type='raw'/>
+      <source file='{{ opencore_iso_path }}'/>
+      <target dev='sda' bus='sata'/>
+      <readonly/>
+      <boot order='1'/>
+      <address type='drive' controller='0' bus='0' target='0' unit='0'/>
+    </disk>
+
+    <!-- Primary Disk (SATA for macOS compatibility) -->
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2' cache='writeback' discard='unmap'/>
+      <source file='{{ disk_path }}'/>
+      <target dev='sdb' bus='sata'/>
+      <boot order='2'/>
+      <address type='drive' controller='0' bus='0' target='0' unit='1'/>
+    </disk>
+
+    {% if macos_iso_path %}
+    <!-- macOS Installation/Recovery ISO -->
+    <disk type='file' device='cdrom'>
+      <driver name='qemu' type='raw'/>
+      <source file='{{ macos_iso_path }}'/>
+      <target dev='sdc' bus='sata'/>
+      <readonly/>
+      <address type='drive' controller='0' bus='0' target='0' unit='2'/>
+    </disk>
+    {% endif %}
+
+    <!-- SATA Controller -->
+    <controller type='sata' index='0'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x1f' function='0x2'/>
+    </controller>
+
+    <!-- Network (use vmxnet3 or e1000-82545em for macOS) -->
+    <interface type='network'>
+      <source network='default'/>
+      <model type='e1000-82545em'/>
+    </interface>
+
+    <!-- GPU Passthrough (AMD recommended for macOS) -->
+    {% if gpu_pci_bus %}
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <source>
+        <address domain='0x0000' bus='{{ gpu_pci_bus }}' slot='{{ gpu_pci_slot }}' function='{{ gpu_pci_function }}'/>
+      </source>
+      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0' multifunction='on'/>
+    </hostdev>
+
+    <!-- GPU Audio -->
+    {% if gpu_audio_function %}
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <source>
+        <address domain='0x0000' bus='{{ gpu_pci_bus }}' slot='{{ gpu_pci_slot }}' function='{{ gpu_audio_function }}'/>
+      </source>
+      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x1'/>
+    </hostdev>
+    {% endif %}
+    {% endif %}
+
+    <!-- VirtIO Serial for NeuronGuest Agent -->
+    {% if virtio_serial_enabled | default(true) %}
+    <controller type='virtio-serial' index='0'>
+      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>
+    </controller>
+    <channel type='unix'>
+      <source mode='bind' path='/tmp/neuron-{{ vm_name }}.sock'/>
+      <target type='virtio' name='org.neuronos.guest.0'/>
+    </channel>
+    {% endif %}
+
+    <!-- Looking Glass IVSHMEM -->
+    {% if looking_glass_enabled | default(false) %}
+    <shmem name='looking-glass'>
+      <model type='ivshmem-plain'/>
+      <size unit='M'>{{ looking_glass_size_mb | default(128) }}</size>
+    </shmem>
+    {% endif %}
+
+    <!-- USB Controllers -->
+    <controller type='usb' index='0' model='qemu-xhci' ports='4'>
+      <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
+    </controller>
+
+    <!-- USB Passthrough -->
+    {% for usb_device in usb_devices | default([]) %}
+    <hostdev mode='subsystem' type='usb' managed='yes'>
+      <source>
+        <vendor id='{{ usb_device.vendor }}'/>
+        <product id='{{ usb_device.product }}'/>
+      </source>
+    </hostdev>
+    {% endfor %}
+
+    <!-- Tablet for mouse (useful during setup before USB passthrough) -->
+    <input type='tablet' bus='usb'/>
+
+    <!-- Spice display (fallback/setup) -->
+    <graphics type='spice' autoport='yes'>
+      <listen type='address'/>
+      <image compression='off'/>
+      <gl enable='no'/>
+    </graphics>
+
+    {% if gpu_pci_bus %}
+    <!-- No virtual video when using GPU passthrough -->
+    <video>
+      <model type='none'/>
+    </video>
+    {% else %}
+    <!-- VGA for installation without GPU passthrough -->
+    <video>
+      <model type='vga' vram='65536' heads='1' primary='yes'/>
+    </video>
+    {% endif %}
+
+    <!-- Memory balloon disabled for performance -->
+    <memballoon model='none'/>
+
+    <!-- Watchdog -->
+    <watchdog model='itco' action='reset'/>
+  </devices>
+
+  <!-- QEMU command line for macOS-specific settings -->
+  <qemu:commandline>
+    <!-- Apple SMC emulation (required for macOS) -->
+    <qemu:arg value='-device'/>
+    <qemu:arg value='isa-applesmc,osk=ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc'/>
+
+    <!-- SMBIOS settings for Mac model -->
+    <qemu:arg value='-smbios'/>
+    <qemu:arg value='type=2,manufacturer=Apple Inc.,product={{ smbios_model | default("iMacPro1,1") }},version=1.0'/>
+
+    <!-- CPU model for macOS compatibility -->
+    <qemu:arg value='-cpu'/>
+    <qemu:arg value='host,vendor=GenuineIntel,+hypervisor,+invtsc,kvm=on,vmware-cpuid-freq=on'/>
+
+    <!-- Prevent macOS from detecting VM -->
+    <qemu:arg value='-overcommit'/>
+    <qemu:arg value='cpu-pm=on'/>
+  </qemu:commandline>
+
+</domain>
