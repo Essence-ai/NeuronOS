@@ -53,6 +53,7 @@ baobab
 eog
 evince
 file-roller
+zenity
 
 # =============================================================================
 # VIRTUALIZATION CORE (The Heart of NeuronOS)

@@ -1,0 +1,2 @@
+# Allow liveuser to use sudo without password
+liveuser ALL=(ALL) NOPASSWD: ALL

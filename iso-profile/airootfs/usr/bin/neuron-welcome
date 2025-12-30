@@ -1,0 +1,13 @@
+#!/bin/bash
+# NeuronOS Welcome Script - Shows welcome dialog on live boot
+
+zenity --question \
+    --title="Welcome to NeuronOS" \
+    --text="Welcome to NeuronOS!\n\nWould you like to install NeuronOS to your system now?\n\nYou can also click 'Install NeuronOS' on the desktop later." \
+    --ok-label="Install Now" \
+    --cancel-label="Try Live Session" \
+    --width=400
+
+if [ $? -eq 0 ]; then
+    sudo calamares &
+fi

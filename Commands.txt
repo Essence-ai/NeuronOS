@@ -2,9 +2,11 @@ Archinstall
 
 sudo reboot 
 
+archlinux
+password 
+
+
 --- Delete ISO from VM ---
-
-
 
 
 git clone https://github.com/Essence-ai/NeuronOS
@@ -31,15 +33,8 @@ sudo ./build-iso.sh --clean
 
 Shared Folder:
 
-sudo mount -t vbox shared /mnt 
+sudo mount -t vboxsf shared /mnt 
 cp ~/NeuronOS/out/*.iso /mnt 
-
-
-
-
-
-
-
 
 
 
@@ -47,18 +42,6 @@ cp ~/NeuronOS/out/*.iso /mnt
 optional:
 
 qemu-system-x86_64 -enable-kvm -m 4G -nographic -serial mon:stdio -cdrom out/neuronos-*.iso
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
