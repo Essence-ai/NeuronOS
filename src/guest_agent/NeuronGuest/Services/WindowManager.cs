@@ -38,7 +38,7 @@ public interface IWindowManager
 /// <summary>
 /// Manages windows in the Windows VM using Win32 APIs.
 /// </summary>
-public partial class WindowManager : IWindowManager
+public class WindowManager : IWindowManager
 {
     private readonly ILogger<WindowManager> _logger;
 
@@ -49,37 +49,37 @@ public partial class WindowManager : IWindowManager
 
     #region Win32 Imports
 
-    [LibraryImport("user32.dll", SetLastError = true)]
+    [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+    private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
 
-    [LibraryImport("user32.dll", SetLastError = true)]
+    [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool IsWindowVisible(IntPtr hWnd);
+    private static extern bool IsWindowVisible(IntPtr hWnd);
 
-    [LibraryImport("user32.dll", SetLastError = true)]
-    private static partial int GetWindowTextLengthW(IntPtr hWnd);
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern int GetWindowTextLength(IntPtr hWnd);
 
-    [LibraryImport("user32.dll", SetLastError = true)]
-    private static partial int GetWindowTextW(IntPtr hWnd, [Out] char[] lpString, int nMaxCount);
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
-    [LibraryImport("user32.dll", SetLastError = true)]
-    private static partial uint GetWindowThreadProcessId(IntPtr hWnd, out int lpdwProcessId);
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out int lpdwProcessId);
 
-    [LibraryImport("user32.dll", SetLastError = true)]
+    [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+    private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 
-    [LibraryImport("user32.dll", SetLastError = true)]
+    [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool SetForegroundWindow(IntPtr hWnd);
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
 
-    [LibraryImport("user32.dll", SetLastError = true)]
+    [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
-    [LibraryImport("user32.dll", SetLastError = true)]
-    private static partial IntPtr SendMessageW(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
     private const int SW_MINIMIZE = 6;
     private const int SW_MAXIMIZE = 3;
@@ -154,7 +154,7 @@ public partial class WindowManager : IWindowManager
     {
         try
         {
-            SendMessageW(handle, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+            SendMessage(handle, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
             return Task.FromResult(true);
         }
         catch (Exception ex)
@@ -259,12 +259,12 @@ public partial class WindowManager : IWindowManager
         };
 
         // Get title
-        var titleLength = GetWindowTextLengthW(hWnd);
+        var titleLength = GetWindowTextLength(hWnd);
         if (titleLength > 0)
         {
-            var titleBuffer = new char[titleLength + 1];
-            GetWindowTextW(hWnd, titleBuffer, titleBuffer.Length);
-            info.Title = new string(titleBuffer).TrimEnd('\0');
+            var titleBuffer = new StringBuilder(titleLength + 1);
+            GetWindowText(hWnd, titleBuffer, titleBuffer.Capacity);
+            info.Title = titleBuffer.ToString();
         }
 
         // Get process info

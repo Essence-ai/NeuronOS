@@ -1,0 +1,286 @@
+[{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS1069",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS1069)"
+		}
+	},
+	"severity": 8,
+	"message": "The type name 'SerialPort' could not be found in the namespace 'System.IO.Ports'. This type has been forwarded to assembly 'System.IO.Ports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' Consider adding a reference to that assembly.",
+	"startLineNumber": 18,
+	"startColumn": 13,
+	"endLineNumber": 18,
+	"endColumn": 23
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS1069",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS1069)"
+		}
+	},
+	"severity": 8,
+	"message": "The type name 'SerialPort' could not be found in the namespace 'System.IO.Ports'. This type has been forwarded to assembly 'System.IO.Ports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' Consider adding a reference to that assembly.",
+	"startLineNumber": 52,
+	"startColumn": 27,
+	"endLineNumber": 52,
+	"endColumn": 37
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS1061",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS1061)"
+		}
+	},
+	"severity": 8,
+	"message": "'SerialPort?' does not contain a definition for 'Open' and no accessible extension method 'Open' accepting a first argument of type 'SerialPort?' could be found (are you missing a using directive or an assembly reference?)",
+	"startLineNumber": 62,
+	"startColumn": 25,
+	"endLineNumber": 62,
+	"endColumn": 29
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0103",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0103)"
+		}
+	},
+	"severity": 8,
+	"message": "The name 'SerialPort' does not exist in the current context",
+	"startLineNumber": 91,
+	"startColumn": 30,
+	"endLineNumber": 91,
+	"endColumn": 40
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS1069",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS1069)"
+		}
+	},
+	"severity": 8,
+	"message": "The type name 'SerialPort' could not be found in the namespace 'System.IO.Ports'. This type has been forwarded to assembly 'System.IO.Ports, Version=0.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' Consider adding a reference to that assembly.",
+	"startLineNumber": 104,
+	"startColumn": 42,
+	"endLineNumber": 104,
+	"endColumn": 52
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0019",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0019)"
+		}
+	},
+	"severity": 8,
+	"message": "Operator '!=' cannot be applied to operands of type 'SerialPort?' and '<null>'",
+	"startLineNumber": 147,
+	"startColumn": 13,
+	"endLineNumber": 147,
+	"endColumn": 32
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS1061",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS1061)"
+		}
+	},
+	"severity": 8,
+	"message": "'SerialPort?' does not contain a definition for 'IsOpen' and no accessible extension method 'IsOpen' accepting a first argument of type 'SerialPort?' could be found (are you missing a using directive or an assembly reference?)",
+	"startLineNumber": 149,
+	"startColumn": 29,
+	"endLineNumber": 149,
+	"endColumn": 35
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS1061",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS1061)"
+		}
+	},
+	"severity": 8,
+	"message": "'SerialPort?' does not contain a definition for 'Close' and no accessible extension method 'Close' accepting a first argument of type 'SerialPort?' could be found (are you missing a using directive or an assembly reference?)",
+	"startLineNumber": 150,
+	"startColumn": 29,
+	"endLineNumber": 150,
+	"endColumn": 34
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS1061",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS1061)"
+		}
+	},
+	"severity": 8,
+	"message": "'SerialPort?' does not contain a definition for 'Dispose' and no accessible extension method 'Dispose' accepting a first argument of type 'SerialPort?' could be found (are you missing a using directive or an assembly reference?)",
+	"startLineNumber": 151,
+	"startColumn": 25,
+	"endLineNumber": 151,
+	"endColumn": 32
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0019",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0019)"
+		}
+	},
+	"severity": 8,
+	"message": "Operator '==' cannot be applied to operands of type 'SerialPort?' and '<null>'",
+	"startLineNumber": 178,
+	"startColumn": 29,
+	"endLineNumber": 178,
+	"endColumn": 48
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS1061",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS1061)"
+		}
+	},
+	"severity": 8,
+	"message": "'SerialPort?' does not contain a definition for 'BytesToRead' and no accessible extension method 'BytesToRead' accepting a first argument of type 'SerialPort?' could be found (are you missing a using directive or an assembly reference?)",
+	"startLineNumber": 184,
+	"startColumn": 29,
+	"endLineNumber": 184,
+	"endColumn": 40
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS1061",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS1061)"
+		}
+	},
+	"severity": 8,
+	"message": "'SerialPort?' does not contain a definition for 'BytesToRead' and no accessible extension method 'BytesToRead' accepting a first argument of type 'SerialPort?' could be found (are you missing a using directive or an assembly reference?)",
+	"startLineNumber": 190,
+	"startColumn": 32,
+	"endLineNumber": 190,
+	"endColumn": 43
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS1061",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS1061)"
+		}
+	},
+	"severity": 8,
+	"message": "'SerialPort?' does not contain a definition for 'ReadByte' and no accessible extension method 'ReadByte' accepting a first argument of type 'SerialPort?' could be found (are you missing a using directive or an assembly reference?)",
+	"startLineNumber": 192,
+	"startColumn": 37,
+	"endLineNumber": 192,
+	"endColumn": 45
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS0019",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS0019)"
+		}
+	},
+	"severity": 8,
+	"message": "Operator '==' cannot be applied to operands of type 'SerialPort?' and '<null>'",
+	"startLineNumber": 230,
+	"startColumn": 29,
+	"endLineNumber": 230,
+	"endColumn": 48
+},{
+	"resource": "/c:/Users/jasbh/UserMS/Documenten/Projects/OS/src/guest_agent/NeuronGuest/Services/VirtioSerialService.cs",
+	"owner": "DocumentCompilerSemantic",
+	"code": {
+		"value": "CS1061",
+		"target": {
+			"$mid": 1,
+			"path": "/query/roslyn.query",
+			"scheme": "https",
+			"authority": "msdn.microsoft.com",
+			"query": "appId=roslyn&k=k(CS1061)"
+		}
+	},
+	"severity": 8,
+	"message": "'SerialPort?' does not contain a definition for 'Write' and no accessible extension method 'Write' accepting a first argument of type 'SerialPort?' could be found (are you missing a using directive or an assembly reference?)",
+	"startLineNumber": 242,
+	"startColumn": 25,
+	"endLineNumber": 242,
+	"endColumn": 30
+}]
