@@ -1,5 +1,38 @@
 Archinstall
 
+sudo reboot 
+
+--- Delete ISO from VM ---
+
+
+
+
+git clone https://github.com/Essence-ai/NeuronOS
+
+
+sudo pacman -S -needed archiso dos2unix qemu-full git base-devel
+
+cd ~/NeuronOS
+
+dos2unix iso-profile/profiledef.sh
+dos2unix iso-profile/packages.x86_64
+dos2unix iso-profile/pacman.conf
+dos2unix iso-profile/efiboot/loader/loader.conf
+dos2unix iso-profile/efiboot/loader/entries/neuronos.conf
+dos2unix build-iso.sh
+
+
+chmod +x build-iso.sh 
+
+sudo ./build-iso.sh --clean 
+
+
+
+
+Shared Folder:
+
+sudo mount -t vbox shared /mnt 
+cp ~/NeuronOS/out/*.iso /mnt 
 
 
 
@@ -11,7 +44,9 @@ Archinstall
 
 
 
+optional:
 
+qemu-system-x86_64 -enable-kvm -m 4G -nographic -serial mon:stdio -cdrom out/neuronos-*.iso
 
 
 

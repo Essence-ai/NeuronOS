@@ -210,4 +210,4 @@ usbredir
 # =============================================================================
 virt-viewer
 spice-gtk
-looking-glass-dummy-driver
+# looking-glass-dummy-driver  # AUR package - install separately if needed
