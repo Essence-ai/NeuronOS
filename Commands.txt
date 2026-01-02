@@ -1,17 +1,35 @@
 Archinstall
 
+disk config: 
+partitioning: use a best-effort default partitioning layout 
+filesystem xfs
+
+bootloader grub
+
+
+authentication: 
+add a user:
+hostname: archlinux
+password: password 
+Should 'archlinux' be a superuser(sudo)?
+yes
+
+network config: 
+copt iso network config to installation 
+
+install 
+
+--- When install is done ---
+
 sudo reboot 
-
-archlinux
-password 
-
 
 --- Delete ISO from VM ---
 
 
+archlinux
+password 
 
-
-sudo pacman -S -needed archiso dos2unix qemu-full git base-devel
+sudo pacman -S -needed archiso dos2unix qemu-full git base-devel python 
 git clone https://github.com/Essence-ai/NeuronOS
 
 cd ~/NeuronOS
@@ -23,13 +41,9 @@ dos2unix iso-profile/efiboot/loader/loader.conf
 dos2unix iso-profile/efiboot/loader/entries/neuronos.conf
 dos2unix build-iso.sh
 
-
 chmod +x build-iso.sh 
 
 sudo ./build-iso.sh --clean 
-
-
-
 
 Shared Folder:
 
@@ -37,10 +51,12 @@ sudo mount -t vboxsf shared /mnt
 cp ~/NeuronOS/out/*.iso /mnt 
 
 
+
+---end---
+
 Start UP: 
 
 sudo systemctl start gdm
-
 
 
 optional:

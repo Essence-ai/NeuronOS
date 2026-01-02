@@ -82,7 +82,19 @@ class LibvirtManager:
             )
 
         self.uri = uri
-        self.template_dir = template_dir or Path(__file__).parent.parent / "templates"
+
+        # Resolve template directory - check installed location first
+        if template_dir:
+            self.template_dir = template_dir
+        else:
+            installed_path = Path("/usr/share/neuron-os/templates")
+            dev_path = Path(__file__).parent.parent / "templates"
+
+            if installed_path.exists():
+                self.template_dir = installed_path
+            else:
+                self.template_dir = dev_path
+
         self._conn: Optional[libvirt.virConnect] = None
         self._event_callbacks: List[Callable] = []
 

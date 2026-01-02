@@ -1,69 +1,21 @@
 #!/usr/bin/env python3
 """
-NeuronVM Manager - Entry point
-Manages Windows/macOS VMs with GPU passthrough
+NeuronVM Manager - VM Management for NeuronOS
 """
-
 import sys
 sys.path.insert(0, '/usr/lib/neuron-os')
 
 def main():
-    # Try Qt GUI first (for LXQt desktop)
     try:
-        from PyQt6.QtWidgets import QApplication
         from vm_manager.gui.app_qt import main as qt_main
         return qt_main()
-    except ImportError as e:
-        print(f"Qt GUI unavailable: {e}")
-
-    # Fallback to GTK GUI
-    try:
-        import gi
-        gi.require_version('Gtk', '4.0')
-        gi.require_version('Adw', '1')
-        from gi.repository import Gtk, Adw
-
-        from vm_manager.gui.app import VMManagerApp
-        app = VMManagerApp()
-        return app.run(sys.argv)
-
-    except (ImportError, ValueError) as e:
-        print(f"GTK4 not available: {e}")
-        print("Falling back to CLI mode...")
-
-    # CLI fallback
-    try:
-        from vm_manager.core.libvirt_manager import LibvirtManager
-
-        manager = LibvirtManager()
-        if not manager.connect():
-            print("Failed to connect to libvirt")
-            print("Try: sudo systemctl start libvirtd")
-            return 1
-
-        print("NeuronVM Manager (CLI Mode)")
-        print("=" * 40)
-
-        vms = manager.list_vms()
-        if vms:
-            print(f"\nFound {len(vms)} VMs:")
-            for vm in vms:
-                status = "Running" if vm.state.value == 1 else "Stopped"
-                gpu = "[GPU]" if vm.has_gpu_passthrough else ""
-                print(f"  {vm.name}: {status} {gpu}")
-        else:
-            print("\nNo VMs configured.")
-            print("\nTo create a Windows VM with GPU passthrough:")
-            print("  1. Run: neuron-hardware-detect check")
-            print("  2. Run: virt-manager (GUI)")
-
-        manager.disconnect()
-        return 0
-    except ImportError as e:
-        print(f"Error: {e}")
-        print("libvirt modules not available")
+    except Exception as e:
+        print(f"Error launching NeuronVM Manager: {e}")
+        print("\nTry running from terminal to see full error:")
+        print("  neuron-vm-manager")
+        print("\nMake sure libvirtd is running:")
+        print("  sudo systemctl start libvirtd")
         return 1
-
 
 if __name__ == '__main__':
     sys.exit(main())

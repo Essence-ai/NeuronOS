@@ -152,7 +152,18 @@ class AppCatalog:
         Args:
             catalog_path: Path to apps.json catalog file
         """
-        self.catalog_path = catalog_path or Path(__file__).parent.parent.parent / "data" / "apps.json"
+        if catalog_path:
+            self.catalog_path = catalog_path
+        else:
+            # Check installed location first, then development location
+            installed_path = Path("/usr/share/neuron-os/apps.json")
+            dev_path = Path(__file__).parent.parent.parent / "data" / "apps.json"
+
+            if installed_path.exists():
+                self.catalog_path = installed_path
+            else:
+                self.catalog_path = dev_path
+
         self._apps: Dict[str, AppInfo] = {}
         self._loaded = False
 

@@ -32,7 +32,6 @@ ntfs-3g
 grub
 efibootmgr
 os-prober
-systemd-ukify
 
 # =============================================================================
 # DESKTOP ENVIRONMENT - LXQt (Lightweight, Windows-like)
@@ -48,6 +47,11 @@ qterminal
 lxqt-archiver
 xdg-user-dirs
 xdg-utils
+zenity
+
+# Qt6 base (required for PyQt6 apps)
+qt6-base
+qt6-svg
 
 # =============================================================================
 # VIRTUALIZATION CORE (The Heart of NeuronOS)
@@ -64,7 +68,6 @@ iptables-nft
 # =============================================================================
 # INSTALLER
 # =============================================================================
-# calamares - Install from AUR after first boot
 arch-install-scripts
 
 # =============================================================================
@@ -81,32 +84,24 @@ intel-media-driver
 vulkan-intel
 
 # AMD GPU
-libva-mesa-driver
 vulkan-radeon
 
-# NVIDIA (proprietary, user can install)
-# nvidia
-# nvidia-utils
-
 # =============================================================================
-# DEVELOPMENT / SYSTEM TOOLS
+# PYTHON & DEVELOPMENT TOOLS
 # =============================================================================
 python
 python-pip
 python-pyudev
 python-gobject
-python-jinja
+python-jinja2
 python-pyqt6
 libvirt-python
 git
-vim
 nano
 base-devel
 htop
 wget
 curl
-rsync
-tmux
 
 # =============================================================================
 # APPLICATIONS (Minimal for now)
@@ -117,8 +112,6 @@ firefox
 # FONTS
 # =============================================================================
 noto-fonts
-noto-fonts-cjk
-noto-fonts-emoji
 ttf-dejavu
 ttf-liberation
 
@@ -128,28 +121,20 @@ ttf-liberation
 pipewire
 pipewire-alsa
 pipewire-pulse
-pipewire-jack
 wireplumber
 
 # =============================================================================
 # NETWORKING
 # =============================================================================
-networkmanager
 network-manager-applet
 iwd
-bluez
-bluez-utils
 
 # =============================================================================
 # UTILITIES
 # =============================================================================
-man-db
-man-pages
 bash-completion
 usbutils
 pciutils
-lsof
-strace
 
 # =============================================================================
 # FLATPAK (For sandboxed app installation)
@@ -172,27 +157,18 @@ lib32-vulkan-icd-loader
 # LOOKING GLASS DEPENDENCIES (For seamless VM display)
 # =============================================================================
 cmake
-gcc
 fontconfig
 libsamplerate
 libxkbcommon
-libxkbcommon-x11
 libxi
-libxss
-libxpresent
-libxcursor
-nettle
 wayland
 wayland-protocols
-libdecor
-libpipewire
 spice-protocol
 
 # =============================================================================
-# USB PASSTHROUGH (For seamless device passthrough)
+# USB PASSTHROUGH
 # =============================================================================
 libusb
-usbmuxd
 usbredir
 
 # =============================================================================
@@ -200,4 +176,3 @@ usbredir
 # =============================================================================
 virt-viewer
 spice-gtk
-# looking-glass-dummy-driver  # AUR package - install separately if needed
