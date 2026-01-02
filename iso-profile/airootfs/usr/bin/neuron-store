@@ -8,21 +8,22 @@ import sys
 sys.path.insert(0, '/usr/lib/neuron-os')
 
 def main():
-    # Check if GTK4 is available
+    # Check if GTK4 is available and launch GUI
     try:
         import gi
         gi.require_version('Gtk', '4.0')
         gi.require_version('Adw', '1')
         from gi.repository import Gtk, Adw
 
-        # TODO: Implement GUI
-        print("NeuronStore GUI coming soon...")
-        print("For now, use CLI mode with --search")
+        # Import and run the GUI
+        from store.gui.store_window import main as gui_main
+        return gui_main()
 
-    except (ImportError, ValueError):
-        pass
+    except (ImportError, ValueError) as e:
+        print(f"GUI unavailable: {e}")
+        print("Falling back to CLI mode...")
 
-    # CLI mode
+    # CLI mode fallback
     import argparse
     from store.app_catalog import AppCatalog, CompatibilityLayer
 
@@ -45,28 +46,28 @@ def main():
         print(f"\nSearch results for '{args.search}':")
         for app in results:
             layer_icon = {
-                CompatibilityLayer.NATIVE: "🐧",
-                CompatibilityLayer.WINE: "🍷",
-                CompatibilityLayer.PROTON: "🎮",
-                CompatibilityLayer.VM_WINDOWS: "🪟",
-                CompatibilityLayer.VM_MACOS: "🍎",
-                CompatibilityLayer.FLATPAK: "📦",
-            }.get(app.layer, "❓")
-            print(f"  {layer_icon} {app.name} [{app.layer.value}] - {app.description[:50]}...")
+                CompatibilityLayer.NATIVE: "Native",
+                CompatibilityLayer.WINE: "Wine",
+                CompatibilityLayer.PROTON: "Proton",
+                CompatibilityLayer.VM_WINDOWS: "Windows VM",
+                CompatibilityLayer.VM_MACOS: "macOS VM",
+                CompatibilityLayer.FLATPAK: "Flatpak",
+            }.get(app.layer, "?")
+            print(f"  [{layer_icon}] {app.name} - {app.description[:50]}...")
 
     elif args.list or args.native or args.wine or args.vm:
         if args.native:
             apps = catalog.native_apps()
-            print("\n🐧 Native Linux Apps:")
+            print("\nNative Linux Apps:")
         elif args.wine:
             apps = catalog.wine_apps()
-            print("\n🍷 Wine-Compatible Apps:")
+            print("\nWine-Compatible Apps:")
         elif args.vm:
             apps = catalog.vm_required_apps()
-            print("\n🪟 Apps Requiring VM:")
+            print("\nApps Requiring VM:")
         else:
             apps = catalog.all()
-            print("\n📦 All Apps in Catalog:")
+            print("\nAll Apps in Catalog:")
 
         for app in apps:
             print(f"  - {app.name}: {app.description[:60]}...")

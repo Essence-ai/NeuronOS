@@ -60,6 +60,10 @@
               "version": "[8.0.8, )",
               "autoReferenced": true
             },
+            "System.IO.Ports": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
             "System.Text.Json": {
               "target": "Package",
               "version": "[8.0.0, )"

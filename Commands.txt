@@ -9,10 +9,10 @@ password
 --- Delete ISO from VM ---
 
 
-git clone https://github.com/Essence-ai/NeuronOS
 
 
 sudo pacman -S -needed archiso dos2unix qemu-full git base-devel
+git clone https://github.com/Essence-ai/NeuronOS
 
 cd ~/NeuronOS
 

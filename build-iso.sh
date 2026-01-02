@@ -84,11 +84,34 @@ copy_python_modules() {
     log_info "Python modules copied successfully"
 }
 
+enable_services() {
+    log_info "Setting up systemd service symlinks..."
+
+    # Create systemd symlink directories
+    local systemd_dir="${PROFILE_DIR}/airootfs/etc/systemd/system"
+    mkdir -p "${systemd_dir}/multi-user.target.wants"
+    mkdir -p "${systemd_dir}/graphical.target.wants"
+
+    # Enable GDM for graphical login
+    ln -sf /usr/lib/systemd/system/gdm.service "${systemd_dir}/display-manager.service"
+
+    # Enable NetworkManager
+    ln -sf /usr/lib/systemd/system/NetworkManager.service "${systemd_dir}/multi-user.target.wants/NetworkManager.service"
+
+    # Enable libvirtd for VM management
+    ln -sf /usr/lib/systemd/system/libvirtd.service "${systemd_dir}/multi-user.target.wants/libvirtd.service"
+
+    log_info "Systemd services configured"
+}
+
 build_iso() {
     log_info "Building NeuronOS ISO..."
 
     # Copy our code into the profile before building
     copy_python_modules
+
+    # Enable systemd services
+    enable_services
 
     mkarchiso -v -w "$WORK_DIR" -o "$OUT_DIR" "$PROFILE_DIR"
 
