@@ -92,8 +92,8 @@ enable_services() {
     mkdir -p "${systemd_dir}/multi-user.target.wants"
     mkdir -p "${systemd_dir}/graphical.target.wants"
 
-    # Enable GDM for graphical login
-    ln -sf /usr/lib/systemd/system/gdm.service "${systemd_dir}/display-manager.service"
+    # Enable SDDM for graphical login (LXQt display manager)
+    ln -sf /usr/lib/systemd/system/sddm.service "${systemd_dir}/display-manager.service"
 
     # Enable NetworkManager
     ln -sf /usr/lib/systemd/system/NetworkManager.service "${systemd_dir}/multi-user.target.wants/NetworkManager.service"

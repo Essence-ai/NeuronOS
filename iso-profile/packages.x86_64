@@ -35,25 +35,19 @@ os-prober
 systemd-ukify
 
 # =============================================================================
-# DESKTOP ENVIRONMENT - GNOME
+# DESKTOP ENVIRONMENT - LXQt (Lightweight, Windows-like)
 # =============================================================================
-gnome
-gnome-tweaks
-gdm
+xorg-server
+xorg-xinit
+sddm
+lxqt
+breeze-icons
+oxygen-icons
+pcmanfm-qt
+qterminal
+lxqt-archiver
 xdg-user-dirs
 xdg-utils
-gnome-terminal
-nautilus
-gnome-text-editor
-gnome-calculator
-gnome-system-monitor
-gnome-disk-utility
-gnome-screenshot
-baobab
-eog
-evince
-file-roller
-zenity
 
 # =============================================================================
 # VIRTUALIZATION CORE (The Heart of NeuronOS)
@@ -102,6 +96,7 @@ python-pip
 python-pyudev
 python-gobject
 python-jinja
+python-pyqt6
 libvirt-python
 git
 vim
@@ -161,7 +156,7 @@ strace
 # =============================================================================
 flatpak
 xdg-desktop-portal
-xdg-desktop-portal-gnome
+xdg-desktop-portal-lxqt
 
 # =============================================================================
 # WINE (For lightweight Windows apps without VM)

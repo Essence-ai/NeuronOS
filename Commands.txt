@@ -54,3 +54,11 @@ df -h
 
 sudo fdisk -l 
 
+
+Delete Folder:
+
+sudo rm -r NeuronOS
+
+sudo rm -rf NeuronOS (FORCE DELETE!)
+
+

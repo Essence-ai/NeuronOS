@@ -8,19 +8,24 @@ import sys
 sys.path.insert(0, '/usr/lib/neuron-os')
 
 def main():
-    # Check if GTK4 is available and launch GUI
+    # Try Qt GUI first (for LXQt desktop)
+    try:
+        from PyQt6.QtWidgets import QApplication
+        from store.gui.store_window_qt import main as qt_main
+        return qt_main()
+    except ImportError as e:
+        print(f"Qt GUI unavailable: {e}")
+
+    # Fallback to GTK GUI
     try:
         import gi
         gi.require_version('Gtk', '4.0')
         gi.require_version('Adw', '1')
         from gi.repository import Gtk, Adw
-
-        # Import and run the GUI
-        from store.gui.store_window import main as gui_main
-        return gui_main()
-
+        from store.gui.store_window import main as gtk_main
+        return gtk_main()
     except (ImportError, ValueError) as e:
-        print(f"GUI unavailable: {e}")
+        print(f"GTK GUI unavailable: {e}")
         print("Falling back to CLI mode...")
 
     # CLI mode fallback
