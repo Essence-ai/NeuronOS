@@ -37,28 +37,26 @@ sudo mount -t vboxsf shared /mnt
 cp ~/NeuronOS/out/*.iso /mnt 
 
 
+Start UP: 
+
+sudo systemctl start gdm
+
 
 
 optional:
-
-qemu-system-x86_64 -enable-kvm -m 4G -nographic -serial mon:stdio -cdrom out/neuronos-*.iso
-
-
+    qemu-system-x86_64 -enable-kvm -m 4G -nographic -serial mon:stdio -cdrom out/neuronos-*.iso
 
 File System:
+    lsblk
+    lsblk -f 
 
-lsblk
-lsblk -f 
+    df -h
 
-df -h
-
-sudo fdisk -l 
+    sudo fdisk -l 
 
 
 Delete Folder:
-
-sudo rm -r NeuronOS
-
-sudo rm -rf NeuronOS (FORCE DELETE!)
+    sudo rm -r NeuronOS
+    sudo rm -rf NeuronOS (FORCE DELETE!)
 
 

@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
 Name=Install NeuronOS
-Comment=Install NeuronOS to your system
-Exec=sudo calamares
-Icon=calamares
+Comment=Install NeuronOS to your system using archinstall
+Exec=qterminal -e sudo archinstall
+Icon=system-software-install
 Terminal=false
 Categories=System;
