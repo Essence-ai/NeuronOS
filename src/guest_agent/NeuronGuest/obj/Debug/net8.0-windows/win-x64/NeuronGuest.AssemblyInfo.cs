@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("NeuronOS Guest Agent for Windows VMs")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b4ce7342e57e37da01d0a20c876314fb35138932")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2b1caeac38f30ae730e09ea14f3ec83a50e47d47")]
 [assembly: System.Reflection.AssemblyProductAttribute("NeuronGuest")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NeuronGuest")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

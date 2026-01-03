@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Install NeuronOS
+Comment=Install NeuronOS to your computer
+Icon=system-installer
+Exec=qterminal -e sudo archinstall
+Terminal=false

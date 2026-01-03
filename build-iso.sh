@@ -110,6 +110,22 @@ enable_services() {
     log_info "Systemd services configured"
 }
 
+setup_user_configs() {
+    log_info "Setting up user configuration..."
+
+    # Copy skel configs to liveuser home
+    local liveuser_home="${PROFILE_DIR}/airootfs/home/liveuser"
+    mkdir -p "$liveuser_home"
+
+    # Copy all skel configs
+    cp -r "${PROFILE_DIR}/airootfs/etc/skel/." "$liveuser_home/"
+
+    # Set ownership (will be applied during build)
+    # liveuser uid:gid is 1000:1000
+
+    log_info "User configuration set up"
+}
+
 build_iso() {
     log_info "Building NeuronOS ISO..."
 
@@ -118,6 +134,9 @@ build_iso() {
 
     # Enable systemd services
     enable_services
+
+    # Setup user configs (copy skel to liveuser)
+    setup_user_configs
 
     mkarchiso -v -w "$WORK_DIR" -o "$OUT_DIR" "$PROFILE_DIR"
 

@@ -41,7 +41,6 @@ xorg-xinit
 sddm
 lxqt
 breeze-icons
-oxygen-icons
 pcmanfm-qt
 qterminal
 lxqt-archiver
@@ -52,6 +51,14 @@ zenity
 # Qt6 base (required for PyQt6 apps)
 qt6-base
 qt6-svg
+
+# Premium theming
+papirus-icon-theme
+kvantum
+qt5ct
+qt6ct
+arc-gtk-theme
+lxqt-themes
 
 # =============================================================================
 # VIRTUALIZATION CORE (The Heart of NeuronOS)
