@@ -57,8 +57,8 @@ papirus-icon-theme
 kvantum
 qt5ct
 qt6ct
-arc-gtk-theme
 lxqt-themes
+materia-gtk-theme
 
 # =============================================================================
 # VIRTUALIZATION CORE (The Heart of NeuronOS)
@@ -100,7 +100,7 @@ python
 python-pip
 python-pyudev
 python-gobject
-python-jinja2
+python-jinja
 python-pyqt6
 libvirt-python
 git
