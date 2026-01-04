@@ -101,6 +101,7 @@ python-pip
 python-pyudev
 python-gobject
 python-jinja
+python-requests
 python-pyqt6
 libvirt-python
 git

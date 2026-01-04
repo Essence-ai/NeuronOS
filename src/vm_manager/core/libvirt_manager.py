@@ -341,6 +341,107 @@ class LibvirtManager:
             logger.error(f"Failed to create VM from template: {e}")
             return None
 
+    def create_windows_vm(
+        self,
+        name: str,
+        ram_gb: int = 8,
+        cpu_cores: int = 4,
+        disk_gb: int = 64,
+        gpu_passthrough: bool = False,
+        iso_path: Optional[str] = None,
+    ) -> bool:
+        """
+        High-level method to create a Windows VM.
+
+        Args:
+            name: VM name
+            ram_gb: RAM in GB
+            cpu_cores: Number of CPU cores
+            disk_gb: Disk size in GB
+            gpu_passthrough: Whether to enable GPU passthrough
+            iso_path: Path to Windows ISO for installation
+        """
+        import subprocess
+        import shutil
+
+        # Define storage directory
+        storage_base = Path("/var/lib/neuron-os/vms")
+        vm_dir = storage_base / name
+
+        # Ensure directory exists
+        try:
+            vm_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            logger.error(f"Failed to create VM directory {vm_dir}: {e}")
+            return False
+
+        disk_path = vm_dir / "system.qcow2"
+        ovmf_vars_path = vm_dir / "OVMF_VARS.fd"
+
+        try:
+            # 1. Create disk image if it doesn't exist
+            if not disk_path.exists():
+                logger.info(f"Creating {disk_gb}GB disk at {disk_path}")
+                subprocess.run([
+                    "qemu-img", "create", "-f", "qcow2",
+                    str(disk_path), f"{disk_gb}G"
+                ], check=True)
+
+            # 2. Copy OVMF vars for UEFI
+            if not ovmf_vars_path.exists():
+                orig_vars = Path("/usr/share/edk2-ovmf/x64/OVMF_VARS.fd")
+                if orig_vars.exists():
+                    shutil.copy2(orig_vars, ovmf_vars_path)
+                else:
+                    logger.warning("OVMF variables template not found at default location")
+
+            # 3. Handle GPU passthrough
+            template_vars = {
+                "memory_mb": ram_gb * 1024,
+                "cpu_cores": cpu_cores,
+                "vcpus": cpu_cores * 2,
+                "disk_path": str(disk_path),
+                "iso_path": iso_path,
+                "ovmf_vars": str(ovmf_vars_path),
+                "has_gpu": gpu_passthrough
+            }
+
+            if gpu_passthrough:
+                # Use hardware detection to find a candidate if possible
+                try:
+                    # Search for hardware detect scanner
+                    from hardware_detect.gpu_scanner import GPUScanner
+                    scanner = GPUScanner()
+                    candidate = scanner.get_passthrough_candidate()
+
+                    if candidate:
+                        # Parse address like 0000:01:00.0
+                        addr_parts = candidate.pci_address.replace(":", ".").split(".")
+                        if len(addr_parts) == 4:
+                            template_vars.update({
+                                "gpu_domain": f"0x{addr_parts[0]}",
+                                "gpu_bus": f"0x{addr_parts[1]}",
+                                "gpu_slot": f"0x{addr_parts[2]}",
+                                "gpu_function": f"0x{addr_parts[3]}",
+                                "gpu_audio_function": "0x1"
+                            })
+                            logger.info(f"Using GPU {candidate.pci_address} for passthrough")
+                except Exception as e:
+                    logger.warning(f"GPU detection failed: {e}")
+
+            # 4. Define from template
+            uuid = self.create_vm_from_template(
+                "windows11-passthrough.xml.j2",
+                name,
+                **template_vars
+            )
+
+            return uuid is not None
+
+        except Exception as e:
+            logger.error(f"Failed to create Windows VM: {e}")
+            return False
+
     def delete_vm(self, name: str, delete_storage: bool = False) -> bool:
         """
         Delete a virtual machine.

@@ -233,9 +233,6 @@ class WineInstaller(BaseInstaller):
     def install(self, app: AppInfo, progress: InstallProgress) -> bool:
         """
         Install a Windows app via Wine.
-
-        For now, this creates a Wine prefix and opens the installer.
-        Full automation requires app-specific install scripts.
         """
         progress.update(10, "Creating Wine prefix...", InstallStatus.CONFIGURING)
 
@@ -244,10 +241,11 @@ class WineInstaller(BaseInstaller):
 
         env = os.environ.copy()
         env["WINEPREFIX"] = str(prefix_path)
+        env["WINEDEBUG"] = "-all"
 
         # Initialize prefix
         try:
-            progress.update(30, "Initializing Wine prefix...", InstallStatus.CONFIGURING)
+            progress.update(20, "Initializing Wine prefix...", InstallStatus.CONFIGURING)
             subprocess.run(
                 ["wineboot", "--init"],
                 env=env,
@@ -256,14 +254,52 @@ class WineInstaller(BaseInstaller):
             )
         except Exception as e:
             logger.error(f"Failed to initialize Wine prefix: {e}")
+            progress.update(0, "Failed to initialize Wine", InstallStatus.FAILED)
+            return False
 
         # If there's an installer URL, download and run it
-        if hasattr(app, 'installer_url') and app.installer_url:
-            progress.update(50, "Downloading installer...", InstallStatus.DOWNLOADING)
-            # Would download and run installer
-            # For now, just mark as needing manual install
+        installer_url = getattr(app, 'installer_url', None)
+        if installer_url:
+            progress.update(40, "Downloading installer...", InstallStatus.DOWNLOADING)
 
-        progress.update(100, "Wine prefix ready - run installer manually", InstallStatus.COMPLETE)
+            installer_name = Path(installer_url).name or "installer.exe"
+            if not installer_name.lower().endswith(('.exe', '.msi')):
+                installer_name += ".exe"
+
+            download_path = prefix_path / installer_name
+
+            try:
+                import requests
+                response = requests.get(installer_url, stream=True)
+                response.raise_for_status()
+                total_size = int(response.headers.get('content-length', 0))
+
+                with open(download_path, 'wb') as f:
+                    if total_size == 0:
+                        f.write(response.content)
+                    else:
+                        downloaded = 0
+                        for data in response.iter_content(chunk_size=8192):
+                            downloaded += len(data)
+                            f.write(data)
+                            done = int(50 * downloaded / total_size)
+                            progress.update(40 + done, f"Downloading: {downloaded/1024/1024:.1f}MB")
+
+                progress.update(90, "Launching installer...", InstallStatus.INSTALLING)
+                cmd = ["wine", str(download_path)]
+                if installer_name.lower().endswith('.msi'):
+                    cmd = ["wine", "msiexec", "/i", str(download_path)]
+
+                subprocess.Popen(cmd, env=env, start_new_session=True)
+                progress.update(100, "Installer launched - please complete setup", InstallStatus.COMPLETE)
+                return True
+
+            except Exception as e:
+                logger.error(f"Download/Run failed: {e}")
+                progress.update(0, f"Error: {str(e)}", InstallStatus.FAILED)
+                return False
+
+        progress.update(100, "Wine prefix ready", InstallStatus.COMPLETE)
         return True
 
     def uninstall(self, app: AppInfo) -> bool:

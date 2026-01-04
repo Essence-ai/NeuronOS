@@ -117,8 +117,9 @@ class VMCard(QFrame):
 class CreateVMWidget(QWidget):
     """Widget for creating new VMs."""
 
-    def __init__(self):
+    def __init__(self, manager: Optional[LibvirtManager] = None):
         super().__init__()
+        self.manager = manager
 
         layout = QVBoxLayout(self)
 
@@ -202,16 +203,56 @@ class CreateVMWidget(QWidget):
         layout.addStretch()
 
     def _on_create(self):
-        QMessageBox.information(
-            self,
-            "Create VM",
-            f"VM creation will be implemented.\n\n"
-            f"OS: {self.os_combo.currentText()}\n"
-            f"RAM: {self.ram_spin.value()} GB\n"
-            f"CPU: {self.cpu_spin.value()} cores\n"
-            f"Disk: {self.disk_spin.value()} GB\n"
-            f"GPU Passthrough: {'Yes' if self.gpu_check.isChecked() else 'No'}"
+        if not self.manager:
+            QMessageBox.critical(self, "Error", "Libvirt manager not available.")
+            return
+
+        name = f"Neuron-{self.os_combo.currentText().replace(' ', '-')}"
+        ram = self.ram_spin.value()
+        cpu = self.cpu_spin.value()
+        disk = self.disk_spin.value()
+        gpu = self.gpu_check.isChecked()
+
+        # Simple confirmation
+        confirm = QMessageBox.question(
+            self, "Confirm Creation",
+            f"Create {name} with:\n"
+            f"- {ram}GB RAM\n"
+            f"- {cpu} Cores\n"
+            f"- {disk}GB Disk\n"
+            f"- GPU Passthrough: {'Yes' if gpu else 'No'}\n\n"
+            "This will create a new virtual disk. Continue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
+
+        if confirm == QMessageBox.StandardButton.No:
+            return
+
+        # Disable button during creation
+        self.sender().setEnabled(False)
+        self.sender().setText("Creating...")
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+
+        try:
+            success = self.manager.create_windows_vm(
+                name=name,
+                ram_gb=ram,
+                cpu_cores=cpu,
+                disk_gb=disk,
+                gpu_passthrough=gpu
+            )
+
+            if success:
+                QMessageBox.information(self, "Success", f"Successfully created VM: {name}")
+            else:
+                QMessageBox.warning(self, "Error", f"Failed to create VM. Check logs for details.")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An unexpected error occurred: {e}")
+        finally:
+            self.sender().setEnabled(True)
+            self.sender().setText("Create VM")
+            QApplication.restoreOverrideCursor()
 
 
 class NeuronVMWindow(QMainWindow):
@@ -303,7 +344,7 @@ class NeuronVMWindow(QMainWindow):
         tabs.addTab(self.vms_widget, "Virtual Machines")
 
         # Create tab
-        create_widget = CreateVMWidget()
+        create_widget = CreateVMWidget(self.manager)
         tabs.addTab(create_widget, "Create New")
 
         layout.addWidget(tabs)
