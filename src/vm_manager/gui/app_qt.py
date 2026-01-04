@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 try:
     from vm_manager.core.libvirt_manager import LibvirtManager, VMInfo, VMState
+    from vm_manager.core.looking_glass import get_looking_glass_manager
 except ImportError as e:
     print(f"Warning: Could not import libvirt_manager: {e}")
     LibvirtManager = None
@@ -83,6 +84,21 @@ class VMCard(QFrame):
         btn_layout = QVBoxLayout()
 
         if vm_info.state == VMState.RUNNING:
+            display_btn = QPushButton("Display")
+            display_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #0078d4;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    padding: 8px 16px;
+                    margin-bottom: 4px;
+                }
+                QPushButton:hover { background-color: #1084d8; }
+            """)
+            display_btn.clicked.connect(lambda: self.on_action("display", vm_info))
+            btn_layout.addWidget(display_btn)
+
             stop_btn = QPushButton("Stop")
             stop_btn.setStyleSheet("""
                 QPushButton {
@@ -393,6 +409,15 @@ class NeuronVMWindow(QMainWindow):
                 self.status.showMessage(f"Starting {vm_info.name}...")
             else:
                 QMessageBox.warning(self, "Error", f"Failed to start {vm_info.name}")
+        elif action == "display":
+            lg = get_looking_glass_manager()
+            if not lg.is_installed():
+                QMessageBox.information(self, "Looking Glass", "Looking Glass client not found. Please install it to use high-performance display.")
+                return
+
+            self.status.showMessage(f"Launching display for {vm_info.name}...")
+            if not lg.start(vm_info.name):
+                QMessageBox.warning(self, "Error", "Failed to launch Looking Glass display. Ensure the VM has an IVSHMEM device configured.")
         elif action == "stop":
             success = self.manager.stop_vm(vm_info.name)
             if success:
