@@ -672,6 +672,42 @@
       "website": "https://1password.com/",
       "tags": ["security", "passwords", "privacy"],
       "notes": ["Official Linux client available"]
+    },
+    {
+      "id": "notepad-plus-plus",
+      "name": "Notepad++",
+      "description": "Powerful source code editor and Notepad replacement",
+      "category": "development",
+      "layer": "wine",
+      "rating": "perfect",
+      "publisher": "Don Ho",
+      "website": "https://notepad-plus-plus.org/",
+      "installer_url": "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.6/npp.8.6.Installer.x64.exe",
+      "tags": ["editor", "text", "development", "windows"]
+    },
+    {
+      "id": "rufus",
+      "name": "Rufus",
+      "description": "Create bootable USB flash drives easily",
+      "category": "utilities",
+      "layer": "wine",
+      "rating": "perfect",
+      "publisher": "Akeo",
+      "website": "https://rufus.ie/",
+      "installer_url": "https://github.com/pbatard/rufus/releases/download/v4.3/rufus-4.3.exe",
+      "tags": ["usb", "bootable", "iso", "windows"]
+    },
+    {
+      "id": "winrar",
+      "name": "WinRAR",
+      "description": "Powerful archive manager for RAR and ZIP files",
+      "category": "utilities",
+      "layer": "wine",
+      "rating": "perfect",
+      "publisher": "RARLAB",
+      "website": "https://www.rarlab.com/",
+      "installer_url": "https://www.rarlab.com/rar/winrar-x64-624.exe",
+      "tags": ["archive", "compression", "rar", "zip"]
     }
   ]
 }
