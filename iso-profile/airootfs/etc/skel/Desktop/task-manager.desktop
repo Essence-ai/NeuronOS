@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Task Manager
+Comment=Monitor system processes
+Icon=utilities-system-monitor
+Exec=qterminal -e htop
+Terminal=false
+Categories=System;Monitor;

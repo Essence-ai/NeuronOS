@@ -44,6 +44,5 @@ file_permissions=(
   ["/usr/bin/neuron-store"]="0:0:755"
   ["/usr/bin/neuron-welcome"]="0:0:755"
   ["/usr/lib/neuron-os"]="0:0:755"
-  ["/usr/lib/neuron-os/neuron-init.sh"]="0:0:755"
   ["/home/liveuser"]="1000:1000:755"
 )

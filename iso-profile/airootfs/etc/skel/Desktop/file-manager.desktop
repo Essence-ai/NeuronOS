@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=File Manager
+Comment=Browse files and folders
+Icon=folder
+Exec=pcmanfm-qt
+Terminal=false
+Categories=System;

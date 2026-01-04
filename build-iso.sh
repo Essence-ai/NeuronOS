@@ -101,12 +101,6 @@ enable_services() {
     # Enable libvirtd for VM management
     ln -sf /usr/lib/systemd/system/libvirtd.service "${systemd_dir}/multi-user.target.wants/libvirtd.service"
 
-    # Enable NeuronOS init service (backup for network)
-    ln -sf /etc/systemd/system/neuron-init.service "${systemd_dir}/multi-user.target.wants/neuron-init.service"
-
-    # Make neuron-init.sh executable
-    chmod +x "${PROFILE_DIR}/airootfs/usr/lib/neuron-os/neuron-init.sh" 2>/dev/null || true
-
     log_info "Systemd services configured"
 }
 

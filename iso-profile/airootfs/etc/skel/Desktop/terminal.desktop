@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Terminal
+Comment=Command line interface
+Icon=utilities-terminal
+Exec=qterminal
+Terminal=false
+Categories=System;
