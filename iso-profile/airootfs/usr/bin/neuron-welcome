@@ -9,5 +9,5 @@ zenity --question \
     --width=400
 
 if [ $? -eq 0 ]; then
-    sudo calamares &
+    qterminal -e sudo archinstall &
 fi
