@@ -55,11 +55,11 @@
       "name": "Visual Studio Code",
       "description": "Lightweight but powerful source code editor",
       "category": "development",
-      "layer": "native",
+      "layer": "flatpak",
       "rating": "perfect",
       "publisher": "Microsoft",
       "website": "https://code.visualstudio.com/",
-      "package_name": "code",
+      "package_name": "com.visualstudio.code",
       "tags": ["editor", "ide", "programming", "development"]
     },
     {
@@ -67,11 +67,11 @@
       "name": "Discord",
       "description": "Voice, video, and text chat for gamers and communities",
       "category": "communication",
-      "layer": "native",
+      "layer": "flatpak",
       "rating": "perfect",
       "publisher": "Discord Inc.",
       "website": "https://discord.com/",
-      "package_name": "discord",
+      "package_name": "com.discordapp.Discord",
       "tags": ["chat", "voice", "gaming", "community"]
     },
     {

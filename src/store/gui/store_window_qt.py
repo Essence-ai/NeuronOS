@@ -303,8 +303,10 @@ class NeuronStoreWindow(QMainWindow):
 
         # Header bar
         header = QWidget()
-        header.setStyleSheet("background-color: #2d2d2d; padding: 8px;")
+        header.setFixedHeight(56)
+        header.setStyleSheet("background-color: #2d2d2d;")
         header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(16, 8, 16, 8)
 
         title = QLabel("NeuronStore")
         title.setFont(QFont("", 14, QFont.Weight.Bold))

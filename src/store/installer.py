@@ -300,11 +300,74 @@ class WineInstaller(BaseInstaller):
                 return False
 
         progress.update(100, "Wine prefix ready", InstallStatus.COMPLETE)
+
+        # Create desktop entry so the app can be found
+        self._create_desktop_entry(app)
+
         return True
+
+    def _create_desktop_entry(self, app: AppInfo) -> None:
+        """Create a .desktop file for the Wine app."""
+        prefix_path = self._get_prefix_path(app)
+
+        # Create desktop entry in user's applications folder
+        desktop_dir = Path.home() / ".local/share/applications"
+        desktop_dir.mkdir(parents=True, exist_ok=True)
+
+        desktop_file = desktop_dir / f"neuron-wine-{app.id}.desktop"
+
+        # Create a launcher script
+        launcher_dir = Path.home() / ".local/share/neuron-os/launchers"
+        launcher_dir.mkdir(parents=True, exist_ok=True)
+        launcher_script = launcher_dir / f"{app.id}.sh"
+
+        # Write launcher script
+        launcher_content = f"""#!/bin/bash
+export WINEPREFIX="{prefix_path}"
+export WINEDEBUG="-all"
+
+# Find the main executable in the Wine prefix
+EXE_PATH=$(find "$WINEPREFIX/drive_c" -iname "*.exe" -type f 2>/dev/null | grep -iv uninstall | grep -iv setup | head -1)
+
+if [ -n "$EXE_PATH" ]; then
+    wine "$EXE_PATH" "$@"
+else
+    # Open file manager at prefix location for manual selection
+    xdg-open "$WINEPREFIX/drive_c"
+fi
+"""
+        try:
+            launcher_script.write_text(launcher_content)
+            launcher_script.chmod(0o755)
+
+            # Write desktop entry
+            desktop_content = f"""[Desktop Entry]
+Name={app.name}
+Comment={app.description}
+Exec={launcher_script}
+Icon=wine
+Type=Application
+Categories=Wine;Application;
+Keywords={';'.join(getattr(app, 'tags', []))};
+"""
+            desktop_file.write_text(desktop_content)
+            logger.info(f"Created desktop entry for {app.name}")
+        except Exception as e:
+            logger.warning(f"Failed to create desktop entry: {e}")
 
     def uninstall(self, app: AppInfo) -> bool:
         """Remove Wine prefix for an app."""
         prefix_path = self._get_prefix_path(app)
+
+        # Remove desktop entry and launcher
+        desktop_file = Path.home() / ".local/share/applications" / f"neuron-wine-{app.id}.desktop"
+        launcher_script = Path.home() / ".local/share/neuron-os/launchers" / f"{app.id}.sh"
+
+        if desktop_file.exists():
+            desktop_file.unlink()
+        if launcher_script.exists():
+            launcher_script.unlink()
+
         if prefix_path.exists():
             shutil.rmtree(prefix_path)
             return True
