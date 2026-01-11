@@ -10,13 +10,13 @@ from __future__ import annotations
 import logging
 import threading
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, GLib, Pango
+from gi.repository import Gtk, Adw, GLib, Pango  # noqa: E402
 
 if TYPE_CHECKING:
     from .wizard import OnboardingWizard
@@ -152,7 +152,6 @@ class HardwareCheckPage(WizardPage):
 
     def _do_hardware_check(self):
         """Perform hardware check (runs in background thread)."""
-        import time
 
         results = {
             "cpu_vendor": "Unknown",

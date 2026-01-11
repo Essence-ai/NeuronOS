@@ -11,7 +11,7 @@ from store.installer import _safe_filename, _ensure_within_directory, _verify_do
 from vm_manager.gui.app import _validate_vm_name
 from utils.atomic_write import atomic_write_text, atomic_write_json
 from migration.migrator import Migrator, FileCategory
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 def test_safe_filename_protection():
     """Verify SEC-002: _safe_filename prevents path traversal."""

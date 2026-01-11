@@ -4,7 +4,7 @@ Unit tests for hardware_detect module.
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch, MagicMock
 from pathlib import Path
 import sys
 

@@ -11,7 +11,7 @@ It now delegates to specialized modules:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Optional, List, Callable
@@ -25,9 +25,10 @@ except ImportError:
     libvirt = None
 
 # Import new modular components
-from .connection import LibvirtConnection, get_connection
+from .connection import LibvirtConnection
 from .vm_lifecycle import VMLifecycleManager, ShutdownMethod
 from .vm_creator import VMCreator
+from .vm_config import VMConfig
 
 logger = logging.getLogger(__name__)
 

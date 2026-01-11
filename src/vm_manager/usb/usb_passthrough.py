@@ -13,8 +13,8 @@ import logging
 import os
 import subprocess
 from pathlib import Path
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Set
+from dataclasses import dataclass
+from typing import Optional, List, Dict
 from enum import Enum
 import json
 import re

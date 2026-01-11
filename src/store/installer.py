@@ -17,7 +17,7 @@ import shutil
 import hashlib
 from abc import ABC, abstractmethod
 from pathlib import Path, PurePosixPath
-from typing import Optional, Callable, Dict, Any, List
+from typing import Optional, Callable, Dict, List
 from dataclasses import dataclass
 from enum import Enum
 from urllib.parse import urlparse, unquote
@@ -277,7 +277,7 @@ class FlatpakInstaller(BaseInstaller):
                 return True
             else:
                 logger.error(f"Flatpak install failed: {result.stderr}")
-                progress.update(0, f"Installation failed", InstallStatus.FAILED)
+                progress.update(0, "Installation failed", InstallStatus.FAILED)
                 return False
 
         except subprocess.TimeoutExpired:

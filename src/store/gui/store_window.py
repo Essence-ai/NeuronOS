@@ -19,13 +19,13 @@ from typing import Optional, List, Callable
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Gtk, Adw, GLib, Gio, Pango
+from gi.repository import Gtk, Adw, GLib, Gio, Pango  # noqa: E402
 
-from ..app_catalog import (
+from ..app_catalog import (  # noqa: E402
     AppCatalog, AppInfo, AppCategory,
     CompatibilityLayer, CompatibilityRating
 )
-from ..installer import AppInstaller, InstallStatus
+from ..installer import AppInstaller, InstallStatus  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

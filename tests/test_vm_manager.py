@@ -10,9 +10,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from vm_manager.core.vm_config import (
-    VMConfig, VMType, VMState, DisplayMode,
-    CPUConfig, MemoryConfig, StorageConfig,
-    GPUPassthroughConfig, windows11_gaming_preset,
+    VMConfig, VMType, CPUConfig, MemoryConfig, GPUPassthroughConfig, windows11_gaming_preset,
 )
 
 
@@ -148,7 +146,7 @@ class TestGPUPassthroughManager:
         mock_exists.return_value = True
         mock_resolve.return_value = Path("/sys/bus/pci/drivers/nvidia")
 
-        manager = GPUPassthroughManager()
+        _manager = GPUPassthroughManager()  # noqa: F841 - instance validates interface
         # Would return "nvidia" if sysfs existed
         # This is a unit test showing the interface works
 

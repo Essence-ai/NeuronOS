@@ -15,11 +15,11 @@ from pathlib import Path
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QLineEdit, QScrollArea, QFrame,
-    QListWidget, QListWidgetItem, QProgressBar, QGridLayout,
+    QListWidget, QProgressBar, QGridLayout,
     QSplitter, QStatusBar
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
-from PyQt6.QtGui import QFont, QIcon
+from PyQt6.QtGui import QFont
 
 # Add parent to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -28,7 +28,7 @@ from store.app_catalog import (
     AppCatalog, AppInfo, AppCategory,
     CompatibilityLayer, CompatibilityRating
 )
-from store.installer import AppInstaller, InstallStatus
+from store.installer import AppInstaller
 
 logger = logging.getLogger(__name__)
 

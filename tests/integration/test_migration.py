@@ -143,7 +143,7 @@ class TestBrowserProfileMigration:
         migrator = WindowsMigrator(source, target)
         
         # Migrate browser profile
-        result = migrator._migrate_browser_profile(
+        _result = migrator._migrate_browser_profile(  # noqa: F841 - result verified by assertions
             source_home / "AppData/Local/Google/Chrome/User Data",
             target_home / ".config/google-chrome",
             exclude_caches=True,

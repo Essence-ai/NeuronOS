@@ -7,11 +7,10 @@ This is the core component for automatic VFIO configuration.
 """
 
 import os
-import re
 import json
 import subprocess
 from pathlib import Path
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict
 from typing import List, Optional
 
 
@@ -336,7 +335,7 @@ def main():
     args = parser.parse_args()
 
     scanner = GPUScanner()
-    gpus = scanner.scan()
+    _gpus = scanner.scan()  # noqa: F841 - scan populates scanner.devices
 
     if args.json:
         print(scanner.to_json())

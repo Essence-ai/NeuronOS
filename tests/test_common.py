@@ -4,7 +4,6 @@ Tests for common module (Phase 4 error handling).
 
 import pytest
 import logging
-from unittest.mock import MagicMock, patch
 import time
 
 

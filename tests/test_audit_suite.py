@@ -12,27 +12,20 @@ if not hasattr(os, "getuid"):
 if not hasattr(os, "geteuid"):
     os.geteuid = lambda: 1000
 
-import pytest
-import logging
-import time
-import os
-import re
-import json
-from pathlib import Path
-from unittest.mock import patch, mock_open
+import pytest  # noqa: E402
+import os  # noqa: E402
+from pathlib import Path  # noqa: E402
+from unittest.mock import patch  # noqa: E402
 
-# Import targets
+# Import targets  # noqa: E402
 # ...
-from common.exceptions import (
-    NeuronError, VMNotFoundError, IOMMUError
+from common.decorators import (  # noqa: E402
+    retry, require_root
 )
-from common.decorators import (
-    handle_errors, retry, require_root
-)
-from common.resources import ManagedResource
-from vm_manager.gui.app import _validate_vm_name
-from store.installer import _safe_filename, _ensure_within_directory, ProtonInstaller
-from vm_manager.core.guest_client import GuestAgentClient, CommandType, GuestAgentResponse
+from common.resources import ManagedResource  # noqa: E402
+from vm_manager.gui.app import _validate_vm_name  # noqa: E402
+from store.installer import _safe_filename, _ensure_within_directory, ProtonInstaller  # noqa: E402
+from vm_manager.core.guest_client import GuestAgentClient, CommandType, GuestAgentResponse  # noqa: E402
 
 
 # =============================================================================
@@ -106,9 +99,15 @@ class TestPhase2Features:
         installer = ProtonInstaller()
         
         # Mock directory structure
-        m1 = MagicMock(); m1.is_dir.return_value = True; m1.name = "Proton 8.0"
-        m2 = MagicMock(); m2.is_dir.return_value = True; m2.name = "Proton 7.0"
-        m3 = MagicMock(); m3.is_dir.return_value = False; m3.name = "not-a-proton-dir"
+        m1 = MagicMock()
+        m1.is_dir.return_value = True
+        m1.name = "Proton 8.0"
+        m2 = MagicMock()
+        m2.is_dir.return_value = True
+        m2.name = "Proton 7.0"
+        m3 = MagicMock()
+        m3.is_dir.return_value = False
+        m3.name = "not-a-proton-dir"
         mock_dirs = [m1, m2, m3]
         
         with patch.object(Path, "exists", return_value=True), \

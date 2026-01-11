@@ -9,11 +9,10 @@ GPU framebuffer via IVSHMEM (Inter-VM Shared Memory).
 
 import os
 import subprocess
-import signal
 import shutil
 from pathlib import Path
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict
 from enum import Enum
 import json
 import time
@@ -275,7 +274,7 @@ class LookingGlassManager:
                 self._states[vm_name] = LookingGlassState.ERROR
                 return False
 
-        except Exception as e:
+        except Exception:
             self._states[vm_name] = LookingGlassState.ERROR
             return False
 

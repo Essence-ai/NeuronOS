@@ -21,7 +21,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Callable
-from queue import Queue, Empty
 import ssl
 import subprocess
 

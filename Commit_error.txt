@@ -1,0 +1,1475 @@
+2026-01-11T14:36:25.8443756Z Current runner version: '2.330.0'
+2026-01-11T14:36:25.8476784Z ##[group]Runner Image Provisioner
+2026-01-11T14:36:25.8477853Z Hosted Compute Agent
+2026-01-11T14:36:25.8478733Z Version: 20251211.462
+2026-01-11T14:36:25.8479817Z Commit: 6cbad8c2bb55d58165063d031ccabf57e2d2db61
+2026-01-11T14:36:25.8481355Z Build Date: 2025-12-11T16:28:49Z
+2026-01-11T14:36:25.8482423Z Worker ID: {85751573-a386-4742-a2bc-608a0c5ce859}
+2026-01-11T14:36:25.8483758Z ##[endgroup]
+2026-01-11T14:36:25.8484918Z ##[group]Operating System
+2026-01-11T14:36:25.8485901Z Ubuntu
+2026-01-11T14:36:25.8486772Z 24.04.3
+2026-01-11T14:36:25.8487568Z LTS
+2026-01-11T14:36:25.8488363Z ##[endgroup]
+2026-01-11T14:36:25.8489143Z ##[group]Runner Image
+2026-01-11T14:36:25.8490129Z Image: ubuntu-24.04
+2026-01-11T14:36:25.8490935Z Version: 20260105.202.1
+2026-01-11T14:36:25.8492655Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260105.202/images/ubuntu/Ubuntu2404-Readme.md
+2026-01-11T14:36:25.8495635Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260105.202
+2026-01-11T14:36:25.8497374Z ##[endgroup]
+2026-01-11T14:36:25.8499157Z ##[group]GITHUB_TOKEN Permissions
+2026-01-11T14:36:25.8502016Z Contents: read
+2026-01-11T14:36:25.8502869Z Metadata: read
+2026-01-11T14:36:25.8503685Z Packages: read
+2026-01-11T14:36:25.8505002Z ##[endgroup]
+2026-01-11T14:36:25.8508251Z Secret source: Actions
+2026-01-11T14:36:25.8509394Z Prepare workflow directory
+2026-01-11T14:36:25.9036806Z Prepare all required actions
+2026-01-11T14:36:25.9091620Z Getting action download info
+2026-01-11T14:36:26.1587990Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-01-11T14:36:26.2615509Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-01-11T14:36:26.4465430Z Complete job name: Lint
+2026-01-11T14:36:26.5121339Z ##[group]Run actions/checkout@v4
+2026-01-11T14:36:26.5122125Z with:
+2026-01-11T14:36:26.5122532Z   repository: Essence-ai/NeuronOS
+2026-01-11T14:36:26.5123197Z   token: ***
+2026-01-11T14:36:26.5123576Z   ssh-strict: true
+2026-01-11T14:36:26.5123966Z   ssh-user: git
+2026-01-11T14:36:26.5124750Z   persist-credentials: true
+2026-01-11T14:36:26.5125203Z   clean: true
+2026-01-11T14:36:26.5125595Z   sparse-checkout-cone-mode: true
+2026-01-11T14:36:26.5126064Z   fetch-depth: 1
+2026-01-11T14:36:26.5126440Z   fetch-tags: false
+2026-01-11T14:36:26.5126833Z   show-progress: true
+2026-01-11T14:36:26.5127234Z   lfs: false
+2026-01-11T14:36:26.5127601Z   submodules: false
+2026-01-11T14:36:26.5128000Z   set-safe-directory: true
+2026-01-11T14:36:26.5128725Z env:
+2026-01-11T14:36:26.5129106Z   PYTHON_VERSION: 3.11
+2026-01-11T14:36:26.5129520Z ##[endgroup]
+2026-01-11T14:36:26.6180396Z Syncing repository: Essence-ai/NeuronOS
+2026-01-11T14:36:26.6182038Z ##[group]Getting Git version info
+2026-01-11T14:36:26.6182773Z Working directory is '/home/runner/work/NeuronOS/NeuronOS'
+2026-01-11T14:36:26.6183692Z [command]/usr/bin/git version
+2026-01-11T14:36:26.6273223Z git version 2.52.0
+2026-01-11T14:36:26.6298897Z ##[endgroup]
+2026-01-11T14:36:26.6312720Z Temporarily overriding HOME='/home/runner/work/_temp/3ce82878-f6c7-4a12-8024-05a4da1eefe6' before making global git config changes
+2026-01-11T14:36:26.6314385Z Adding repository directory to the temporary git global config as a safe directory
+2026-01-11T14:36:26.6325276Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/NeuronOS/NeuronOS
+2026-01-11T14:36:26.6363952Z Deleting the contents of '/home/runner/work/NeuronOS/NeuronOS'
+2026-01-11T14:36:26.6367539Z ##[group]Initializing the repository
+2026-01-11T14:36:26.6371769Z [command]/usr/bin/git init /home/runner/work/NeuronOS/NeuronOS
+2026-01-11T14:36:26.6485043Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-01-11T14:36:26.6486637Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-01-11T14:36:26.6488485Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-01-11T14:36:26.6490333Z hint: call:
+2026-01-11T14:36:26.6491052Z hint:
+2026-01-11T14:36:26.6491766Z hint: 	git config --global init.defaultBranch <name>
+2026-01-11T14:36:26.6492446Z hint:
+2026-01-11T14:36:26.6493074Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-01-11T14:36:26.6494336Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-01-11T14:36:26.6495229Z hint:
+2026-01-11T14:36:26.6495812Z hint: 	git branch -m <name>
+2026-01-11T14:36:26.6496490Z hint:
+2026-01-11T14:36:26.6497068Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-01-11T14:36:26.6498017Z Initialized empty Git repository in /home/runner/work/NeuronOS/NeuronOS/.git/
+2026-01-11T14:36:26.6501293Z [command]/usr/bin/git remote add origin https://github.com/Essence-ai/NeuronOS
+2026-01-11T14:36:26.6534845Z ##[endgroup]
+2026-01-11T14:36:26.6535551Z ##[group]Disabling automatic garbage collection
+2026-01-11T14:36:26.6538886Z [command]/usr/bin/git config --local gc.auto 0
+2026-01-11T14:36:26.6566127Z ##[endgroup]
+2026-01-11T14:36:26.6566782Z ##[group]Setting up auth
+2026-01-11T14:36:26.6572473Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-01-11T14:36:26.6602154Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-01-11T14:36:26.6960833Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-01-11T14:36:26.6989022Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-01-11T14:36:26.7202054Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-01-11T14:36:26.7230032Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-01-11T14:36:26.7455702Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-01-11T14:36:26.7489213Z ##[endgroup]
+2026-01-11T14:36:26.7490450Z ##[group]Fetching the repository
+2026-01-11T14:36:26.7499071Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +27ef646cf5ac9913d0b8904f439123f87d73ae2d:refs/remotes/origin/main
+2026-01-11T14:36:27.1285628Z From https://github.com/Essence-ai/NeuronOS
+2026-01-11T14:36:27.1286981Z  * [new ref]         27ef646cf5ac9913d0b8904f439123f87d73ae2d -> origin/main
+2026-01-11T14:36:27.1319117Z ##[endgroup]
+2026-01-11T14:36:27.1319882Z ##[group]Determining the checkout info
+2026-01-11T14:36:27.1321273Z ##[endgroup]
+2026-01-11T14:36:27.1326248Z [command]/usr/bin/git sparse-checkout disable
+2026-01-11T14:36:27.1368642Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-01-11T14:36:27.1394779Z ##[group]Checking out the ref
+2026-01-11T14:36:27.1397919Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-01-11T14:36:27.1920088Z Switched to a new branch 'main'
+2026-01-11T14:36:27.1923289Z branch 'main' set up to track 'origin/main'.
+2026-01-11T14:36:27.1935068Z ##[endgroup]
+2026-01-11T14:36:27.1977726Z [command]/usr/bin/git log -1 --format=%H
+2026-01-11T14:36:27.2001182Z 27ef646cf5ac9913d0b8904f439123f87d73ae2d
+2026-01-11T14:36:27.2259120Z ##[group]Run actions/setup-python@v5
+2026-01-11T14:36:27.2259780Z with:
+2026-01-11T14:36:27.2260174Z   python-version: 3.11
+2026-01-11T14:36:27.2260657Z   check-latest: false
+2026-01-11T14:36:27.2261277Z   token: ***
+2026-01-11T14:36:27.2261693Z   update-environment: true
+2026-01-11T14:36:27.2262224Z   allow-prereleases: false
+2026-01-11T14:36:27.2262717Z   freethreaded: false
+2026-01-11T14:36:27.2263154Z env:
+2026-01-11T14:36:27.2263521Z   PYTHON_VERSION: 3.11
+2026-01-11T14:36:27.2264408Z ##[endgroup]
+2026-01-11T14:36:27.3922445Z ##[group]Installed versions
+2026-01-11T14:36:27.4044523Z Successfully set up CPython (3.11.14)
+2026-01-11T14:36:27.4046221Z ##[endgroup]
+2026-01-11T14:36:27.4169742Z ##[group]Run pip install ruff black
+2026-01-11T14:36:27.4170526Z [36;1mpip install ruff black[0m
+2026-01-11T14:36:27.4221266Z shell: /usr/bin/bash -e {0}
+2026-01-11T14:36:27.4221820Z env:
+2026-01-11T14:36:27.4222205Z   PYTHON_VERSION: 3.11
+2026-01-11T14:36:27.4222838Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.14/x64
+2026-01-11T14:36:27.4223837Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib/pkgconfig
+2026-01-11T14:36:27.4225304Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2026-01-11T14:36:27.4226228Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2026-01-11T14:36:27.4227141Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2026-01-11T14:36:27.4228084Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib
+2026-01-11T14:36:27.4228889Z ##[endgroup]
+2026-01-11T14:36:28.6576106Z Collecting ruff
+2026-01-11T14:36:28.9393081Z   Downloading ruff-0.14.11-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (26 kB)
+2026-01-11T14:36:29.0054821Z Collecting black
+2026-01-11T14:36:29.0132227Z   Downloading black-25.12.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (86 kB)
+2026-01-11T14:36:29.0594742Z Collecting click>=8.0.0 (from black)
+2026-01-11T14:36:29.0669303Z   Downloading click-8.3.1-py3-none-any.whl.metadata (2.6 kB)
+2026-01-11T14:36:29.0825854Z Collecting mypy-extensions>=0.4.3 (from black)
+2026-01-11T14:36:29.0901530Z   Downloading mypy_extensions-1.1.0-py3-none-any.whl.metadata (1.1 kB)
+2026-01-11T14:36:29.1097319Z Collecting packaging>=22.0 (from black)
+2026-01-11T14:36:29.1607799Z   Downloading packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+2026-01-11T14:36:29.1815389Z Collecting pathspec>=0.9.0 (from black)
+2026-01-11T14:36:29.1889621Z   Downloading pathspec-1.0.3-py3-none-any.whl.metadata (13 kB)
+2026-01-11T14:36:29.2151356Z Collecting platformdirs>=2 (from black)
+2026-01-11T14:36:29.2229795Z   Downloading platformdirs-4.5.1-py3-none-any.whl.metadata (12 kB)
+2026-01-11T14:36:29.2399621Z Collecting pytokens>=0.3.0 (from black)
+2026-01-11T14:36:29.2470322Z   Downloading pytokens-0.3.0-py3-none-any.whl.metadata (2.0 kB)
+2026-01-11T14:36:29.2604561Z Downloading ruff-0.14.11-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (13.8 MB)
+2026-01-11T14:36:29.5822098Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.8/13.8 MB 45.9 MB/s  0:00:00
+2026-01-11T14:36:29.5898738Z Downloading black-25.12.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.8 MB)
+2026-01-11T14:36:29.6081777Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 100.6 MB/s  0:00:00
+2026-01-11T14:36:29.6160654Z Downloading click-8.3.1-py3-none-any.whl (108 kB)
+2026-01-11T14:36:29.6280627Z Downloading mypy_extensions-1.1.0-py3-none-any.whl (5.0 kB)
+2026-01-11T14:36:29.6375250Z Downloading packaging-25.0-py3-none-any.whl (66 kB)
+2026-01-11T14:36:29.6474856Z Downloading pathspec-1.0.3-py3-none-any.whl (55 kB)
+2026-01-11T14:36:29.6568029Z Downloading platformdirs-4.5.1-py3-none-any.whl (18 kB)
+2026-01-11T14:36:29.6667256Z Downloading pytokens-0.3.0-py3-none-any.whl (12 kB)
+2026-01-11T14:36:29.7122725Z Installing collected packages: ruff, pytokens, platformdirs, pathspec, packaging, mypy-extensions, click, black
+2026-01-11T14:36:30.1915189Z 
+2026-01-11T14:36:30.1928365Z Successfully installed black-25.12.0 click-8.3.1 mypy-extensions-1.1.0 packaging-25.0 pathspec-1.0.3 platformdirs-4.5.1 pytokens-0.3.0 ruff-0.14.11
+2026-01-11T14:36:30.3773631Z ##[group]Run ruff check src/ tests/ --ignore E501
+2026-01-11T14:36:30.3774064Z [36;1mruff check src/ tests/ --ignore E501[0m
+2026-01-11T14:36:30.3808769Z shell: /usr/bin/bash -e {0}
+2026-01-11T14:36:30.3809011Z env:
+2026-01-11T14:36:30.3809186Z   PYTHON_VERSION: 3.11
+2026-01-11T14:36:30.3809479Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.14/x64
+2026-01-11T14:36:30.3810139Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib/pkgconfig
+2026-01-11T14:36:30.3810556Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2026-01-11T14:36:30.3810916Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2026-01-11T14:36:30.3811288Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.14/x64
+2026-01-11T14:36:30.3811660Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.14/x64/lib
+2026-01-11T14:36:30.3811956Z ##[endgroup]
+2026-01-11T14:36:30.4061240Z F401 [*] `dataclasses.field` imported but unused
+2026-01-11T14:36:30.4061958Z   --> src/common/features.py:10:36
+2026-01-11T14:36:30.4062254Z    |
+2026-01-11T14:36:30.4062421Z  9 | import logging
+2026-01-11T14:36:30.4062848Z 10 | from dataclasses import dataclass, field
+2026-01-11T14:36:30.4063305Z    |                                    ^^^^^
+2026-01-11T14:36:30.4063812Z 11 | from typing import Optional, Callable, Any, Dict
+2026-01-11T14:36:30.4064486Z    |
+2026-01-11T14:36:30.4064858Z help: Remove unused import: `dataclasses.field`
+2026-01-11T14:36:30.4065208Z 
+2026-01-11T14:36:30.4065401Z F401 [*] `gi.repository.Gtk` imported but unused
+2026-01-11T14:36:30.4065883Z    --> src/common/features.py:182:35
+2026-01-11T14:36:30.4066266Z     |
+2026-01-11T14:36:30.4066559Z 180 |     """Check if GTK is available."""
+2026-01-11T14:36:30.4066974Z 181 |     try:
+2026-01-11T14:36:30.4067301Z 182 |         from gi.repository import Gtk
+2026-01-11T14:36:30.4067734Z     |                                   ^^^
+2026-01-11T14:36:30.4068128Z 183 |         return True
+2026-01-11T14:36:30.4068473Z 184 |     except Exception:
+2026-01-11T14:36:30.4068824Z     |
+2026-01-11T14:36:30.4069157Z help: Remove unused import: `gi.repository.Gtk`
+2026-01-11T14:36:30.4069506Z 
+2026-01-11T14:36:30.4069669Z F541 [*] f-string without any placeholders
+2026-01-11T14:36:30.4070199Z    --> src/hardware_detect/config_generator.py:329:19
+2026-01-11T14:36:30.4070679Z     |
+2026-01-11T14:36:30.4070986Z 327 |         # Check if params already present
+2026-01-11T14:36:30.4136157Z 328 |         if params in content:
+2026-01-11T14:36:30.4137090Z 329 |             print(f"✓ Kernel params already in GRUB config")
+2026-01-11T14:36:30.4137752Z     |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4138269Z 330 |             return
+2026-01-11T14:36:30.4138592Z     |
+2026-01-11T14:36:30.4138881Z help: Remove extraneous `f` prefix
+2026-01-11T14:36:30.4139176Z 
+2026-01-11T14:36:30.4139356Z F401 [*] `typing.Optional` imported but unused
+2026-01-11T14:36:30.4139866Z   --> src/hardware_detect/cpu_detect.py:14:20
+2026-01-11T14:36:30.4140300Z    |
+2026-01-11T14:36:30.4140649Z 12 | from pathlib import Path
+2026-01-11T14:36:30.4141081Z 13 | from dataclasses import dataclass
+2026-01-11T14:36:30.4141519Z 14 | from typing import Optional
+2026-01-11T14:36:30.4141898Z    |                    ^^^^^^^^
+2026-01-11T14:36:30.4142115Z    |
+2026-01-11T14:36:30.4142321Z help: Remove unused import: `typing.Optional`
+2026-01-11T14:36:30.4142540Z 
+2026-01-11T14:36:30.4142630Z F401 [*] `re` imported but unused
+2026-01-11T14:36:30.4142889Z   --> src/hardware_detect/gpu_scanner.py:10:8
+2026-01-11T14:36:30.4143150Z    |
+2026-01-11T14:36:30.4143312Z  9 | import os
+2026-01-11T14:36:30.4143481Z 10 | import re
+2026-01-11T14:36:30.4143652Z    |        ^^
+2026-01-11T14:36:30.4143812Z 11 | import json
+2026-01-11T14:36:30.4143999Z 12 | import subprocess
+2026-01-11T14:36:30.4144414Z    |
+2026-01-11T14:36:30.4144721Z help: Remove unused import: `re`
+2026-01-11T14:36:30.4144989Z 
+2026-01-11T14:36:30.4145184Z F401 [*] `dataclasses.field` imported but unused
+2026-01-11T14:36:30.4145992Z   --> src/hardware_detect/gpu_scanner.py:14:44
+2026-01-11T14:36:30.4146458Z    |
+2026-01-11T14:36:30.4146636Z 12 | import subprocess
+2026-01-11T14:36:30.4146879Z 13 | from pathlib import Path
+2026-01-11T14:36:30.4147195Z 14 | from dataclasses import dataclass, asdict, field
+2026-01-11T14:36:30.4147510Z    |                                            ^^^^^
+2026-01-11T14:36:30.4147948Z 15 | from typing import List, Optional
+2026-01-11T14:36:30.4148182Z    |
+2026-01-11T14:36:30.4148393Z help: Remove unused import: `dataclasses.field`
+2026-01-11T14:36:30.4148594Z 
+2026-01-11T14:36:30.4148731Z F841 Local variable `gpus` is assigned to but never used
+2026-01-11T14:36:30.4149068Z    --> src/hardware_detect/gpu_scanner.py:339:5
+2026-01-11T14:36:30.4149325Z     |
+2026-01-11T14:36:30.4149504Z 338 |     scanner = GPUScanner()
+2026-01-11T14:36:30.4149736Z 339 |     gpus = scanner.scan()
+2026-01-11T14:36:30.4149954Z     |     ^^^^
+2026-01-11T14:36:30.4150121Z 340 |
+2026-01-11T14:36:30.4150279Z 341 |     if args.json:
+2026-01-11T14:36:30.4150477Z     |
+2026-01-11T14:36:30.4150726Z help: Remove assignment to unused variable `gpus`
+2026-01-11T14:36:30.4150937Z 
+2026-01-11T14:36:30.4151046Z F401 [*] `os` imported but unused
+2026-01-11T14:36:30.4151319Z   --> src/hardware_detect/iommu_parser.py:10:8
+2026-01-11T14:36:30.4151592Z    |
+2026-01-11T14:36:30.4151740Z  8 | """
+2026-01-11T14:36:30.4151904Z  9 |
+2026-01-11T14:36:30.4152068Z 10 | import os
+2026-01-11T14:36:30.4152245Z    |        ^^
+2026-01-11T14:36:30.4152429Z 11 | import subprocess
+2026-01-11T14:36:30.4152635Z 12 | from pathlib import Path
+2026-01-11T14:36:30.4152847Z    |
+2026-01-11T14:36:30.4153013Z help: Remove unused import: `os`
+2026-01-11T14:36:30.4153168Z 
+2026-01-11T14:36:30.4153283Z F401 [*] `typing.Optional` imported but unused
+2026-01-11T14:36:30.4153554Z   --> src/migration/cli.py:12:20
+2026-01-11T14:36:30.4153769Z    |
+2026-01-11T14:36:30.4153920Z 10 | import sys
+2026-01-11T14:36:30.4154113Z 11 | from pathlib import Path
+2026-01-11T14:36:30.4154954Z 12 | from typing import Optional
+2026-01-11T14:36:30.4155195Z    |                    ^^^^^^^^
+2026-01-11T14:36:30.4155400Z 13 |
+2026-01-11T14:36:30.4155637Z 14 | from .drive_detector import DriveDetector, DriveType
+2026-01-11T14:36:30.4155944Z    |
+2026-01-11T14:36:30.4156144Z help: Remove unused import: `typing.Optional`
+2026-01-11T14:36:30.4156347Z 
+2026-01-11T14:36:30.4156434Z F401 [*] `os` imported but unused
+2026-01-11T14:36:30.4156685Z   --> src/migration/migrator.py:11:8
+2026-01-11T14:36:30.4156918Z    |
+2026-01-11T14:36:30.4157068Z 10 | import logging
+2026-01-11T14:36:30.4157252Z 11 | import os
+2026-01-11T14:36:30.4157414Z    |        ^^
+2026-01-11T14:36:30.4157586Z 12 | import shutil
+2026-01-11T14:36:30.4157803Z 13 | from dataclasses import dataclass, field
+2026-01-11T14:36:30.4158056Z    |
+2026-01-11T14:36:30.4158229Z help: Remove unused import: `os`
+2026-01-11T14:36:30.4158384Z 
+2026-01-11T14:36:30.4158492Z F401 [*] `typing.Optional` imported but unused
+2026-01-11T14:36:30.4158778Z   --> src/onboarding/pages.py:13:35
+2026-01-11T14:36:30.4159006Z    |
+2026-01-11T14:36:30.4159168Z 11 | import threading
+2026-01-11T14:36:30.4159372Z 12 | from pathlib import Path
+2026-01-11T14:36:30.4159628Z 13 | from typing import TYPE_CHECKING, Optional
+2026-01-11T14:36:30.4159906Z    |                                   ^^^^^^^^
+2026-01-11T14:36:30.4160133Z 14 |
+2026-01-11T14:36:30.4160289Z 15 | import gi
+2026-01-11T14:36:30.4160452Z    |
+2026-01-11T14:36:30.4160650Z help: Remove unused import: `typing.Optional`
+2026-01-11T14:36:30.4160844Z 
+2026-01-11T14:36:30.4160951Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4161232Z   --> src/onboarding/pages.py:19:1
+2026-01-11T14:36:30.4161474Z    |
+2026-01-11T14:36:30.4161655Z 17 | gi.require_version("Gtk", "4.0")
+2026-01-11T14:36:30.4161910Z 18 | gi.require_version("Adw", "1")
+2026-01-11T14:36:30.4162196Z 19 | from gi.repository import Gtk, Adw, GLib, Pango
+2026-01-11T14:36:30.4162508Z    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4162906Z 20 |
+2026-01-11T14:36:30.4163084Z 21 | if TYPE_CHECKING:
+2026-01-11T14:36:30.4163272Z    |
+2026-01-11T14:36:30.4163369Z 
+2026-01-11T14:36:30.4163456Z F401 [*] `time` imported but unused
+2026-01-11T14:36:30.4163706Z    --> src/onboarding/pages.py:155:16
+2026-01-11T14:36:30.4163943Z     |
+2026-01-11T14:36:30.4164112Z 153 |     def _do_hardware_check(self):
+2026-01-11T14:36:30.4164781Z 154 |         """Perform hardware check (runs in background thread)."""
+2026-01-11T14:36:30.4165122Z 155 |         import time
+2026-01-11T14:36:30.4165331Z     |                ^^^^
+2026-01-11T14:36:30.4165525Z 156 |
+2026-01-11T14:36:30.4165683Z 157 |         results = {
+2026-01-11T14:36:30.4165877Z     |
+2026-01-11T14:36:30.4166052Z help: Remove unused import: `time`
+2026-01-11T14:36:30.4166227Z 
+2026-01-11T14:36:30.4166328Z F401 [*] `subprocess` imported but unused
+2026-01-11T14:36:30.4166599Z   --> src/onboarding/wizard.py:11:8
+2026-01-11T14:36:30.4166820Z    |
+2026-01-11T14:36:30.4166981Z 10 | import logging
+2026-01-11T14:36:30.4167179Z 11 | import subprocess
+2026-01-11T14:36:30.4167371Z    |        ^^^^^^^^^^
+2026-01-11T14:36:30.4167547Z 12 | import sys
+2026-01-11T14:36:30.4167737Z 13 | from pathlib import Path
+2026-01-11T14:36:30.4167945Z    |
+2026-01-11T14:36:30.4168127Z help: Remove unused import: `subprocess`
+2026-01-11T14:36:30.4168306Z 
+2026-01-11T14:36:30.4168414Z F401 [*] `typing.Optional` imported but unused
+2026-01-11T14:36:30.4168701Z   --> src/onboarding/wizard.py:14:20
+2026-01-11T14:36:30.4168926Z    |
+2026-01-11T14:36:30.4169079Z 12 | import sys
+2026-01-11T14:36:30.4169273Z 13 | from pathlib import Path
+2026-01-11T14:36:30.4169524Z 14 | from typing import Optional, List, Callable
+2026-01-11T14:36:30.4169797Z    |                    ^^^^^^^^
+2026-01-11T14:36:30.4169996Z 15 |
+2026-01-11T14:36:30.4170151Z 16 | import gi
+2026-01-11T14:36:30.4170312Z    |
+2026-01-11T14:36:30.4170483Z help: Remove unused import
+2026-01-11T14:36:30.4170624Z 
+2026-01-11T14:36:30.4170726Z F401 [*] `typing.Callable` imported but unused
+2026-01-11T14:36:30.4171010Z   --> src/onboarding/wizard.py:14:36
+2026-01-11T14:36:30.4171241Z    |
+2026-01-11T14:36:30.4171391Z 12 | import sys
+2026-01-11T14:36:30.4171582Z 13 | from pathlib import Path
+2026-01-11T14:36:30.4171832Z 14 | from typing import Optional, List, Callable
+2026-01-11T14:36:30.4172110Z    |                                    ^^^^^^^^
+2026-01-11T14:36:30.4172342Z 15 |
+2026-01-11T14:36:30.4172500Z 16 | import gi
+2026-01-11T14:36:30.4172657Z    |
+2026-01-11T14:36:30.4172824Z help: Remove unused import
+2026-01-11T14:36:30.4172963Z 
+2026-01-11T14:36:30.4173064Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4173343Z   --> src/onboarding/wizard.py:20:1
+2026-01-11T14:36:30.4173572Z    |
+2026-01-11T14:36:30.4173741Z 18 | gi.require_version("Gtk", "4.0")
+2026-01-11T14:36:30.4173988Z 19 | gi.require_version("Adw", "1")
+2026-01-11T14:36:30.4174523Z 20 | from gi.repository import Gtk, Adw, GLib, Gio
+2026-01-11T14:36:30.4174832Z    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4175070Z 21 |
+2026-01-11T14:36:30.4175258Z 22 | logger = logging.getLogger(__name__)
+2026-01-11T14:36:30.4175496Z    |
+2026-01-11T14:36:30.4175594Z 
+2026-01-11T14:36:30.4175693Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4175974Z   --> src/store/gui/store_window.py:22:1
+2026-01-11T14:36:30.4176205Z    |
+2026-01-11T14:36:30.4176374Z 20 | gi.require_version('Gtk', '4.0')
+2026-01-11T14:36:30.4176616Z 21 | gi.require_version('Adw', '1')
+2026-01-11T14:36:30.4176915Z 22 | from gi.repository import Gtk, Adw, GLib, Gio, Pango
+2026-01-11T14:36:30.4177249Z    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4177500Z 23 |
+2026-01-11T14:36:30.4177670Z 24 | from ..app_catalog import (
+2026-01-11T14:36:30.4177892Z    |
+2026-01-11T14:36:30.4177979Z 
+2026-01-11T14:36:30.4178079Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4178354Z   --> src/store/gui/store_window.py:24:1
+2026-01-11T14:36:30.4178589Z    |
+2026-01-11T14:36:30.4178968Z 22 |   from gi.repository import Gtk, Adw, GLib, Gio, Pango
+2026-01-11T14:36:30.4179272Z 23 |
+2026-01-11T14:36:30.4179438Z 24 | / from ..app_catalog import (
+2026-01-11T14:36:30.4179698Z 25 | |     AppCatalog, AppInfo, AppCategory,
+2026-01-11T14:36:30.4179989Z 26 | |     CompatibilityLayer, CompatibilityRating
+2026-01-11T14:36:30.4180260Z 27 | | )
+2026-01-11T14:36:30.4180408Z    | |_^
+2026-01-11T14:36:30.4180774Z 28 |   from ..installer import AppInstaller, InstallStatus
+2026-01-11T14:36:30.4181060Z    |
+2026-01-11T14:36:30.4181153Z 
+2026-01-11T14:36:30.4181250Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4181526Z   --> src/store/gui/store_window.py:28:1
+2026-01-11T14:36:30.4181757Z    |
+2026-01-11T14:36:30.4181951Z 26 |     CompatibilityLayer, CompatibilityRating
+2026-01-11T14:36:30.4182205Z 27 | )
+2026-01-11T14:36:30.4182428Z 28 | from ..installer import AppInstaller, InstallStatus
+2026-01-11T14:36:30.4182733Z    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4182977Z 29 |
+2026-01-11T14:36:30.4183152Z 30 | logger = logging.getLogger(__name__)
+2026-01-11T14:36:30.4183394Z    |
+2026-01-11T14:36:30.4183480Z 
+2026-01-11T14:36:30.4183646Z F401 [*] `PyQt6.QtWidgets.QListWidgetItem` imported but unused
+2026-01-11T14:36:30.4184006Z   --> src/store/gui/store_window_qt.py:18:18
+2026-01-11T14:36:30.4184467Z    |
+2026-01-11T14:36:30.4184729Z 16 |     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+2026-01-11T14:36:30.4185140Z 17 |     QLabel, QPushButton, QLineEdit, QScrollArea, QFrame,
+2026-01-11T14:36:30.4185524Z 18 |     QListWidget, QListWidgetItem, QProgressBar, QGridLayout,
+2026-01-11T14:36:30.4185854Z    |                  ^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4186085Z 19 |     QSplitter, QStatusBar
+2026-01-11T14:36:30.4186297Z 20 | )
+2026-01-11T14:36:30.4186451Z    |
+2026-01-11T14:36:30.4186694Z help: Remove unused import: `PyQt6.QtWidgets.QListWidgetItem`
+2026-01-11T14:36:30.4186946Z 
+2026-01-11T14:36:30.4187063Z F401 [*] `PyQt6.QtGui.QIcon` imported but unused
+2026-01-11T14:36:30.4187362Z   --> src/store/gui/store_window_qt.py:22:32
+2026-01-11T14:36:30.4187615Z    |
+2026-01-11T14:36:30.4187760Z 20 | )
+2026-01-11T14:36:30.4187977Z 21 | from PyQt6.QtCore import Qt, QThread, pyqtSignal
+2026-01-11T14:36:30.4188279Z 22 | from PyQt6.QtGui import QFont, QIcon
+2026-01-11T14:36:30.4188533Z    |                                ^^^^^
+2026-01-11T14:36:30.4188763Z 23 |
+2026-01-11T14:36:30.4188926Z 24 | # Add parent to path
+2026-01-11T14:36:30.4189129Z    |
+2026-01-11T14:36:30.4189325Z help: Remove unused import: `PyQt6.QtGui.QIcon`
+2026-01-11T14:36:30.4189541Z 
+2026-01-11T14:36:30.4189707Z F401 [*] `store.installer.InstallStatus` imported but unused
+2026-01-11T14:36:30.4190048Z   --> src/store/gui/store_window_qt.py:31:43
+2026-01-11T14:36:30.4190295Z    |
+2026-01-11T14:36:30.4190492Z 29 |     CompatibilityLayer, CompatibilityRating
+2026-01-11T14:36:30.4190761Z 30 | )
+2026-01-11T14:36:30.4190994Z 31 | from store.installer import AppInstaller, InstallStatus
+2026-01-11T14:36:30.4191325Z    |                                           ^^^^^^^^^^^^^
+2026-01-11T14:36:30.4191573Z 32 |
+2026-01-11T14:36:30.4191746Z 33 | logger = logging.getLogger(__name__)
+2026-01-11T14:36:30.4191984Z    |
+2026-01-11T14:36:30.4192218Z help: Remove unused import: `store.installer.InstallStatus`
+2026-01-11T14:36:30.4192468Z 
+2026-01-11T14:36:30.4192563Z F401 [*] `typing.Any` imported but unused
+2026-01-11T14:36:30.4192827Z   --> src/store/installer.py:20:46
+2026-01-11T14:36:30.4193052Z    |
+2026-01-11T14:36:30.4193224Z 18 | from abc import ABC, abstractmethod
+2026-01-11T14:36:30.4193504Z 19 | from pathlib import Path, PurePosixPath
+2026-01-11T14:36:30.4193828Z 20 | from typing import Optional, Callable, Dict, Any, List
+2026-01-11T14:36:30.4194328Z    |                                              ^^^
+2026-01-11T14:36:30.4194625Z 21 | from dataclasses import dataclass
+2026-01-11T14:36:30.4194872Z 22 | from enum import Enum
+2026-01-11T14:36:30.4195069Z    |
+2026-01-11T14:36:30.4195378Z help: Remove unused import: `typing.Any`
+2026-01-11T14:36:30.4195574Z 
+2026-01-11T14:36:30.4195674Z F541 [*] f-string without any placeholders
+2026-01-11T14:36:30.4195946Z    --> src/store/installer.py:280:36
+2026-01-11T14:36:30.4196175Z     |
+2026-01-11T14:36:30.4196335Z 278 |             else:
+2026-01-11T14:36:30.4196616Z 279 |                 logger.error(f"Flatpak install failed: {result.stderr}")
+2026-01-11T14:36:30.4197180Z 280 |                 progress.update(0, f"Installation failed", InstallStatus.FAILED)
+2026-01-11T14:36:30.4197593Z     |                                    ^^^^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4197867Z 281 |                 return False
+2026-01-11T14:36:30.4198077Z     |
+2026-01-11T14:36:30.4198254Z help: Remove extraneous `f` prefix
+2026-01-11T14:36:30.4198414Z 
+2026-01-11T14:36:30.4198526Z F401 [*] `typing.Optional` imported but unused
+2026-01-11T14:36:30.4198797Z   --> src/updater/cli.py:11:20
+2026-01-11T14:36:30.4199014Z    |
+2026-01-11T14:36:30.4199167Z  9 | import logging
+2026-01-11T14:36:30.4199356Z 10 | import sys
+2026-01-11T14:36:30.4199544Z 11 | from typing import Optional
+2026-01-11T14:36:30.4199770Z    |                    ^^^^^^^^
+2026-01-11T14:36:30.4199966Z 12 |
+2026-01-11T14:36:30.4200213Z 13 | from .updater import UpdateManager, UpdateStatus, UpdateInfo
+2026-01-11T14:36:30.4200526Z    |
+2026-01-11T14:36:30.4200725Z help: Remove unused import: `typing.Optional`
+2026-01-11T14:36:30.4200923Z 
+2026-01-11T14:36:30.4201045Z F401 [*] `.updater.UpdateInfo` imported but unused
+2026-01-11T14:36:30.4201327Z   --> src/updater/cli.py:13:51
+2026-01-11T14:36:30.4201540Z    |
+2026-01-11T14:36:30.4201701Z 11 | from typing import Optional
+2026-01-11T14:36:30.4201912Z 12 |
+2026-01-11T14:36:30.4202155Z 13 | from .updater import UpdateManager, UpdateStatus, UpdateInfo
+2026-01-11T14:36:30.4202500Z    |                                                   ^^^^^^^^^^
+2026-01-11T14:36:30.4202816Z 14 | from .snapshot import SnapshotManager, Snapshot
+2026-01-11T14:36:30.4203165Z 15 | from .rollback import RollbackManager, RollbackStatus
+2026-01-11T14:36:30.4203461Z    |
+2026-01-11T14:36:30.4203659Z help: Remove unused import: `.updater.UpdateInfo`
+2026-01-11T14:36:30.4203866Z 
+2026-01-11T14:36:30.4203984Z F401 [*] `.snapshot.Snapshot` imported but unused
+2026-01-11T14:36:30.4204514Z   --> src/updater/cli.py:14:40
+2026-01-11T14:36:30.4204739Z    |
+2026-01-11T14:36:30.4204986Z 13 | from .updater import UpdateManager, UpdateStatus, UpdateInfo
+2026-01-11T14:36:30.4205362Z 14 | from .snapshot import SnapshotManager, Snapshot
+2026-01-11T14:36:30.4205653Z    |                                        ^^^^^^^^
+2026-01-11T14:36:30.4205955Z 15 | from .rollback import RollbackManager, RollbackStatus
+2026-01-11T14:36:30.4206239Z    |
+2026-01-11T14:36:30.4206433Z help: Remove unused import: `.snapshot.Snapshot`
+2026-01-11T14:36:30.4206640Z 
+2026-01-11T14:36:30.4206771Z F401 [*] `.rollback.RollbackStatus` imported but unused
+2026-01-11T14:36:30.4207064Z   --> src/updater/cli.py:15:40
+2026-01-11T14:36:30.4207269Z    |
+2026-01-11T14:36:30.4207506Z 13 | from .updater import UpdateManager, UpdateStatus, UpdateInfo
+2026-01-11T14:36:30.4207877Z 14 | from .snapshot import SnapshotManager, Snapshot
+2026-01-11T14:36:30.4208211Z 15 | from .rollback import RollbackManager, RollbackStatus
+2026-01-11T14:36:30.4208515Z    |                                        ^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4208757Z 16 |
+2026-01-11T14:36:30.4208936Z 17 | logger = logging.getLogger(__name__)
+2026-01-11T14:36:30.4209175Z    |
+2026-01-11T14:36:30.4209387Z help: Remove unused import: `.rollback.RollbackStatus`
+2026-01-11T14:36:30.4209622Z 
+2026-01-11T14:36:30.4209718Z F401 [*] `threading` imported but unused
+2026-01-11T14:36:30.4209988Z   --> src/updater/updater.py:12:8
+2026-01-11T14:36:30.4210204Z    |
+2026-01-11T14:36:30.4210363Z 10 | import logging
+2026-01-11T14:36:30.4210550Z 11 | import subprocess
+2026-01-11T14:36:30.4210746Z 12 | import threading
+2026-01-11T14:36:30.4210929Z    |        ^^^^^^^^^
+2026-01-11T14:36:30.4211146Z 13 | from dataclasses import dataclass, field
+2026-01-11T14:36:30.4211548Z 14 | from datetime import datetime
+2026-01-11T14:36:30.4211777Z    |
+2026-01-11T14:36:30.4211954Z help: Remove unused import: `threading`
+2026-01-11T14:36:30.4212135Z 
+2026-01-11T14:36:30.4212231Z F401 [*] `queue.Queue` imported but unused
+2026-01-11T14:36:30.4212526Z   --> src/vm_manager/core/guest_client.py:24:19
+2026-01-11T14:36:30.4212781Z    |
+2026-01-11T14:36:30.4213055Z 22 | from pathlib import Path
+2026-01-11T14:36:30.4213336Z 23 | from typing import Optional, List, Dict, Any, Callable
+2026-01-11T14:36:30.4213653Z 24 | from queue import Queue, Empty
+2026-01-11T14:36:30.4213885Z    |                   ^^^^^
+2026-01-11T14:36:30.4214086Z 25 | import ssl
+2026-01-11T14:36:30.4214441Z 26 | import subprocess
+2026-01-11T14:36:30.4214631Z    |
+2026-01-11T14:36:30.4214795Z help: Remove unused import
+2026-01-11T14:36:30.4214943Z 
+2026-01-11T14:36:30.4215039Z F401 [*] `queue.Empty` imported but unused
+2026-01-11T14:36:30.4215328Z   --> src/vm_manager/core/guest_client.py:24:26
+2026-01-11T14:36:30.4215584Z    |
+2026-01-11T14:36:30.4215764Z 22 | from pathlib import Path
+2026-01-11T14:36:30.4216039Z 23 | from typing import Optional, List, Dict, Any, Callable
+2026-01-11T14:36:30.4216354Z 24 | from queue import Queue, Empty
+2026-01-11T14:36:30.4216577Z    |                          ^^^^^
+2026-01-11T14:36:30.4216788Z 25 | import ssl
+2026-01-11T14:36:30.4216964Z 26 | import subprocess
+2026-01-11T14:36:30.4217153Z    |
+2026-01-11T14:36:30.4217321Z help: Remove unused import
+2026-01-11T14:36:30.4217459Z 
+2026-01-11T14:36:30.4217569Z F401 [*] `dataclasses.field` imported but unused
+2026-01-11T14:36:30.4217878Z   --> src/vm_manager/core/libvirt_manager.py:14:36
+2026-01-11T14:36:30.4218135Z    |
+2026-01-11T14:36:30.4218290Z 13 | import logging
+2026-01-11T14:36:30.4218500Z 14 | from dataclasses import dataclass, field
+2026-01-11T14:36:30.4218766Z    |                                    ^^^^^
+2026-01-11T14:36:30.4219002Z 15 | from enum import Enum
+2026-01-11T14:36:30.4219222Z 16 | from pathlib import Path
+2026-01-11T14:36:30.4219428Z    |
+2026-01-11T14:36:30.4219616Z help: Remove unused import: `dataclasses.field`
+2026-01-11T14:36:30.4219814Z 
+2026-01-11T14:36:30.4219956Z F401 [*] `.connection.get_connection` imported but unused
+2026-01-11T14:36:30.4220282Z   --> src/vm_manager/core/libvirt_manager.py:28:44
+2026-01-11T14:36:30.4220544Z    |
+2026-01-11T14:36:30.4220707Z 27 | # Import new modular components
+2026-01-11T14:36:30.4221022Z 28 | from .connection import LibvirtConnection, get_connection
+2026-01-11T14:36:30.4221350Z    |                                            ^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4221691Z 29 | from .vm_lifecycle import VMLifecycleManager, ShutdownMethod
+2026-01-11T14:36:30.4222026Z 30 | from .vm_creator import VMCreator
+2026-01-11T14:36:30.4222249Z    |
+2026-01-11T14:36:30.4222473Z help: Remove unused import: `.connection.get_connection`
+2026-01-11T14:36:30.4222697Z 
+2026-01-11T14:36:30.4222783Z F821 Undefined name `VMConfig`
+2026-01-11T14:36:30.4223043Z    --> src/vm_manager/core/libvirt_manager.py:310:34
+2026-01-11T14:36:30.4223306Z     |
+2026-01-11T14:36:30.4223471Z 308 |             return None
+2026-01-11T14:36:30.4223669Z 309 |
+2026-01-11T14:36:30.4223907Z 310 |     def create_vm(self, config: "VMConfig") -> bool:
+2026-01-11T14:36:30.4224453Z     |                                  ^^^^^^^^
+2026-01-11T14:36:30.4224706Z 311 |         """
+2026-01-11T14:36:30.4224955Z 312 |         Generic method to create a VM from a VMConfig.
+2026-01-11T14:36:30.4225231Z     |
+2026-01-11T14:36:30.4225330Z 
+2026-01-11T14:36:30.4225419Z F401 [*] `signal` imported but unused
+2026-01-11T14:36:30.4225689Z   --> src/vm_manager/core/looking_glass.py:12:8
+2026-01-11T14:36:30.4225952Z    |
+2026-01-11T14:36:30.4226108Z 10 | import os
+2026-01-11T14:36:30.4226285Z 11 | import subprocess
+2026-01-11T14:36:30.4226478Z 12 | import signal
+2026-01-11T14:36:30.4226655Z    |        ^^^^^^
+2026-01-11T14:36:30.4226830Z 13 | import shutil
+2026-01-11T14:36:30.4227015Z 14 | from pathlib import Path
+2026-01-11T14:36:30.4227355Z    |
+2026-01-11T14:36:30.4227531Z help: Remove unused import: `signal`
+2026-01-11T14:36:30.4227707Z 
+2026-01-11T14:36:30.4227805Z F401 [*] `typing.Any` imported but unused
+2026-01-11T14:36:30.4228084Z   --> src/vm_manager/core/looking_glass.py:16:42
+2026-01-11T14:36:30.4228342Z    |
+2026-01-11T14:36:30.4228511Z 14 | from pathlib import Path
+2026-01-11T14:36:30.4228741Z 15 | from dataclasses import dataclass
+2026-01-11T14:36:30.4229126Z 16 | from typing import Optional, List, Dict, Any
+2026-01-11T14:36:30.4229397Z    |                                          ^^^
+2026-01-11T14:36:30.4229641Z 17 | from enum import Enum
+2026-01-11T14:36:30.4229838Z 18 | import json
+2026-01-11T14:36:30.4230008Z    |
+2026-01-11T14:36:30.4230187Z help: Remove unused import: `typing.Any`
+2026-01-11T14:36:30.4230376Z 
+2026-01-11T14:36:30.4230507Z F841 [*] Local variable `e` is assigned to but never used
+2026-01-11T14:36:30.4230837Z    --> src/vm_manager/core/looking_glass.py:278:29
+2026-01-11T14:36:30.4231097Z     |
+2026-01-11T14:36:30.4231272Z 276 |                 return False
+2026-01-11T14:36:30.4231483Z 277 |
+2026-01-11T14:36:30.4231655Z 278 |         except Exception as e:
+2026-01-11T14:36:30.4231884Z     |                             ^
+2026-01-11T14:36:30.4232171Z 279 |             self._states[vm_name] = LookingGlassState.ERROR
+2026-01-11T14:36:30.4232474Z 280 |             return False
+2026-01-11T14:36:30.4232685Z     |
+2026-01-11T14:36:30.4232880Z help: Remove assignment to unused variable `e`
+2026-01-11T14:36:30.4233073Z 
+2026-01-11T14:36:30.4233177Z F401 [*] `typing.Optional` imported but unused
+2026-01-11T14:36:30.4233465Z   --> src/vm_manager/core/state_machine.py:11:20
+2026-01-11T14:36:30.4233754Z    |
+2026-01-11T14:36:30.4233905Z  9 | import logging
+2026-01-11T14:36:30.4234094Z 10 | from enum import Enum, auto
+2026-01-11T14:36:30.4234576Z 11 | from typing import Optional, Dict, Set, Callable
+2026-01-11T14:36:30.4234860Z    |                    ^^^^^^^^
+2026-01-11T14:36:30.4235066Z 12 |
+2026-01-11T14:36:30.4235250Z 13 | logger = logging.getLogger(__name__)
+2026-01-11T14:36:30.4235484Z    |
+2026-01-11T14:36:30.4235672Z help: Remove unused import: `typing.Optional`
+2026-01-11T14:36:30.4235873Z 
+2026-01-11T14:36:30.4236017Z F841 Local variable `old_state` is assigned to but never used
+2026-01-11T14:36:30.4236365Z    --> src/vm_manager/core/state_machine.py:146:9
+2026-01-11T14:36:30.4236618Z     |
+2026-01-11T14:36:30.4236862Z 144 |         Use with caution - bypasses transition validation.
+2026-01-11T14:36:30.4237154Z 145 |         """
+2026-01-11T14:36:30.4237342Z 146 |         old_state = self._state
+2026-01-11T14:36:30.4237563Z     |         ^^^^^^^^^
+2026-01-11T14:36:30.4237761Z 147 |         self._state = state
+2026-01-11T14:36:30.4238079Z 148 |         logger.debug(f"VM {self.vm_name}: state forced to {state.name}")
+2026-01-11T14:36:30.4238420Z     |
+2026-01-11T14:36:30.4238640Z help: Remove assignment to unused variable `old_state`
+2026-01-11T14:36:30.4238861Z 
+2026-01-11T14:36:30.4238973Z F401 [*] `.vm_config.VMType` imported but unused
+2026-01-11T14:36:30.4239280Z   --> src/vm_manager/core/vm_creator.py:26:15
+2026-01-11T14:36:30.4239525Z    |
+2026-01-11T14:36:30.4239762Z 24 | from .connection import get_connection, LibvirtConnection
+2026-01-11T14:36:30.4240077Z 25 | from .vm_config import (
+2026-01-11T14:36:30.4240298Z 26 |     VMConfig, VMType, 
+2026-01-11T14:36:30.4240500Z    |               ^^^^^^
+2026-01-11T14:36:30.4240746Z 27 |     GPUPassthroughConfig, LookingGlassConfig,
+2026-01-11T14:36:30.4241013Z 28 | )
+2026-01-11T14:36:30.4241160Z    |
+2026-01-11T14:36:30.4241326Z help: Remove unused import
+2026-01-11T14:36:30.4241465Z 
+2026-01-11T14:36:30.4241611Z F401 [*] `.vm_config.LookingGlassConfig` imported but unused
+2026-01-11T14:36:30.4241943Z   --> src/vm_manager/core/vm_creator.py:27:27
+2026-01-11T14:36:30.4242185Z    |
+2026-01-11T14:36:30.4242350Z 25 | from .vm_config import (
+2026-01-11T14:36:30.4242563Z 26 |     VMConfig, VMType, 
+2026-01-11T14:36:30.4242828Z 27 |     GPUPassthroughConfig, LookingGlassConfig,
+2026-01-11T14:36:30.4243241Z    |                           ^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4243480Z 28 | )
+2026-01-11T14:36:30.4243633Z    |
+2026-01-11T14:36:30.4243792Z help: Remove unused import
+2026-01-11T14:36:30.4243929Z 
+2026-01-11T14:36:30.4244021Z F401 [*] `os` imported but unused
+2026-01-11T14:36:30.4244471Z   --> src/vm_manager/gui/app.py:17:8
+2026-01-11T14:36:30.4244835Z    |
+2026-01-11T14:36:30.4244987Z 15 | import logging
+2026-01-11T14:36:30.4245170Z 16 | import sys
+2026-01-11T14:36:30.4245343Z 17 | import os
+2026-01-11T14:36:30.4245511Z    |        ^^
+2026-01-11T14:36:30.4245676Z 18 | import re
+2026-01-11T14:36:30.4245852Z 19 | import subprocess
+2026-01-11T14:36:30.4246038Z    |
+2026-01-11T14:36:30.4246201Z help: Remove unused import: `os`
+2026-01-11T14:36:30.4246356Z 
+2026-01-11T14:36:30.4246466Z F401 [*] `typing.Optional` imported but unused
+2026-01-11T14:36:30.4246741Z   --> src/vm_manager/gui/app.py:22:20
+2026-01-11T14:36:30.4246976Z    |
+2026-01-11T14:36:30.4247134Z 20 | import threading
+2026-01-11T14:36:30.4247341Z 21 | from pathlib import Path
+2026-01-11T14:36:30.4247597Z 22 | from typing import Optional, List, Dict, Any
+2026-01-11T14:36:30.4247864Z    |                    ^^^^^^^^
+2026-01-11T14:36:30.4248098Z 23 | from dataclasses import dataclass
+2026-01-11T14:36:30.4248341Z 24 | from enum import Enum
+2026-01-11T14:36:30.4248542Z    |
+2026-01-11T14:36:30.4248707Z help: Remove unused import
+2026-01-11T14:36:30.4248850Z 
+2026-01-11T14:36:30.4248947Z F401 [*] `typing.Dict` imported but unused
+2026-01-11T14:36:30.4249215Z   --> src/vm_manager/gui/app.py:22:36
+2026-01-11T14:36:30.4249446Z    |
+2026-01-11T14:36:30.4249601Z 20 | import threading
+2026-01-11T14:36:30.4249807Z 21 | from pathlib import Path
+2026-01-11T14:36:30.4250073Z 22 | from typing import Optional, List, Dict, Any
+2026-01-11T14:36:30.4250352Z    |                                    ^^^^
+2026-01-11T14:36:30.4250610Z 23 | from dataclasses import dataclass
+2026-01-11T14:36:30.4250852Z 24 | from enum import Enum
+2026-01-11T14:36:30.4251053Z    |
+2026-01-11T14:36:30.4251220Z help: Remove unused import
+2026-01-11T14:36:30.4251362Z 
+2026-01-11T14:36:30.4251457Z F401 [*] `typing.Any` imported but unused
+2026-01-11T14:36:30.4251722Z   --> src/vm_manager/gui/app.py:22:42
+2026-01-11T14:36:30.4251956Z    |
+2026-01-11T14:36:30.4252116Z 20 | import threading
+2026-01-11T14:36:30.4252311Z 21 | from pathlib import Path
+2026-01-11T14:36:30.4252566Z 22 | from typing import Optional, List, Dict, Any
+2026-01-11T14:36:30.4252839Z    |                                          ^^^
+2026-01-11T14:36:30.4253097Z 23 | from dataclasses import dataclass
+2026-01-11T14:36:30.4253338Z 24 | from enum import Enum
+2026-01-11T14:36:30.4253530Z    |
+2026-01-11T14:36:30.4253688Z help: Remove unused import
+2026-01-11T14:36:30.4253832Z 
+2026-01-11T14:36:30.4253922Z F401 [*] `enum.Enum` imported but unused
+2026-01-11T14:36:30.4254373Z   --> src/vm_manager/gui/app.py:24:18
+2026-01-11T14:36:30.4254609Z    |
+2026-01-11T14:36:30.4254812Z 22 | from typing import Optional, List, Dict, Any
+2026-01-11T14:36:30.4255105Z 23 | from dataclasses import dataclass
+2026-01-11T14:36:30.4255350Z 24 | from enum import Enum
+2026-01-11T14:36:30.4255548Z    |                  ^^^^
+2026-01-11T14:36:30.4255733Z 25 |
+2026-01-11T14:36:30.4255915Z 26 | logger = logging.getLogger(__name__)
+2026-01-11T14:36:30.4256155Z    |
+2026-01-11T14:36:30.4256327Z help: Remove unused import: `enum.Enum`
+2026-01-11T14:36:30.4256517Z 
+2026-01-11T14:36:30.4256876Z F401 `gi.repository.Pango` imported but unused; consider using `importlib.util.find_spec` to test for availability
+2026-01-11T14:36:30.4257405Z   --> src/vm_manager/gui/app.py:55:52
+2026-01-11T14:36:30.4257630Z    |
+2026-01-11T14:36:30.4257811Z 53 |     gi.require_version('Gtk', '4.0')
+2026-01-11T14:36:30.4258068Z 54 |     gi.require_version('Adw', '1')
+2026-01-11T14:36:30.4258391Z 55 |     from gi.repository import Gtk, Adw, Gio, GLib, Pango, Gdk
+2026-01-11T14:36:30.4258729Z    |                                                    ^^^^^
+2026-01-11T14:36:30.4259126Z 56 |     GTK_AVAILABLE = True
+2026-01-11T14:36:30.4259369Z 57 | except (ImportError, ValueError):
+2026-01-11T14:36:30.4259597Z    |
+2026-01-11T14:36:30.4259804Z help: Remove unused import: `gi.repository.Pango`
+2026-01-11T14:36:30.4260012Z 
+2026-01-11T14:36:30.4260466Z F401 `vm_manager.core.looking_glass.LookingGlassManager` imported but unused; consider using `importlib.util.find_spec` to test for availability
+2026-01-11T14:36:30.4261309Z   --> src/vm_manager/gui/app.py:68:47
+2026-01-11T14:36:30.4261537Z    |
+2026-01-11T14:36:30.4261763Z 66 |     from hardware_detect.iommu_parser import IOMMUParser
+2026-01-11T14:36:30.4262155Z 67 |     from vm_manager.core.libvirt_manager import LibvirtManager
+2026-01-11T14:36:30.4262657Z 68 |     from vm_manager.core.looking_glass import LookingGlassManager, get_looking_glass_manager
+2026-01-11T14:36:30.4263117Z    |                                               ^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4263480Z 69 |     from vm_manager.core.vm_config import VMConfig, VMType, VMState
+2026-01-11T14:36:30.4263830Z 70 |     MODULES_AVAILABLE = True
+2026-01-11T14:36:30.4264043Z    |
+2026-01-11T14:36:30.4264565Z help: Remove unused import: `vm_manager.core.looking_glass.LookingGlassManager`
+2026-01-11T14:36:30.4264885Z 
+2026-01-11T14:36:30.4265273Z F401 `vm_manager.core.vm_config.VMConfig` imported but unused; consider using `importlib.util.find_spec` to test for availability
+2026-01-11T14:36:30.4265854Z   --> src/vm_manager/gui/app.py:69:43
+2026-01-11T14:36:30.4266087Z    |
+2026-01-11T14:36:30.4266321Z 67 |     from vm_manager.core.libvirt_manager import LibvirtManager
+2026-01-11T14:36:30.4266826Z 68 |     from vm_manager.core.looking_glass import LookingGlassManager, get_looking_glass_manager
+2026-01-11T14:36:30.4267337Z 69 |     from vm_manager.core.vm_config import VMConfig, VMType, VMState
+2026-01-11T14:36:30.4267689Z    |                                           ^^^^^^^^
+2026-01-11T14:36:30.4267951Z 70 |     MODULES_AVAILABLE = True
+2026-01-11T14:36:30.4268185Z 71 | except ImportError:
+2026-01-11T14:36:30.4268384Z    |
+2026-01-11T14:36:30.4268547Z help: Remove unused import
+2026-01-11T14:36:30.4268697Z 
+2026-01-11T14:36:30.4269074Z F401 `vm_manager.core.vm_config.VMType` imported but unused; consider using `importlib.util.find_spec` to test for availability
+2026-01-11T14:36:30.4269629Z   --> src/vm_manager/gui/app.py:69:53
+2026-01-11T14:36:30.4269866Z    |
+2026-01-11T14:36:30.4270107Z 67 |     from vm_manager.core.libvirt_manager import LibvirtManager
+2026-01-11T14:36:30.4270607Z 68 |     from vm_manager.core.looking_glass import LookingGlassManager, get_looking_glass_manager
+2026-01-11T14:36:30.4271126Z 69 |     from vm_manager.core.vm_config import VMConfig, VMType, VMState
+2026-01-11T14:36:30.4271478Z    |                                                     ^^^^^^
+2026-01-11T14:36:30.4271757Z 70 |     MODULES_AVAILABLE = True
+2026-01-11T14:36:30.4271983Z 71 | except ImportError:
+2026-01-11T14:36:30.4272179Z    |
+2026-01-11T14:36:30.4272345Z help: Remove unused import
+2026-01-11T14:36:30.4272501Z 
+2026-01-11T14:36:30.4272876Z F401 `vm_manager.core.vm_config.VMState` imported but unused; consider using `importlib.util.find_spec` to test for availability
+2026-01-11T14:36:30.4273440Z   --> src/vm_manager/gui/app.py:69:61
+2026-01-11T14:36:30.4273663Z    |
+2026-01-11T14:36:30.4273903Z 67 |     from vm_manager.core.libvirt_manager import LibvirtManager
+2026-01-11T14:36:30.4274498Z 68 |     from vm_manager.core.looking_glass import LookingGlassManager, get_looking_glass_manager
+2026-01-11T14:36:30.4275017Z 69 |     from vm_manager.core.vm_config import VMConfig, VMType, VMState
+2026-01-11T14:36:30.4275378Z    |                                                             ^^^^^^^
+2026-01-11T14:36:30.4275655Z 70 |     MODULES_AVAILABLE = True
+2026-01-11T14:36:30.4275889Z 71 | except ImportError:
+2026-01-11T14:36:30.4276081Z    |
+2026-01-11T14:36:30.4276250Z help: Remove unused import
+2026-01-11T14:36:30.4276389Z 
+2026-01-11T14:36:30.4276489Z F401 [*] `typing.List` imported but unused
+2026-01-11T14:36:30.4276901Z   --> src/vm_manager/gui/app_qt.py:11:30
+2026-01-11T14:36:30.4277141Z    |
+2026-01-11T14:36:30.4277300Z  9 | import sys
+2026-01-11T14:36:30.4277474Z 10 | import logging
+2026-01-11T14:36:30.4277680Z 11 | from typing import Optional, List
+2026-01-11T14:36:30.4277928Z    |                              ^^^^
+2026-01-11T14:36:30.4278159Z 12 | from pathlib import Path
+2026-01-11T14:36:30.4278478Z    |
+2026-01-11T14:36:30.4278659Z help: Remove unused import: `typing.List`
+2026-01-11T14:36:30.4278848Z 
+2026-01-11T14:36:30.4278991Z F401 [*] `PyQt6.QtWidgets.QListWidget` imported but unused
+2026-01-11T14:36:30.4279310Z   --> src/vm_manager/gui/app_qt.py:16:26
+2026-01-11T14:36:30.4279552Z    |
+2026-01-11T14:36:30.4279721Z 14 | from PyQt6.QtWidgets import (
+2026-01-11T14:36:30.4280054Z 15 |     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+2026-01-11T14:36:30.4280476Z 16 |     QLabel, QPushButton, QListWidget, QListWidgetItem, QFrame,
+2026-01-11T14:36:30.4280799Z    |                          ^^^^^^^^^^^
+2026-01-11T14:36:30.4281094Z 17 |     QProgressBar, QStatusBar, QMessageBox, QTabWidget,
+2026-01-11T14:36:30.4281458Z 18 |     QGroupBox, QFormLayout, QComboBox, QSpinBox, QCheckBox
+2026-01-11T14:36:30.4281760Z    |
+2026-01-11T14:36:30.4281928Z help: Remove unused import
+2026-01-11T14:36:30.4282074Z 
+2026-01-11T14:36:30.4282227Z F401 [*] `PyQt6.QtWidgets.QListWidgetItem` imported but unused
+2026-01-11T14:36:30.4282564Z   --> src/vm_manager/gui/app_qt.py:16:39
+2026-01-11T14:36:30.4282793Z    |
+2026-01-11T14:36:30.4282963Z 14 | from PyQt6.QtWidgets import (
+2026-01-11T14:36:30.4283278Z 15 |     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+2026-01-11T14:36:30.4283695Z 16 |     QLabel, QPushButton, QListWidget, QListWidgetItem, QFrame,
+2026-01-11T14:36:30.4284025Z    |                                       ^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4284446Z 17 |     QProgressBar, QStatusBar, QMessageBox, QTabWidget,
+2026-01-11T14:36:30.4284811Z 18 |     QGroupBox, QFormLayout, QComboBox, QSpinBox, QCheckBox
+2026-01-11T14:36:30.4285099Z    |
+2026-01-11T14:36:30.4285264Z help: Remove unused import
+2026-01-11T14:36:30.4285402Z 
+2026-01-11T14:36:30.4285545Z F401 [*] `PyQt6.QtWidgets.QProgressBar` imported but unused
+2026-01-11T14:36:30.4285864Z   --> src/vm_manager/gui/app_qt.py:17:5
+2026-01-11T14:36:30.4286092Z    |
+2026-01-11T14:36:30.4286342Z 15 |     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+2026-01-11T14:36:30.4286750Z 16 |     QLabel, QPushButton, QListWidget, QListWidgetItem, QFrame,
+2026-01-11T14:36:30.4287124Z 17 |     QProgressBar, QStatusBar, QMessageBox, QTabWidget,
+2026-01-11T14:36:30.4287413Z    |     ^^^^^^^^^^^^
+2026-01-11T14:36:30.4287663Z 18 |     QGroupBox, QFormLayout, QComboBox, QSpinBox, QCheckBox
+2026-01-11T14:36:30.4287961Z 19 | )
+2026-01-11T14:36:30.4288110Z    |
+2026-01-11T14:36:30.4288280Z help: Remove unused import
+2026-01-11T14:36:30.4288418Z 
+2026-01-11T14:36:30.4288532Z F401 [*] `PyQt6.QtCore.QThread` imported but unused
+2026-01-11T14:36:30.4288833Z   --> src/vm_manager/gui/app_qt.py:20:30
+2026-01-11T14:36:30.4289065Z    |
+2026-01-11T14:36:30.4289290Z 18 |     QGroupBox, QFormLayout, QComboBox, QSpinBox, QCheckBox
+2026-01-11T14:36:30.4289591Z 19 | )
+2026-01-11T14:36:30.4289829Z 20 | from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
+2026-01-11T14:36:30.4290146Z    |                              ^^^^^^^
+2026-01-11T14:36:30.4290420Z 21 | from PyQt6.QtGui import QFont, QIcon, QColor
+2026-01-11T14:36:30.4290686Z    |
+2026-01-11T14:36:30.4290847Z help: Remove unused import
+2026-01-11T14:36:30.4290991Z 
+2026-01-11T14:36:30.4291121Z F401 [*] `PyQt6.QtCore.pyqtSignal` imported but unused
+2026-01-11T14:36:30.4291428Z   --> src/vm_manager/gui/app_qt.py:20:39
+2026-01-11T14:36:30.4291669Z    |
+2026-01-11T14:36:30.4291892Z 18 |     QGroupBox, QFormLayout, QComboBox, QSpinBox, QCheckBox
+2026-01-11T14:36:30.4292183Z 19 | )
+2026-01-11T14:36:30.4292419Z 20 | from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
+2026-01-11T14:36:30.4292856Z    |                                       ^^^^^^^^^^
+2026-01-11T14:36:30.4293155Z 21 | from PyQt6.QtGui import QFont, QIcon, QColor
+2026-01-11T14:36:30.4293410Z    |
+2026-01-11T14:36:30.4293578Z help: Remove unused import
+2026-01-11T14:36:30.4293719Z 
+2026-01-11T14:36:30.4293827Z F401 [*] `PyQt6.QtGui.QIcon` imported but unused
+2026-01-11T14:36:30.4294117Z   --> src/vm_manager/gui/app_qt.py:21:32
+2026-01-11T14:36:30.4294583Z    |
+2026-01-11T14:36:30.4294728Z 19 | )
+2026-01-11T14:36:30.4294964Z 20 | from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
+2026-01-11T14:36:30.4295298Z 21 | from PyQt6.QtGui import QFont, QIcon, QColor
+2026-01-11T14:36:30.4295574Z    |                                ^^^^^
+2026-01-11T14:36:30.4295792Z 22 |
+2026-01-11T14:36:30.4295958Z 23 | # Add parent to path
+2026-01-11T14:36:30.4296150Z    |
+2026-01-11T14:36:30.4296313Z help: Remove unused import
+2026-01-11T14:36:30.4296452Z 
+2026-01-11T14:36:30.4296564Z F401 [*] `PyQt6.QtGui.QColor` imported but unused
+2026-01-11T14:36:30.4296853Z   --> src/vm_manager/gui/app_qt.py:21:39
+2026-01-11T14:36:30.4297089Z    |
+2026-01-11T14:36:30.4297234Z 19 | )
+2026-01-11T14:36:30.4297458Z 20 | from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
+2026-01-11T14:36:30.4297791Z 21 | from PyQt6.QtGui import QFont, QIcon, QColor
+2026-01-11T14:36:30.4298064Z    |                                       ^^^^^^
+2026-01-11T14:36:30.4298293Z 22 |
+2026-01-11T14:36:30.4298454Z 23 | # Add parent to path
+2026-01-11T14:36:30.4298644Z    |
+2026-01-11T14:36:30.4298805Z help: Remove unused import
+2026-01-11T14:36:30.4298941Z 
+2026-01-11T14:36:30.4299357Z F401 `vm_manager.core.libvirt_manager.VMInfo` imported but unused; consider using `importlib.util.find_spec` to test for availability
+2026-01-11T14:36:30.4299936Z   --> src/vm_manager/gui/app_qt.py:27:65
+2026-01-11T14:36:30.4300173Z    |
+2026-01-11T14:36:30.4300316Z 26 | try:
+2026-01-11T14:36:30.4300621Z 27 |     from vm_manager.core.libvirt_manager import LibvirtManager, VMInfo, VMState
+2026-01-11T14:36:30.4301041Z    |                                                                 ^^^^^^
+2026-01-11T14:36:30.4301428Z 28 |     from vm_manager.core.looking_glass import get_looking_glass_manager
+2026-01-11T14:36:30.4301786Z 29 | except ImportError as e:
+2026-01-11T14:36:30.4301989Z    |
+2026-01-11T14:36:30.4302247Z help: Remove unused import: `vm_manager.core.libvirt_manager.VMInfo`
+2026-01-11T14:36:30.4302522Z 
+2026-01-11T14:36:30.4302620Z F541 [*] f-string without any placeholders
+2026-01-11T14:36:30.4302895Z    --> src/vm_manager/gui/app_qt.py:264:52
+2026-01-11T14:36:30.4303133Z     |
+2026-01-11T14:36:30.4303463Z 262 |                 QMessageBox.information(self, "Success", f"Successfully created VM: {name}")
+2026-01-11T14:36:30.4303874Z 263 |             else:
+2026-01-11T14:36:30.4304340Z 264 |                 QMessageBox.warning(self, "Error", f"Failed to create VM. Check logs for details.")
+2026-01-11T14:36:30.4304833Z     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4305137Z 265 |
+2026-01-11T14:36:30.4305312Z 266 |         except Exception as e:
+2026-01-11T14:36:30.4305528Z     |
+2026-01-11T14:36:30.4305706Z help: Remove extraneous `f` prefix
+2026-01-11T14:36:30.4305872Z 
+2026-01-11T14:36:30.4305978Z F401 [*] `subprocess` imported but unused
+2026-01-11T14:36:30.4306271Z   --> src/vm_manager/passthrough/gpu_attach.py:13:8
+2026-01-11T14:36:30.4306549Z    |
+2026-01-11T14:36:30.4306702Z 12 | import logging
+2026-01-11T14:36:30.4306895Z 13 | import subprocess
+2026-01-11T14:36:30.4307083Z    |        ^^^^^^^^^^
+2026-01-11T14:36:30.4307291Z 14 | from dataclasses import dataclass
+2026-01-11T14:36:30.4307543Z 15 | from pathlib import Path
+2026-01-11T14:36:30.4307756Z    |
+2026-01-11T14:36:30.4307929Z help: Remove unused import: `subprocess`
+2026-01-11T14:36:30.4308120Z 
+2026-01-11T14:36:30.4308229Z F401 [*] `jinja2.BaseLoader` imported but unused
+2026-01-11T14:36:30.4308533Z   --> src/vm_manager/templates/loader.py:13:69
+2026-01-11T14:36:30.4308779Z    |
+2026-01-11T14:36:30.4309105Z 11 | from typing import Optional, List
+2026-01-11T14:36:30.4309337Z 12 |
+2026-01-11T14:36:30.4309648Z 13 | from jinja2 import Environment, FileSystemLoader, TemplateNotFound, BaseLoader
+2026-01-11T14:36:30.4310076Z    |                                                                     ^^^^^^^^^^
+2026-01-11T14:36:30.4310350Z 14 |
+2026-01-11T14:36:30.4310625Z 15 | logger = logging.getLogger(__name__)
+2026-01-11T14:36:30.4310866Z    |
+2026-01-11T14:36:30.4311063Z help: Remove unused import: `jinja2.BaseLoader`
+2026-01-11T14:36:30.4311263Z 
+2026-01-11T14:36:30.4311370Z F401 [*] `dataclasses.field` imported but unused
+2026-01-11T14:36:30.4311677Z   --> src/vm_manager/usb/usb_passthrough.py:16:36
+2026-01-11T14:36:30.4311931Z    |
+2026-01-11T14:36:30.4312088Z 14 | import subprocess
+2026-01-11T14:36:30.4312287Z 15 | from pathlib import Path
+2026-01-11T14:36:30.4312536Z 16 | from dataclasses import dataclass, field
+2026-01-11T14:36:30.4312804Z    |                                    ^^^^^
+2026-01-11T14:36:30.4313086Z 17 | from typing import Optional, List, Dict, Set
+2026-01-11T14:36:30.4313373Z 18 | from enum import Enum
+2026-01-11T14:36:30.4313570Z    |
+2026-01-11T14:36:30.4313772Z help: Remove unused import: `dataclasses.field`
+2026-01-11T14:36:30.4313971Z 
+2026-01-11T14:36:30.4314065Z F401 [*] `typing.Set` imported but unused
+2026-01-11T14:36:30.4314450Z   --> src/vm_manager/usb/usb_passthrough.py:17:42
+2026-01-11T14:36:30.4314708Z    |
+2026-01-11T14:36:30.4314877Z 15 | from pathlib import Path
+2026-01-11T14:36:30.4315117Z 16 | from dataclasses import dataclass, field
+2026-01-11T14:36:30.4315414Z 17 | from typing import Optional, List, Dict, Set
+2026-01-11T14:36:30.4315690Z    |                                          ^^^
+2026-01-11T14:36:30.4315942Z 18 | from enum import Enum
+2026-01-11T14:36:30.4316146Z 19 | import json
+2026-01-11T14:36:30.4316312Z    |
+2026-01-11T14:36:30.4316490Z help: Remove unused import: `typing.Set`
+2026-01-11T14:36:30.4316670Z 
+2026-01-11T14:36:30.4316958Z F841 Local variable `result` is assigned to but never used
+2026-01-11T14:36:30.4317295Z    --> tests/integration/test_migration.py:146:9
+2026-01-11T14:36:30.4317561Z     |
+2026-01-11T14:36:30.4317737Z 145 |         # Migrate browser profile
+2026-01-11T14:36:30.4318035Z 146 |         result = migrator._migrate_browser_profile(
+2026-01-11T14:36:30.4318308Z     |         ^^^^^^
+2026-01-11T14:36:30.4318574Z 147 |             source_home / "AppData/Local/Google/Chrome/User Data",
+2026-01-11T14:36:30.4318944Z 148 |             target_home / ".config/google-chrome",
+2026-01-11T14:36:30.4319211Z     |
+2026-01-11T14:36:30.4319409Z help: Remove assignment to unused variable `result`
+2026-01-11T14:36:30.4319623Z 
+2026-01-11T14:36:30.4319722Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4319991Z   --> tests/test_audit_suite.py:15:1
+2026-01-11T14:36:30.4320214Z    |
+2026-01-11T14:36:30.4320385Z 13 |     os.geteuid = lambda: 1000
+2026-01-11T14:36:30.4320597Z 14 |
+2026-01-11T14:36:30.4320753Z 15 | import pytest
+2026-01-11T14:36:30.4320935Z    | ^^^^^^^^^^^^^
+2026-01-11T14:36:30.4321106Z 16 | import logging
+2026-01-11T14:36:30.4321279Z 17 | import time
+2026-01-11T14:36:30.4321443Z    |
+2026-01-11T14:36:30.4321529Z 
+2026-01-11T14:36:30.4321626Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4321893Z   --> tests/test_audit_suite.py:16:1
+2026-01-11T14:36:30.4322119Z    |
+2026-01-11T14:36:30.4322271Z 15 | import pytest
+2026-01-11T14:36:30.4322453Z 16 | import logging
+2026-01-11T14:36:30.4322624Z    | ^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4322793Z 17 | import time
+2026-01-11T14:36:30.4322960Z 18 | import os
+2026-01-11T14:36:30.4323122Z    |
+2026-01-11T14:36:30.4323208Z 
+2026-01-11T14:36:30.4323296Z F401 [*] `logging` imported but unused
+2026-01-11T14:36:30.4323548Z   --> tests/test_audit_suite.py:16:8
+2026-01-11T14:36:30.4323764Z    |
+2026-01-11T14:36:30.4323920Z 15 | import pytest
+2026-01-11T14:36:30.4324096Z 16 | import logging
+2026-01-11T14:36:30.4324360Z    |        ^^^^^^^
+2026-01-11T14:36:30.4324649Z 17 | import time
+2026-01-11T14:36:30.4324821Z 18 | import os
+2026-01-11T14:36:30.4324985Z    |
+2026-01-11T14:36:30.4325154Z help: Remove unused import: `logging`
+2026-01-11T14:36:30.4325332Z 
+2026-01-11T14:36:30.4325430Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4325689Z   --> tests/test_audit_suite.py:17:1
+2026-01-11T14:36:30.4325919Z    |
+2026-01-11T14:36:30.4326181Z 15 | import pytest
+2026-01-11T14:36:30.4326368Z 16 | import logging
+2026-01-11T14:36:30.4326551Z 17 | import time
+2026-01-11T14:36:30.4326715Z    | ^^^^^^^^^^^
+2026-01-11T14:36:30.4326887Z 18 | import os
+2026-01-11T14:36:30.4327051Z 19 | import re
+2026-01-11T14:36:30.4327214Z    |
+2026-01-11T14:36:30.4327300Z 
+2026-01-11T14:36:30.4327388Z F401 [*] `time` imported but unused
+2026-01-11T14:36:30.4327641Z   --> tests/test_audit_suite.py:17:8
+2026-01-11T14:36:30.4327865Z    |
+2026-01-11T14:36:30.4328026Z 15 | import pytest
+2026-01-11T14:36:30.4328202Z 16 | import logging
+2026-01-11T14:36:30.4328381Z 17 | import time
+2026-01-11T14:36:30.4328558Z    |        ^^^^
+2026-01-11T14:36:30.4328721Z 18 | import os
+2026-01-11T14:36:30.4328888Z 19 | import re
+2026-01-11T14:36:30.4329044Z    |
+2026-01-11T14:36:30.4329217Z help: Remove unused import: `time`
+2026-01-11T14:36:30.4329380Z 
+2026-01-11T14:36:30.4329478Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4329747Z   --> tests/test_audit_suite.py:18:1
+2026-01-11T14:36:30.4329968Z    |
+2026-01-11T14:36:30.4330122Z 16 | import logging
+2026-01-11T14:36:30.4330293Z 17 | import time
+2026-01-11T14:36:30.4330466Z 18 | import os
+2026-01-11T14:36:30.4330630Z    | ^^^^^^^^^
+2026-01-11T14:36:30.4330787Z 19 | import re
+2026-01-11T14:36:30.4330955Z 20 | import json
+2026-01-11T14:36:30.4331116Z    |
+2026-01-11T14:36:30.4331201Z 
+2026-01-11T14:36:30.4331304Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4331563Z   --> tests/test_audit_suite.py:19:1
+2026-01-11T14:36:30.4331788Z    |
+2026-01-11T14:36:30.4331934Z 17 | import time
+2026-01-11T14:36:30.4332103Z 18 | import os
+2026-01-11T14:36:30.4332273Z 19 | import re
+2026-01-11T14:36:30.4332436Z    | ^^^^^^^^^
+2026-01-11T14:36:30.4332600Z 20 | import json
+2026-01-11T14:36:30.4332782Z 21 | from pathlib import Path
+2026-01-11T14:36:30.4332990Z    |
+2026-01-11T14:36:30.4333077Z 
+2026-01-11T14:36:30.4333160Z F401 [*] `re` imported but unused
+2026-01-11T14:36:30.4333399Z   --> tests/test_audit_suite.py:19:8
+2026-01-11T14:36:30.4333655Z    |
+2026-01-11T14:36:30.4333805Z 17 | import time
+2026-01-11T14:36:30.4333969Z 18 | import os
+2026-01-11T14:36:30.4334227Z 19 | import re
+2026-01-11T14:36:30.4334389Z    |        ^^
+2026-01-11T14:36:30.4334553Z 20 | import json
+2026-01-11T14:36:30.4334733Z 21 | from pathlib import Path
+2026-01-11T14:36:30.4334938Z    |
+2026-01-11T14:36:30.4335105Z help: Remove unused import: `re`
+2026-01-11T14:36:30.4335260Z 
+2026-01-11T14:36:30.4335357Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4335621Z   --> tests/test_audit_suite.py:20:1
+2026-01-11T14:36:30.4335834Z    |
+2026-01-11T14:36:30.4335984Z 18 | import os
+2026-01-11T14:36:30.4336147Z 19 | import re
+2026-01-11T14:36:30.4336318Z 20 | import json
+2026-01-11T14:36:30.4336484Z    | ^^^^^^^^^^^
+2026-01-11T14:36:30.4336669Z 21 | from pathlib import Path
+2026-01-11T14:36:30.4336925Z 22 | from unittest.mock import patch, mock_open
+2026-01-11T14:36:30.4337178Z    |
+2026-01-11T14:36:30.4337264Z 
+2026-01-11T14:36:30.4337359Z F401 [*] `json` imported but unused
+2026-01-11T14:36:30.4337600Z   --> tests/test_audit_suite.py:20:8
+2026-01-11T14:36:30.4337823Z    |
+2026-01-11T14:36:30.4337968Z 18 | import os
+2026-01-11T14:36:30.4338136Z 19 | import re
+2026-01-11T14:36:30.4338299Z 20 | import json
+2026-01-11T14:36:30.4338464Z    |        ^^^^
+2026-01-11T14:36:30.4338639Z 21 | from pathlib import Path
+2026-01-11T14:36:30.4338890Z 22 | from unittest.mock import patch, mock_open
+2026-01-11T14:36:30.4339343Z    |
+2026-01-11T14:36:30.4353744Z help: Remove unused import: `json`
+2026-01-11T14:36:30.4353945Z 
+2026-01-11T14:36:30.4354389Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4354707Z   --> tests/test_audit_suite.py:21:1
+2026-01-11T14:36:30.4354951Z    |
+2026-01-11T14:36:30.4355099Z 19 | import re
+2026-01-11T14:36:30.4355277Z 20 | import json
+2026-01-11T14:36:30.4355474Z 21 | from pathlib import Path
+2026-01-11T14:36:30.4355691Z    | ^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4355940Z 22 | from unittest.mock import patch, mock_open
+2026-01-11T14:36:30.4356324Z    |
+2026-01-11T14:36:30.4356416Z 
+2026-01-11T14:36:30.4356517Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4356785Z   --> tests/test_audit_suite.py:22:1
+2026-01-11T14:36:30.4357011Z    |
+2026-01-11T14:36:30.4357157Z 20 | import json
+2026-01-11T14:36:30.4357344Z 21 | from pathlib import Path
+2026-01-11T14:36:30.4357604Z 22 | from unittest.mock import patch, mock_open
+2026-01-11T14:36:30.4357879Z    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4358098Z 23 |
+2026-01-11T14:36:30.4358251Z 24 | # Import targets
+2026-01-11T14:36:30.4358423Z    |
+2026-01-11T14:36:30.4358515Z 
+2026-01-11T14:36:30.4358645Z F401 [*] `unittest.mock.mock_open` imported but unused
+2026-01-11T14:36:30.4358960Z   --> tests/test_audit_suite.py:22:34
+2026-01-11T14:36:30.4359189Z    |
+2026-01-11T14:36:30.4359344Z 20 | import json
+2026-01-11T14:36:30.4359530Z 21 | from pathlib import Path
+2026-01-11T14:36:30.4359791Z 22 | from unittest.mock import patch, mock_open
+2026-01-11T14:36:30.4360065Z    |                                  ^^^^^^^^^
+2026-01-11T14:36:30.4360291Z 23 |
+2026-01-11T14:36:30.4360442Z 24 | # Import targets
+2026-01-11T14:36:30.4360619Z    |
+2026-01-11T14:36:30.4360825Z help: Remove unused import: `unittest.mock.mock_open`
+2026-01-11T14:36:30.4361046Z 
+2026-01-11T14:36:30.4361146Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4361411Z   --> tests/test_audit_suite.py:26:1
+2026-01-11T14:36:30.4361633Z    |
+2026-01-11T14:36:30.4361787Z 24 |   # Import targets
+2026-01-11T14:36:30.4361967Z 25 |   # ...
+2026-01-11T14:36:30.4362155Z 26 | / from common.exceptions import (
+2026-01-11T14:36:30.4362429Z 27 | |     NeuronError, VMNotFoundError, IOMMUError
+2026-01-11T14:36:30.4362690Z 28 | | )
+2026-01-11T14:36:30.4362834Z    | |_^
+2026-01-11T14:36:30.4363008Z 29 |   from common.decorators import (
+2026-01-11T14:36:30.4363268Z 30 |       handle_errors, retry, require_root
+2026-01-11T14:36:30.4363500Z    |
+2026-01-11T14:36:30.4363583Z 
+2026-01-11T14:36:30.4363746Z F401 [*] `common.exceptions.NeuronError` imported but unused
+2026-01-11T14:36:30.4364061Z   --> tests/test_audit_suite.py:27:5
+2026-01-11T14:36:30.4364410Z    |
+2026-01-11T14:36:30.4364553Z 25 | # ...
+2026-01-11T14:36:30.4364732Z 26 | from common.exceptions import (
+2026-01-11T14:36:30.4364999Z 27 |     NeuronError, VMNotFoundError, IOMMUError
+2026-01-11T14:36:30.4365262Z    |     ^^^^^^^^^^^
+2026-01-11T14:36:30.4365436Z 28 | )
+2026-01-11T14:36:30.4365599Z 29 | from common.decorators import (
+2026-01-11T14:36:30.4365817Z    |
+2026-01-11T14:36:30.4365976Z help: Remove unused import
+2026-01-11T14:36:30.4366117Z 
+2026-01-11T14:36:30.4366295Z F401 [*] `common.exceptions.VMNotFoundError` imported but unused
+2026-01-11T14:36:30.4366637Z   --> tests/test_audit_suite.py:27:18
+2026-01-11T14:36:30.4366869Z    |
+2026-01-11T14:36:30.4367009Z 25 | # ...
+2026-01-11T14:36:30.4367191Z 26 | from common.exceptions import (
+2026-01-11T14:36:30.4367456Z 27 |     NeuronError, VMNotFoundError, IOMMUError
+2026-01-11T14:36:30.4367720Z    |                  ^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4367926Z 28 | )
+2026-01-11T14:36:30.4368088Z 29 | from common.decorators import (
+2026-01-11T14:36:30.4368306Z    |
+2026-01-11T14:36:30.4368463Z help: Remove unused import
+2026-01-11T14:36:30.4368604Z 
+2026-01-11T14:36:30.4368747Z F401 [*] `common.exceptions.IOMMUError` imported but unused
+2026-01-11T14:36:30.4369058Z   --> tests/test_audit_suite.py:27:35
+2026-01-11T14:36:30.4369279Z    |
+2026-01-11T14:36:30.4369416Z 25 | # ...
+2026-01-11T14:36:30.4369587Z 26 | from common.exceptions import (
+2026-01-11T14:36:30.4369968Z 27 |     NeuronError, VMNotFoundError, IOMMUError
+2026-01-11T14:36:30.4370249Z    |                                   ^^^^^^^^^^
+2026-01-11T14:36:30.4370482Z 28 | )
+2026-01-11T14:36:30.4370651Z 29 | from common.decorators import (
+2026-01-11T14:36:30.4370873Z    |
+2026-01-11T14:36:30.4371030Z help: Remove unused import
+2026-01-11T14:36:30.4371171Z 
+2026-01-11T14:36:30.4371270Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4371641Z   --> tests/test_audit_suite.py:29:1
+2026-01-11T14:36:30.4371863Z    |
+2026-01-11T14:36:30.4372055Z 27 |       NeuronError, VMNotFoundError, IOMMUError
+2026-01-11T14:36:30.4372311Z 28 |   )
+2026-01-11T14:36:30.4372485Z 29 | / from common.decorators import (
+2026-01-11T14:36:30.4372737Z 30 | |     handle_errors, retry, require_root
+2026-01-11T14:36:30.4372979Z 31 | | )
+2026-01-11T14:36:30.4373123Z    | |_^
+2026-01-11T14:36:30.4373320Z 32 |   from common.resources import ManagedResource
+2026-01-11T14:36:30.4373635Z 33 |   from vm_manager.gui.app import _validate_vm_name
+2026-01-11T14:36:30.4373977Z    |
+2026-01-11T14:36:30.4374275Z 
+2026-01-11T14:36:30.4374552Z F401 [*] `common.decorators.handle_errors` imported but unused
+2026-01-11T14:36:30.4375100Z   --> tests/test_audit_suite.py:30:5
+2026-01-11T14:36:30.4375471Z    |
+2026-01-11T14:36:30.4375701Z 28 | )
+2026-01-11T14:36:30.4375989Z 29 | from common.decorators import (
+2026-01-11T14:36:30.4376457Z 30 |     handle_errors, retry, require_root
+2026-01-11T14:36:30.4376889Z    |     ^^^^^^^^^^^^^
+2026-01-11T14:36:30.4377181Z 31 | )
+2026-01-11T14:36:30.4377486Z 32 | from common.resources import ManagedResource
+2026-01-11T14:36:30.4377901Z    |
+2026-01-11T14:36:30.4378259Z help: Remove unused import: `common.decorators.handle_errors`
+2026-01-11T14:36:30.4378667Z 
+2026-01-11T14:36:30.4378835Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4379279Z   --> tests/test_audit_suite.py:32:1
+2026-01-11T14:36:30.4379682Z    |
+2026-01-11T14:36:30.4379985Z 30 |     handle_errors, retry, require_root
+2026-01-11T14:36:30.4380395Z 31 | )
+2026-01-11T14:36:30.4380714Z 32 | from common.resources import ManagedResource
+2026-01-11T14:36:30.4381167Z    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4381638Z 33 | from vm_manager.gui.app import _validate_vm_name
+2026-01-11T14:36:30.4382372Z 34 | from store.installer import _safe_filename, _ensure_within_directory, ProtonInstaller
+2026-01-11T14:36:30.4383003Z    |
+2026-01-11T14:36:30.4383173Z 
+2026-01-11T14:36:30.4383338Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4383772Z   --> tests/test_audit_suite.py:33:1
+2026-01-11T14:36:30.4384331Z    |
+2026-01-11T14:36:30.4384596Z 31 | )
+2026-01-11T14:36:30.4384916Z 32 | from common.resources import ManagedResource
+2026-01-11T14:36:30.4385440Z 33 | from vm_manager.gui.app import _validate_vm_name
+2026-01-11T14:36:30.4385946Z    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4386653Z 34 | from store.installer import _safe_filename, _ensure_within_directory, ProtonInstaller
+2026-01-11T14:36:30.4387394Z 35 | from vm_manager.core.guest_client import GuestAgentClient, CommandType, GuestAgentResponse
+2026-01-11T14:36:30.4387827Z    |
+2026-01-11T14:36:30.4387917Z 
+2026-01-11T14:36:30.4388022Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4388288Z   --> tests/test_audit_suite.py:34:1
+2026-01-11T14:36:30.4388512Z    |
+2026-01-11T14:36:30.4388700Z 32 | from common.resources import ManagedResource
+2026-01-11T14:36:30.4389022Z 33 | from vm_manager.gui.app import _validate_vm_name
+2026-01-11T14:36:30.4389460Z 34 | from store.installer import _safe_filename, _ensure_within_directory, ProtonInstaller
+2026-01-11T14:36:30.4389912Z    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4390389Z 35 | from vm_manager.core.guest_client import GuestAgentClient, CommandType, GuestAgentResponse
+2026-01-11T14:36:30.4390803Z    |
+2026-01-11T14:36:30.4390890Z 
+2026-01-11T14:36:30.4390992Z E402 Module level import not at top of file
+2026-01-11T14:36:30.4391426Z   --> tests/test_audit_suite.py:35:1
+2026-01-11T14:36:30.4391660Z    |
+2026-01-11T14:36:30.4391852Z 33 | from vm_manager.gui.app import _validate_vm_name
+2026-01-11T14:36:30.4392289Z 34 | from store.installer import _safe_filename, _ensure_within_directory, ProtonInstaller
+2026-01-11T14:36:30.4392872Z 35 | from vm_manager.core.guest_client import GuestAgentClient, CommandType, GuestAgentResponse
+2026-01-11T14:36:30.4393454Z    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4393738Z    |
+2026-01-11T14:36:30.4393824Z 
+2026-01-11T14:36:30.4393936Z E702 Multiple statements on one line (semicolon)
+2026-01-11T14:36:30.4394491Z    --> tests/test_audit_suite.py:109:25
+2026-01-11T14:36:30.4394734Z     |
+2026-01-11T14:36:30.4394911Z 108 |         # Mock directory structure
+2026-01-11T14:36:30.4395262Z 109 |         m1 = MagicMock(); m1.is_dir.return_value = True; m1.name = "Proton 8.0"
+2026-01-11T14:36:30.4395618Z     |                         ^
+2026-01-11T14:36:30.4395939Z 110 |         m2 = MagicMock(); m2.is_dir.return_value = True; m2.name = "Proton 7.0"
+2026-01-11T14:36:30.4396412Z 111 |         m3 = MagicMock(); m3.is_dir.return_value = False; m3.name = "not-a-proton-dir"
+2026-01-11T14:36:30.4396777Z     |
+2026-01-11T14:36:30.4396867Z 
+2026-01-11T14:36:30.4396978Z E702 Multiple statements on one line (semicolon)
+2026-01-11T14:36:30.4397268Z    --> tests/test_audit_suite.py:109:56
+2026-01-11T14:36:30.4397491Z     |
+2026-01-11T14:36:30.4397658Z 108 |         # Mock directory structure
+2026-01-11T14:36:30.4397999Z 109 |         m1 = MagicMock(); m1.is_dir.return_value = True; m1.name = "Proton 8.0"
+2026-01-11T14:36:30.4398363Z     |                                                        ^
+2026-01-11T14:36:30.4398721Z 110 |         m2 = MagicMock(); m2.is_dir.return_value = True; m2.name = "Proton 7.0"
+2026-01-11T14:36:30.4399187Z 111 |         m3 = MagicMock(); m3.is_dir.return_value = False; m3.name = "not-a-proton-dir"
+2026-01-11T14:36:30.4399569Z     |
+2026-01-11T14:36:30.4399662Z 
+2026-01-11T14:36:30.4399779Z E702 Multiple statements on one line (semicolon)
+2026-01-11T14:36:30.4400060Z    --> tests/test_audit_suite.py:110:25
+2026-01-11T14:36:30.4400286Z     |
+2026-01-11T14:36:30.4400450Z 108 |         # Mock directory structure
+2026-01-11T14:36:30.4400790Z 109 |         m1 = MagicMock(); m1.is_dir.return_value = True; m1.name = "Proton 8.0"
+2026-01-11T14:36:30.4401232Z 110 |         m2 = MagicMock(); m2.is_dir.return_value = True; m2.name = "Proton 7.0"
+2026-01-11T14:36:30.4401572Z     |                         ^
+2026-01-11T14:36:30.4401898Z 111 |         m3 = MagicMock(); m3.is_dir.return_value = False; m3.name = "not-a-proton-dir"
+2026-01-11T14:36:30.4402279Z 112 |         mock_dirs = [m1, m2, m3]
+2026-01-11T14:36:30.4402502Z     |
+2026-01-11T14:36:30.4402589Z 
+2026-01-11T14:36:30.4402698Z E702 Multiple statements on one line (semicolon)
+2026-01-11T14:36:30.4402977Z    --> tests/test_audit_suite.py:110:56
+2026-01-11T14:36:30.4403200Z     |
+2026-01-11T14:36:30.4403372Z 108 |         # Mock directory structure
+2026-01-11T14:36:30.4403707Z 109 |         m1 = MagicMock(); m1.is_dir.return_value = True; m1.name = "Proton 8.0"
+2026-01-11T14:36:30.4404353Z 110 |         m2 = MagicMock(); m2.is_dir.return_value = True; m2.name = "Proton 7.0"
+2026-01-11T14:36:30.4404753Z     |                                                        ^
+2026-01-11T14:36:30.4405146Z 111 |         m3 = MagicMock(); m3.is_dir.return_value = False; m3.name = "not-a-proton-dir"
+2026-01-11T14:36:30.4405530Z 112 |         mock_dirs = [m1, m2, m3]
+2026-01-11T14:36:30.4405750Z     |
+2026-01-11T14:36:30.4405842Z 
+2026-01-11T14:36:30.4405951Z E702 Multiple statements on one line (semicolon)
+2026-01-11T14:36:30.4406237Z    --> tests/test_audit_suite.py:111:25
+2026-01-11T14:36:30.4406467Z     |
+2026-01-11T14:36:30.4406726Z 109 |         m1 = MagicMock(); m1.is_dir.return_value = True; m1.name = "Proton 8.0"
+2026-01-11T14:36:30.4407301Z 110 |         m2 = MagicMock(); m2.is_dir.return_value = True; m2.name = "Proton 7.0"
+2026-01-11T14:36:30.4407773Z 111 |         m3 = MagicMock(); m3.is_dir.return_value = False; m3.name = "not-a-proton-dir"
+2026-01-11T14:36:30.4408137Z     |                         ^
+2026-01-11T14:36:30.4408354Z 112 |         mock_dirs = [m1, m2, m3]
+2026-01-11T14:36:30.4408574Z     |
+2026-01-11T14:36:30.4408682Z 
+2026-01-11T14:36:30.4408791Z E702 Multiple statements on one line (semicolon)
+2026-01-11T14:36:30.4409182Z    --> tests/test_audit_suite.py:111:57
+2026-01-11T14:36:30.4409404Z     |
+2026-01-11T14:36:30.4409671Z 109 |         m1 = MagicMock(); m1.is_dir.return_value = True; m1.name = "Proton 8.0"
+2026-01-11T14:36:30.4410108Z 110 |         m2 = MagicMock(); m2.is_dir.return_value = True; m2.name = "Proton 7.0"
+2026-01-11T14:36:30.4410574Z 111 |         m3 = MagicMock(); m3.is_dir.return_value = False; m3.name = "not-a-proton-dir"
+2026-01-11T14:36:30.4410964Z     |                                                         ^
+2026-01-11T14:36:30.4411233Z 112 |         mock_dirs = [m1, m2, m3]
+2026-01-11T14:36:30.4411447Z     |
+2026-01-11T14:36:30.4411539Z 
+2026-01-11T14:36:30.4411667Z F401 [*] `unittest.mock.MagicMock` imported but unused
+2026-01-11T14:36:30.4411966Z  --> tests/test_common.py:7:27
+2026-01-11T14:36:30.4412173Z   |
+2026-01-11T14:36:30.4412326Z 5 | import pytest
+2026-01-11T14:36:30.4412501Z 6 | import logging
+2026-01-11T14:36:30.4412715Z 7 | from unittest.mock import MagicMock, patch
+2026-01-11T14:36:30.4412982Z   |                           ^^^^^^^^^
+2026-01-11T14:36:30.4413202Z 8 | import time
+2026-01-11T14:36:30.4413361Z   |
+2026-01-11T14:36:30.4413449Z help: Remove unused import
+2026-01-11T14:36:30.4413459Z 
+2026-01-11T14:36:30.4413570Z F401 [*] `unittest.mock.patch` imported but unused
+2026-01-11T14:36:30.4413654Z  --> tests/test_common.py:7:38
+2026-01-11T14:36:30.4413719Z   |
+2026-01-11T14:36:30.4413788Z 5 | import pytest
+2026-01-11T14:36:30.4413857Z 6 | import logging
+2026-01-11T14:36:30.4413962Z 7 | from unittest.mock import MagicMock, patch
+2026-01-11T14:36:30.4414046Z   |                                      ^^^^^
+2026-01-11T14:36:30.4414114Z 8 | import time
+2026-01-11T14:36:30.4414287Z   |
+2026-01-11T14:36:30.4414376Z help: Remove unused import
+2026-01-11T14:36:30.4414385Z 
+2026-01-11T14:36:30.4414503Z F401 [*] `unittest.mock.patch` imported but unused
+2026-01-11T14:36:30.4414597Z   --> tests/test_gpu_scanner.py:10:27
+2026-01-11T14:36:30.4414664Z    |
+2026-01-11T14:36:30.4414741Z  8 | import pytest
+2026-01-11T14:36:30.4414835Z  9 | from pathlib import Path
+2026-01-11T14:36:30.4414947Z 10 | from unittest.mock import patch, MagicMock
+2026-01-11T14:36:30.4415025Z    |                           ^^^^^
+2026-01-11T14:36:30.4415092Z 11 | import json
+2026-01-11T14:36:30.4415156Z    |
+2026-01-11T14:36:30.4415240Z help: Remove unused import
+2026-01-11T14:36:30.4415249Z 
+2026-01-11T14:36:30.4415377Z F401 [*] `unittest.mock.MagicMock` imported but unused
+2026-01-11T14:36:30.4415469Z   --> tests/test_gpu_scanner.py:10:34
+2026-01-11T14:36:30.4415538Z    |
+2026-01-11T14:36:30.4415613Z  8 | import pytest
+2026-01-11T14:36:30.4415697Z  9 | from pathlib import Path
+2026-01-11T14:36:30.4415803Z 10 | from unittest.mock import patch, MagicMock
+2026-01-11T14:36:30.4415886Z    |                                  ^^^^^^^^^
+2026-01-11T14:36:30.4415953Z 11 | import json
+2026-01-11T14:36:30.4416021Z    |
+2026-01-11T14:36:30.4416105Z help: Remove unused import
+2026-01-11T14:36:30.4416119Z 
+2026-01-11T14:36:30.4416202Z F401 [*] `socket` imported but unused
+2026-01-11T14:36:30.4416291Z  --> tests/test_guest_agent.py:3:8
+2026-01-11T14:36:30.4416354Z   |
+2026-01-11T14:36:30.4416430Z 1 | import pytest
+2026-01-11T14:36:30.4416497Z 2 | import json
+2026-01-11T14:36:30.4416569Z 3 | import socket
+2026-01-11T14:36:30.4416638Z   |        ^^^^^^
+2026-01-11T14:36:30.4416705Z 4 | import ssl
+2026-01-11T14:36:30.4416789Z 5 | from pathlib import Path
+2026-01-11T14:36:30.4416853Z   |
+2026-01-11T14:36:30.4416943Z help: Remove unused import: `socket`
+2026-01-11T14:36:30.4416952Z 
+2026-01-11T14:36:30.4417149Z F401 [*] `ssl` imported but unused
+2026-01-11T14:36:30.4417242Z  --> tests/test_guest_agent.py:4:8
+2026-01-11T14:36:30.4417311Z   |
+2026-01-11T14:36:30.4417380Z 2 | import json
+2026-01-11T14:36:30.4417448Z 3 | import socket
+2026-01-11T14:36:30.4417515Z 4 | import ssl
+2026-01-11T14:36:30.4417582Z   |        ^^^
+2026-01-11T14:36:30.4417664Z 5 | from pathlib import Path
+2026-01-11T14:36:30.4417731Z 6 | import sys
+2026-01-11T14:36:30.4417900Z   |
+2026-01-11T14:36:30.4417990Z help: Remove unused import: `ssl`
+2026-01-11T14:36:30.4417999Z 
+2026-01-11T14:36:30.4418204Z F401 [*] `vm_manager.core.guest_client.GuestAgentResponse` imported but unused
+2026-01-11T14:36:30.4418298Z   --> tests/test_guest_agent.py:12:75
+2026-01-11T14:36:30.4418361Z    |
+2026-01-11T14:36:30.4418524Z 10 | sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+2026-01-11T14:36:30.4418588Z 11 |
+2026-01-11T14:36:30.4418870Z 12 | from vm_manager.core.guest_client import VirtioSerialClient, CommandType, GuestAgentResponse
+2026-01-11T14:36:30.4419001Z    |                                                                           ^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4419066Z 13 |
+2026-01-11T14:36:30.4419164Z 14 | class TestGuestAgentProtocol:
+2026-01-11T14:36:30.4419225Z    |
+2026-01-11T14:36:30.4419436Z help: Remove unused import: `vm_manager.core.guest_client.GuestAgentResponse`
+2026-01-11T14:36:30.4419444Z 
+2026-01-11T14:36:30.4419572Z F841 Local variable `m1` is assigned to but never used
+2026-01-11T14:36:30.4419663Z   --> tests/test_guest_agent.py:19:54
+2026-01-11T14:36:30.4419724Z    |
+2026-01-11T14:36:30.4419814Z 17 |     @pytest.fixture(autouse=True)
+2026-01-11T14:36:30.4419908Z 18 |     def mock_socket_constants(self):
+2026-01-11T14:36:30.4420042Z 19 |         with patch("socket.AF_UNIX", create=True) as m1, \
+2026-01-11T14:36:30.4420139Z    |                                                      ^^
+2026-01-11T14:36:30.4420242Z 20 |              patch("socket.socket") as m2:
+2026-01-11T14:36:30.4420318Z 21 |             yield m2
+2026-01-11T14:36:30.4420381Z    |
+2026-01-11T14:36:30.4420492Z help: Remove assignment to unused variable `m1`
+2026-01-11T14:36:30.4420505Z 
+2026-01-11T14:36:30.4420663Z F841 Local variable `response_json` is assigned to but never used
+2026-01-11T14:36:30.4420751Z   --> tests/test_guest_agent.py:67:9
+2026-01-11T14:36:30.4420815Z    |
+2026-01-11T14:36:30.4420904Z 65 |         client._socket = MagicMock()
+2026-01-11T14:36:30.4420972Z 66 |         
+2026-01-11T14:36:30.4421071Z 67 |         response_json = b'{"success": true}'
+2026-01-11T14:36:30.4421145Z    |         ^^^^^^^^^^^^^
+2026-01-11T14:36:30.4421272Z 68 |         # Return in 3 chunks: STX + part, part, part + ETX
+2026-01-11T14:36:30.4421373Z 69 |         client._socket.recv.side_effect = [
+2026-01-11T14:36:30.4421436Z    |
+2026-01-11T14:36:30.4421581Z help: Remove assignment to unused variable `response_json`
+2026-01-11T14:36:30.4421591Z 
+2026-01-11T14:36:30.4421696Z F401 [*] `unittest.mock.Mock` imported but unused
+2026-01-11T14:36:30.4421790Z  --> tests/test_hardware_detect.py:7:27
+2026-01-11T14:36:30.4421865Z   |
+2026-01-11T14:36:30.4421937Z 6 | import pytest
+2026-01-11T14:36:30.4422060Z 7 | from unittest.mock import Mock, patch, MagicMock
+2026-01-11T14:36:30.4422137Z   |                           ^^^^
+2026-01-11T14:36:30.4422222Z 8 | from pathlib import Path
+2026-01-11T14:36:30.4422290Z 9 | import sys
+2026-01-11T14:36:30.4422353Z   |
+2026-01-11T14:36:30.4422474Z help: Remove unused import: `unittest.mock.Mock`
+2026-01-11T14:36:30.4422482Z 
+2026-01-11T14:36:30.4422608Z F401 [*] `unittest.mock.MagicMock` imported but unused
+2026-01-11T14:36:30.4422696Z   --> tests/test_security.py:14:27
+2026-01-11T14:36:30.4422764Z    |
+2026-01-11T14:36:30.4422941Z 12 | from utils.atomic_write import atomic_write_text, atomic_write_json
+2026-01-11T14:36:30.4423078Z 13 | from migration.migrator import Migrator, FileCategory
+2026-01-11T14:36:30.4423190Z 14 | from unittest.mock import MagicMock, patch
+2026-01-11T14:36:30.4423266Z    |                           ^^^^^^^^^
+2026-01-11T14:36:30.4423329Z 15 |
+2026-01-11T14:36:30.4423543Z 16 | def test_safe_filename_protection():
+2026-01-11T14:36:30.4423616Z    |
+2026-01-11T14:36:30.4423749Z help: Remove unused import: `unittest.mock.MagicMock`
+2026-01-11T14:36:30.4423758Z 
+2026-01-11T14:36:30.4423896Z F401 [*] `tempfile.NamedTemporaryFile` imported but unused
+2026-01-11T14:36:30.4423989Z   --> tests/test_store.py:8:22
+2026-01-11T14:36:30.4424123Z    |
+2026-01-11T14:36:30.4424356Z  6 | import json
+2026-01-11T14:36:30.4424445Z  7 | from pathlib import Path
+2026-01-11T14:36:30.4424559Z  8 | from tempfile import NamedTemporaryFile
+2026-01-11T14:36:30.4424636Z    |                      ^^^^^^^^^^^^^^^^^^
+2026-01-11T14:36:30.4424698Z  9 |
+2026-01-11T14:36:30.4424771Z 10 | import sys
+2026-01-11T14:36:30.4424834Z    |
+2026-01-11T14:36:30.4424985Z help: Remove unused import: `tempfile.NamedTemporaryFile`
+2026-01-11T14:36:30.4424994Z 
+2026-01-11T14:36:30.4425148Z F401 [*] `vm_manager.core.vm_config.VMState` imported but unused
+2026-01-11T14:36:30.4425243Z   --> tests/test_vm_manager.py:13:23
+2026-01-11T14:36:30.4425307Z    |
+2026-01-11T14:36:30.4425408Z 12 | from vm_manager.core.vm_config import (
+2026-01-11T14:36:30.4425531Z 13 |     VMConfig, VMType, VMState, DisplayMode,
+2026-01-11T14:36:30.4425605Z    |                       ^^^^^^^
+2026-01-11T14:36:30.4425709Z 14 |     CPUConfig, MemoryConfig, StorageConfig,
+2026-01-11T14:36:30.4425842Z 15 |     GPUPassthroughConfig, windows11_gaming_preset,
+2026-01-11T14:36:30.4425909Z    |
+2026-01-11T14:36:30.4425991Z help: Remove unused import
+2026-01-11T14:36:30.4426000Z 
+2026-01-11T14:36:30.4426168Z F401 [*] `vm_manager.core.vm_config.DisplayMode` imported but unused
+2026-01-11T14:36:30.4426254Z   --> tests/test_vm_manager.py:13:32
+2026-01-11T14:36:30.4426316Z    |
+2026-01-11T14:36:30.4426412Z 12 | from vm_manager.core.vm_config import (
+2026-01-11T14:36:30.4426516Z 13 |     VMConfig, VMType, VMState, DisplayMode,
+2026-01-11T14:36:30.4426601Z    |                                ^^^^^^^^^^^
+2026-01-11T14:36:30.4426706Z 14 |     CPUConfig, MemoryConfig, StorageConfig,
+2026-01-11T14:36:30.4426835Z 15 |     GPUPassthroughConfig, windows11_gaming_preset,
+2026-01-11T14:36:30.4426900Z    |
+2026-01-11T14:36:30.4426983Z help: Remove unused import
+2026-01-11T14:36:30.4426991Z 
+2026-01-11T14:36:30.4427165Z F401 [*] `vm_manager.core.vm_config.StorageConfig` imported but unused
+2026-01-11T14:36:30.4427250Z   --> tests/test_vm_manager.py:14:30
+2026-01-11T14:36:30.4427316Z    |
+2026-01-11T14:36:30.4427415Z 12 | from vm_manager.core.vm_config import (
+2026-01-11T14:36:30.4427520Z 13 |     VMConfig, VMType, VMState, DisplayMode,
+2026-01-11T14:36:30.4427620Z 14 |     CPUConfig, MemoryConfig, StorageConfig,
+2026-01-11T14:36:30.4427701Z    |                              ^^^^^^^^^^^^^
+2026-01-11T14:36:30.4427824Z 15 |     GPUPassthroughConfig, windows11_gaming_preset,
+2026-01-11T14:36:30.4427889Z 16 | )
+2026-01-11T14:36:30.4427952Z    |
+2026-01-11T14:36:30.4428032Z help: Remove unused import
+2026-01-11T14:36:30.4428045Z 
+2026-01-11T14:36:30.4428191Z F841 Local variable `manager` is assigned to but never used
+2026-01-11T14:36:30.4428286Z    --> tests/test_vm_manager.py:151:9
+2026-01-11T14:36:30.4428350Z     |
+2026-01-11T14:36:30.4428540Z 149 |         mock_resolve.return_value = Path("/sys/bus/pci/drivers/nvidia")
+2026-01-11T14:36:30.4428603Z 150 |
+2026-01-11T14:36:30.4428710Z 151 |         manager = GPUPassthroughManager()
+2026-01-11T14:36:30.4428788Z     |         ^^^^^^^
+2026-01-11T14:36:30.4428897Z 152 |         # Would return "nvidia" if sysfs existed
+2026-01-11T14:36:30.4429030Z 153 |         # This is a unit test showing the interface works
+2026-01-11T14:36:30.4429094Z     |
+2026-01-11T14:36:30.4429222Z help: Remove assignment to unused variable `manager`
+2026-01-11T14:36:30.4429230Z 
+2026-01-11T14:36:30.4429298Z Found 112 errors.
+2026-01-11T14:36:30.4429580Z [*] 74 fixable with the `--fix` option (6 hidden fixes can be enabled with the `--unsafe-fixes` option).
+2026-01-11T14:36:30.4439044Z ##[error]Process completed with exit code 1.
+2026-01-11T14:36:30.4556650Z Post job cleanup.
+2026-01-11T14:36:30.5490390Z [command]/usr/bin/git version
+2026-01-11T14:36:30.5526621Z git version 2.52.0
+2026-01-11T14:36:30.5571881Z Temporarily overriding HOME='/home/runner/work/_temp/f458000e-97b4-42fb-a0f0-048a3b3595a1' before making global git config changes
+2026-01-11T14:36:30.5572395Z Adding repository directory to the temporary git global config as a safe directory
+2026-01-11T14:36:30.5578231Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/NeuronOS/NeuronOS
+2026-01-11T14:36:30.5613992Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-01-11T14:36:30.5645602Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-01-11T14:36:30.5887810Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-01-11T14:36:30.5911218Z http.https://github.com/.extraheader
+2026-01-11T14:36:30.5927894Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-01-11T14:36:30.5964629Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-01-11T14:36:30.6208020Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-01-11T14:36:30.6241694Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-01-11T14:36:30.6590180Z Cleaning up orphan processes

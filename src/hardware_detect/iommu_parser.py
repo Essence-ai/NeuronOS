@@ -7,7 +7,6 @@ IOMMU groups are critical for safe device passthrough - all devices
 in a group must be passed through together.
 """
 
-import os
 import subprocess
 from pathlib import Path
 from dataclasses import dataclass, field

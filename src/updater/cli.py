@@ -8,11 +8,10 @@ Command-line interface for system updates and rollback.
 import argparse
 import logging
 import sys
-from typing import Optional
 
-from .updater import UpdateManager, UpdateStatus, UpdateInfo
-from .snapshot import SnapshotManager, Snapshot
-from .rollback import RollbackManager, RollbackStatus
+from .updater import UpdateManager, UpdateStatus
+from .snapshot import SnapshotManager
+from .rollback import RollbackManager
 
 logger = logging.getLogger(__name__)
 

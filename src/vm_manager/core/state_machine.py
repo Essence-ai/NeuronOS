@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from enum import Enum, auto
-from typing import Optional, Dict, Set, Callable
+from typing import Dict, Set, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ class VMStateMachine:
         
         Use with caution - bypasses transition validation.
         """
-        old_state = self._state
+        _old_state = self._state  # noqa: F841 - kept for debugging
         self._state = state
         logger.debug(f"VM {self.vm_name}: state forced to {state.name}")
     

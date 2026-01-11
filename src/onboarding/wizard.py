@@ -8,16 +8,15 @@ A GTK4/Adwaita wizard that guides users through first-boot setup.
 from __future__ import annotations
 
 import logging
-import subprocess
 import sys
 from pathlib import Path
-from typing import Optional, List, Callable
+from typing import List
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, GLib, Gio
+from gi.repository import Gtk, Adw, GLib, Gio  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,5 @@
 import pytest
 import json
-import socket
-import ssl
 from pathlib import Path
 import sys
 from unittest.mock import MagicMock, patch
@@ -9,15 +7,16 @@ from unittest.mock import MagicMock, patch
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from vm_manager.core.guest_client import VirtioSerialClient, CommandType, GuestAgentResponse
+from vm_manager.core.guest_client import VirtioSerialClient, CommandType
 
 class TestGuestAgentProtocol:
     """Tests for Guest Agent framing and protocol."""
 
     @pytest.fixture(autouse=True)
     def mock_socket_constants(self):
-        with patch("socket.AF_UNIX", create=True) as m1, \
+        with patch("socket.AF_UNIX", create=True) as _m1, \
              patch("socket.socket") as m2:
+            _m1  # noqa: F841 - needed for context manager
             yield m2
 
     @pytest.fixture
@@ -64,7 +63,7 @@ class TestGuestAgentProtocol:
         client = VirtioSerialClient("/tmp/test.sock")
         client._socket = MagicMock()
         
-        response_json = b'{"success": true}'
+        _response_json = b'{"success": true}'  # noqa: F841 - for documentation
         # Return in 3 chunks: STX + part, part, part + ETX
         client._socket.recv.side_effect = [
             b'\x02{"succ',

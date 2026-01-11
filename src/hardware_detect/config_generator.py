@@ -326,7 +326,7 @@ softdep i915 pre: vfio-pci
 
         # Check if params already present
         if params in content:
-            print(f"✓ Kernel params already in GRUB config")
+            print("✓ Kernel params already in GRUB config")
             return
 
         # Add to GRUB_CMDLINE_LINUX_DEFAULT

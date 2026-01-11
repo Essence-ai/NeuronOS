@@ -14,14 +14,12 @@ from __future__ import annotations
 
 import logging
 import sys
-import os
 import re
 import subprocess
 import threading
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import List
 from dataclasses import dataclass
-from enum import Enum
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +50,7 @@ try:
     import gi
     gi.require_version('Gtk', '4.0')
     gi.require_version('Adw', '1')
-    from gi.repository import Gtk, Adw, Gio, GLib, Pango, Gdk
+    from gi.repository import Gtk, Adw, Gio, GLib, Gdk  # noqa: E402, F401
     GTK_AVAILABLE = True
 except (ImportError, ValueError):
     GTK_AVAILABLE = False
@@ -65,8 +63,8 @@ try:
     from hardware_detect.gpu_scanner import GPUScanner
     from hardware_detect.iommu_parser import IOMMUParser
     from vm_manager.core.libvirt_manager import LibvirtManager
-    from vm_manager.core.looking_glass import LookingGlassManager, get_looking_glass_manager
-    from vm_manager.core.vm_config import VMConfig, VMType, VMState
+    from vm_manager.core.looking_glass import get_looking_glass_manager  # noqa: F401
+    from vm_manager.core.vm_config import VMConfig  # noqa: F401
     MODULES_AVAILABLE = True
 except ImportError:
     MODULES_AVAILABLE = False

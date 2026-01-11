@@ -8,23 +8,23 @@ from __future__ import annotations
 
 import sys
 import logging
-from typing import Optional, List
+from typing import Optional
 from pathlib import Path
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QListWidget, QListWidgetItem, QFrame,
-    QProgressBar, QStatusBar, QMessageBox, QTabWidget,
+    QLabel, QPushButton, QFrame,
+    QStatusBar, QMessageBox, QTabWidget,
     QGroupBox, QFormLayout, QComboBox, QSpinBox, QCheckBox
 )
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
-from PyQt6.QtGui import QFont, QIcon, QColor
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QFont
 
 # Add parent to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 try:
-    from vm_manager.core.libvirt_manager import LibvirtManager, VMInfo, VMState
+    from vm_manager.core.libvirt_manager import LibvirtManager, VMInfo, VMState  # noqa: F401
     from vm_manager.core.looking_glass import get_looking_glass_manager
 except ImportError as e:
     print(f"Warning: Could not import libvirt_manager: {e}")
@@ -261,7 +261,7 @@ class CreateVMWidget(QWidget):
             if success:
                 QMessageBox.information(self, "Success", f"Successfully created VM: {name}")
             else:
-                QMessageBox.warning(self, "Error", f"Failed to create VM. Check logs for details.")
+                QMessageBox.warning(self, "Error", "Failed to create VM. Check logs for details.")
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An unexpected error occurred: {e}")

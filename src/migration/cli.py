@@ -9,7 +9,6 @@ import argparse
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
 from .drive_detector import DriveDetector, DriveType
 from .migrator import (

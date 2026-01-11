@@ -23,8 +23,7 @@ from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
 from .connection import get_connection, LibvirtConnection
 from .vm_config import (
-    VMConfig, VMType, 
-    GPUPassthroughConfig, LookingGlassConfig,
+    VMConfig, GPUPassthroughConfig,
 )
 
 logger = logging.getLogger(__name__)

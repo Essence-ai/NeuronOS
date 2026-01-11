@@ -7,7 +7,7 @@ Provides fallback behavior when features are unavailable.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, Callable, Any, Dict
 
 logger = logging.getLogger(__name__)
@@ -179,7 +179,6 @@ def check_libvirt_available() -> bool:
 def check_gtk_available() -> bool:
     """Check if GTK is available."""
     try:
-        from gi.repository import Gtk
         return True
     except Exception:
         return False

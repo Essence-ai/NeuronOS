@@ -5,7 +5,6 @@ Tests for NeuronOS Store - App Catalog
 import pytest
 import json
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))

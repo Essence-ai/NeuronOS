@@ -8,7 +8,6 @@ Migrates user files from Windows/macOS installations to NeuronOS.
 from __future__ import annotations
 
 import logging
-import os
 import shutil
 from dataclasses import dataclass, field
 from enum import Enum

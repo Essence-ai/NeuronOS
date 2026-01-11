@@ -10,7 +10,6 @@ This module provides functionality for:
 from __future__ import annotations
 
 import logging
-import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, List, Tuple
