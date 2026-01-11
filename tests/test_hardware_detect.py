@@ -54,9 +54,12 @@ class TestGPUScanner:
             device_id="2484",
             vendor_name="NVIDIA Corporation",
             device_name="GeForce RTX 3070",
-            device_class="0300",
+            subsystem_vendor="",
+            subsystem_device="",
             is_boot_vga=False,
-            driver="nvidia"
+            iommu_group=1,
+            driver_in_use="nvidia",
+            device_class="0300"
         )
 
         assert gpu.pci_address == "01:00.0"
@@ -84,8 +87,11 @@ class TestIOMMUParser:
 
         device = IOMMUDevice(
             pci_address="01:00.0",
-            description="NVIDIA Corporation GA104 [GeForce RTX 3070]",
-            device_class="0300"
+            device_class="0300",
+            class_name="VGA compatible controller",
+            vendor_id="10de",
+            device_id="2484",
+            description="NVIDIA Corporation GA104 [GeForce RTX 3070]"
         )
 
         group = IOMMUGroup(
@@ -156,6 +162,8 @@ class TestConfigGenerator:
             mkinitcpio_modules="MODULES=(vfio_pci vfio vfio_iommu_type1)",
             kernel_params="intel_iommu=on iommu=pt",
             bootloader="systemd-boot",
+            passthrough_gpu=None,
+            boot_gpu=None,
             warnings=[]
         )
 
