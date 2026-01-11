@@ -305,6 +305,73 @@ class IOMMUParser:
                 return True
         return False
 
+    # Phase 3: GPU reset bug detection
+    # Known GPUs with reset bugs that prevent clean shutdowns
+    RESET_BUG_DEVICES = {
+        # AMD Navi 10/14 (RX 5000 series)
+        ("1002", "731f"): "vendor-reset",  # RX 5700 XT
+        ("1002", "7340"): "vendor-reset",  # RX 5500 XT
+        ("1002", "7341"): "vendor-reset",  # RX 5500
+        # AMD Navi 21/22/23 (RX 6000 series)
+        ("1002", "73bf"): "vendor-reset",  # RX 6800 XT
+        ("1002", "73df"): "vendor-reset",  # RX 6700 XT
+        ("1002", "73ff"): "vendor-reset",  # RX 6600 XT
+    }
+
+    def check_reset_bug(self, pci_address: str) -> Optional[str]:
+        """
+        Check if a GPU has a known reset bug.
+
+        Some GPUs (especially AMD Navi series) have a reset bug where they
+        can't be properly reset after VM shutdown, requiring a host reboot.
+
+        Args:
+            pci_address: PCI address to check (e.g., "0000:01:00.0")
+
+        Returns:
+            Workaround suggestion if bug detected, None otherwise.
+        """
+        # Find the device
+        device = None
+        for group in self.groups.values():
+            for d in group.devices:
+                if d.pci_address == pci_address:
+                    device = d
+                    break
+
+        if not device:
+            return None
+
+        key = (device.vendor_id.lower(), device.device_id.lower())
+        if key in self.RESET_BUG_DEVICES:
+            workaround = self.RESET_BUG_DEVICES[key]
+            return (
+                f"This GPU ({device.description}) has a known reset bug. "
+                f"Install the '{workaround}' kernel module for proper VM shutdown."
+            )
+
+        return None
+
+    def get_acs_kernel_param(self) -> str:
+        """Get the kernel parameter for ACS override."""
+        return "pcie_acs_override=downstream,multifunction"
+
+    def get_all_reset_bugs(self) -> List[str]:
+        """
+        Check all GPUs for reset bugs.
+
+        Returns:
+            List of warning messages for affected GPUs.
+        """
+        warnings = []
+        for group in self.get_gpu_groups():
+            for device in group.devices:
+                if device.is_gpu:
+                    warning = self.check_reset_bug(device.pci_address)
+                    if warning:
+                        warnings.append(warning)
+        return warnings
+
 
 def main():
     """Command-line interface for IOMMU parsing."""

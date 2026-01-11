@@ -1,8 +1,11 @@
 """
-LibvirtManager - Core libvirt connection and VM lifecycle management.
+LibvirtManager - High-level facade for VM management.
 
-This module provides the primary interface for interacting with libvirt
-to create, configure, start, and manage virtual machines with GPU passthrough.
+This module provides the primary interface for interacting with libvirt.
+It now delegates to specialized modules:
+- LibvirtConnection for connection management
+- VMLifecycleManager for start/stop/pause operations
+- VMCreator for VM creation
 """
 
 from __future__ import annotations
@@ -21,7 +24,10 @@ except ImportError:
     LIBVIRT_AVAILABLE = False
     libvirt = None
 
-from jinja2 import Environment, FileSystemLoader
+# Import new modular components
+from .connection import LibvirtConnection, get_connection
+from .vm_lifecycle import VMLifecycleManager, ShutdownMethod
+from .vm_creator import VMCreator
 
 logger = logging.getLogger(__name__)
 
@@ -82,63 +88,41 @@ class LibvirtManager:
             )
 
         self.uri = uri
+        self.template_dir = template_dir
 
-        # Resolve template directory - check installed location first
-        if template_dir:
-            self.template_dir = template_dir
-        else:
-            installed_path = Path("/usr/share/neuron-os/templates")
-            dev_path = Path(__file__).parent.parent / "templates"
+        # Delegate to modular components
+        self._connection = LibvirtConnection(uri)
+        self._lifecycle = VMLifecycleManager(self._connection)
+        self._creator = VMCreator(self._connection)
 
-            if installed_path.exists():
-                self.template_dir = installed_path
-            else:
-                self.template_dir = dev_path
-
+        # Legacy direct connection (for backwards compatibility)
         self._conn: Optional[libvirt.virConnect] = None
         self._event_callbacks: List[Callable] = []
-
-        # Initialize Jinja2 environment
-        if self.template_dir.exists():
-            self._jinja_env = Environment(
-                loader=FileSystemLoader(str(self.template_dir)),
-                autoescape=False,
-            )
-        else:
-            self._jinja_env = None
-            logger.warning(f"Template directory not found: {self.template_dir}")
 
     def connect(self) -> bool:
         """
         Establish connection to libvirt.
 
+        Delegates to LibvirtConnection.
+
         Returns:
             True if connection successful, False otherwise.
         """
         try:
-            self._conn = libvirt.open(self.uri)
-            if self._conn is None:
-                logger.error(f"Failed to connect to {self.uri}")
-                return False
-
-            logger.info(f"Connected to libvirt: {self.uri}")
+            self._connection.connect()
             return True
-
-        except libvirt.libvirtError as e:
+        except Exception as e:
             logger.error(f"libvirt connection error: {e}")
             return False
 
     def disconnect(self) -> None:
         """Close the libvirt connection."""
-        if self._conn:
-            self._conn.close()
-            self._conn = None
-            logger.info("Disconnected from libvirt")
+        self._connection.disconnect()
 
     @property
     def connected(self) -> bool:
         """Check if connected to libvirt."""
-        return self._conn is not None and self._conn.isAlive()
+        return self._connection.is_connected
 
     def _ensure_connected(self) -> None:
         """Ensure we have an active connection."""
@@ -254,30 +238,25 @@ class LibvirtManager:
         """
         Start a virtual machine.
 
+        Delegates to VMLifecycleManager.
+
         Args:
             name: VM name
 
         Returns:
             True if started successfully.
         """
-        self._ensure_connected()
         try:
-            domain = self._conn.lookupByName(name)
-            if domain.isActive():
-                logger.info(f"VM {name} is already running")
-                return True
-
-            domain.create()
-            logger.info(f"Started VM: {name}")
-            return True
-
-        except libvirt.libvirtError as e:
+            return self._lifecycle.start(name)
+        except Exception as e:
             logger.error(f"Failed to start VM {name}: {e}")
             return False
 
     def stop_vm(self, name: str, force: bool = False) -> bool:
         """
         Stop a virtual machine.
+
+        Delegates to VMLifecycleManager.
 
         Args:
             name: VM name
@@ -286,23 +265,10 @@ class LibvirtManager:
         Returns:
             True if stopped successfully.
         """
-        self._ensure_connected()
         try:
-            domain = self._conn.lookupByName(name)
-            if not domain.isActive():
-                logger.info(f"VM {name} is already stopped")
-                return True
-
-            if force:
-                domain.destroy()
-                logger.info(f"Force stopped VM: {name}")
-            else:
-                domain.shutdown()
-                logger.info(f"Initiated graceful shutdown for VM: {name}")
-
-            return True
-
-        except libvirt.libvirtError as e:
+            method = ShutdownMethod.FORCE if force else ShutdownMethod.GRACEFUL
+            return self._lifecycle.stop(name, method=method)
+        except Exception as e:
             logger.error(f"Failed to stop VM {name}: {e}")
             return False
 
@@ -340,6 +306,24 @@ class LibvirtManager:
         except Exception as e:
             logger.error(f"Failed to create VM from template: {e}")
             return None
+
+    def create_vm(self, config: "VMConfig") -> bool:
+        """
+        Generic method to create a VM from a VMConfig.
+
+        Delegates to VMCreator.
+
+        Args:
+            config: VMConfig object
+
+        Returns:
+            True if created successfully.
+        """
+        try:
+            return self._creator.create(config)
+        except Exception as e:
+            logger.error(f"Failed to create VM: {e}")
+            return False
 
     def create_windows_vm(
         self,

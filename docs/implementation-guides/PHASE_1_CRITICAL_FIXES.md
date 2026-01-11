@@ -23,6 +23,7 @@
 ## Overview
 
 This phase addresses **critical vulnerabilities** that could result in:
+
 - Remote Code Execution (RCE)
 - Data Loss
 - System Unbootable
@@ -35,9 +36,11 @@ This phase addresses **critical vulnerabilities** that could result in:
 ## SEC-001: Command Injection in VM Manager
 
 ### Location
+
 `src/vm_manager/gui/app.py:218`
 
 ### Current Code (VULNERABLE)
+
 ```python
 def _on_open_clicked(self, button):
     # Open Looking Glass or virt-viewer
@@ -49,6 +52,7 @@ def _on_open_clicked(self, button):
 ```
 
 ### Why This Is Critical
+
 An attacker who can control the VM name (e.g., via a crafted libvirt config or API) can execute arbitrary shell commands:
 
 ```
@@ -57,6 +61,7 @@ Executed: virt-viewer -c qemu:///system test; rm -rf / # &
 ```
 
 ### Fixed Code
+
 ```python
 import subprocess
 import shlex
@@ -97,11 +102,13 @@ def _on_open_clicked(self, button):
 ```
 
 ### Testing
+
 1. Create a VM with a normal name - should work
 2. Try to create a VM with name `test; echo pwned` - should be rejected
 3. Try to create a VM with name `$(whoami)` - should be rejected
 
 ### Additional Hardening
+
 Search for and fix all other `os.system()` calls in the codebase:
 
 ```bash
@@ -115,10 +122,12 @@ Replace ALL instances with `subprocess.run()` or `subprocess.Popen()` with list 
 ## SEC-002: Unsanitized File Paths
 
 ### Locations
+
 - `src/store/installer.py:265-300` (Wine installer download)
 - `src/migration/migrator.py:258-264` (file copy target)
 
 ### Current Code (VULNERABLE)
+
 ```python
 # installer.py - Wine download
 installer_name = Path(installer_url).name or "installer.exe"
@@ -127,7 +136,9 @@ download_path = prefix_path / installer_name
 ```
 
 ### Why This Is Critical
+
 Path traversal can write files outside intended directory:
+
 ```
 URL: https://evil.com/foo/../../../etc/cron.d/backdoor
 installer_name = "../../../etc/cron.d/backdoor"
@@ -135,6 +146,7 @@ download_path = ~/.local/share/neuron-os/wine-prefixes/app/../../../etc/cron.d/b
 ```
 
 ### Fixed Code
+
 ```python
 import os
 from pathlib import Path, PurePosixPath
@@ -206,6 +218,7 @@ download_path = _ensure_within_directory(
 ```
 
 ### Testing
+
 1. Test with normal URL: `https://example.com/installer.exe`
 2. Test with traversal: `https://example.com/../../../etc/passwd` - should use `passwd` or default
 3. Test with encoded traversal: `https://example.com/%2e%2e%2fetc%2fpasswd`
@@ -215,9 +228,11 @@ download_path = _ensure_within_directory(
 ## SEC-003: Unsafe Download Without Verification
 
 ### Location
+
 `src/store/installer.py:271-300`
 
 ### Current Code (VULNERABLE)
+
 ```python
 response = requests.get(installer_url, stream=True)
 response.raise_for_status()
@@ -228,11 +243,13 @@ subprocess.Popen(["wine", str(download_path)], ...)
 ```
 
 ### Why This Is Critical
+
 - No checksum verification = MITM attacks can replace installer
 - No signature verification = cannot verify authentic source
 - Immediate execution = malware runs before user can inspect
 
 ### Fixed Code
+
 ```python
 import hashlib
 from typing import Optional
@@ -350,6 +367,7 @@ def _secure_download(
 ```
 
 ### Data Model Update
+
 Update `AppInfo` in `app_catalog.py` to include verification data:
 
 ```python
@@ -361,6 +379,7 @@ class AppInfo:
 ```
 
 ### apps.json Update Example
+
 ```json
 {
   "id": "7zip",
@@ -376,9 +395,11 @@ class AppInfo:
 ## DATA-001: Migration File/Directory Confusion
 
 ### Location
+
 `src/migration/migrator.py:353-378` (WindowsMigrator and MacOSMigrator)
 
 ### Current Code (BUG)
+
 ```python
 # For SSH_KEYS category
 elif category == FileCategory.SSH_KEYS:
@@ -400,13 +421,16 @@ def _copy_directory(self, source: Path, target: Path):
 ```
 
 ### Why This Causes Data Loss
+
 When migrating `.gitconfig` (a file), the code:
+
 1. Gets source path: `/mnt/windows/Users/John/.gitconfig` (file)
 2. Creates target as directory: `~/.gitconfig/` (mkdir)
 3. Tries to iterate file contents: `source.iterdir()` FAILS
 4. SSH keys may be partially copied or lost
 
 ### Fixed Code
+
 ```python
 def migrate(self) -> bool:
     """
@@ -508,6 +532,7 @@ def _set_ssh_permissions(self, path: Path):
 ```
 
 ### Also Update `_scan_directory`:
+
 ```python
 def _scan_directory(self, path: Path, category: FileCategory):
     """Scan a path and update totals."""
@@ -537,6 +562,7 @@ def _scan_directory(self, path: Path, category: FileCategory):
 ```
 
 ### Testing
+
 1. Create test Windows partition with:
    - `.gitconfig` file
    - `.ssh/` directory with `id_rsa`, `id_rsa.pub`, `config`
@@ -552,23 +578,28 @@ def _scan_directory(self, path: Path, category: FileCategory):
 ## DATA-002: Non-Atomic Configuration Writes
 
 ### Locations
+
 - `src/store/installer.py:383-384` (VM app config)
 - `src/updater/rollback.py:175-176` (GRUB config)
 - `src/hardware_detect/config_generator.py` (modprobe config)
 
 ### Current Code (VULNERABLE)
+
 ```python
 with open(config_dir / f"{app.id}.json", 'w') as f:
     json.dump(app_config, f, indent=2)
 ```
 
 ### Why This Is Critical
+
 If the system crashes or loses power during write:
+
 1. File is truncated (partial write)
 2. JSON is corrupted
 3. Config is lost or invalid
 
 ### Fixed Code - Utility Module
+
 Create `src/utils/atomic_write.py`:
 
 ```python
@@ -720,6 +751,7 @@ def safe_backup(path: Union[str, Path], backup_suffix: str = ".bak") -> Path:
 ```
 
 ### Usage in Codebase
+
 Replace all direct file writes with atomic versions:
 
 ```python
@@ -737,9 +769,11 @@ atomic_write_json(config_path, config)
 ## SYS-001: Hardcoded GRUB/System Paths
 
 ### Location
+
 `src/updater/rollback.py:159-167`
 
 ### Current Code (BROKEN)
+
 ```python
 grub_entry = """
 menuentry 'NeuronOS Recovery (Timeshift)' ... {
@@ -751,11 +785,13 @@ menuentry 'NeuronOS Recovery (Timeshift)' ... {
 ```
 
 ### Why This Is Critical
+
 - `hd0,gpt2` assumes first disk, second partition - often wrong
 - `/dev/sda2` assumes specific block device - wrong on NVMe (`/dev/nvme0n1p2`)
 - System won't boot into recovery on any non-matching hardware
 
 ### Fixed Code
+
 ```python
 import subprocess
 import re
@@ -936,10 +972,12 @@ def _find_kernel(self) -> Optional[str]:
 ## SYS-002: Missing Sudo for System Operations
 
 ### Locations
+
 - `src/updater/rollback.py:175, 244-249`
 - `src/hardware_detect/config_generator.py` (system file writes)
 
 ### Current Code (BROKEN)
+
 ```python
 with open("/etc/systemd/system/neuron-boot-verify.service", "w") as f:
     f.write(service_content)
@@ -947,6 +985,7 @@ with open("/etc/systemd/system/neuron-boot-verify.service", "w") as f:
 ```
 
 ### Fixed Code
+
 ```python
 import subprocess
 from typing import Union
@@ -1044,6 +1083,7 @@ def _run_system_command(cmd: list, check: bool = True, timeout: int = 60) -> boo
 ```
 
 ### Usage in rollback.py:
+
 ```python
 def schedule_rollback_on_boot_failure(self) -> bool:
     """Configure automatic rollback if system fails to boot."""

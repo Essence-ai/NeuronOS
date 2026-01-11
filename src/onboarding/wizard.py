@@ -216,11 +216,152 @@ class OnboardingWizard(Adw.ApplicationWindow):
             self._finish_wizard()
 
     def _finish_wizard(self):
-        """Complete the wizard and mark first-boot as done."""
-        # Mark first-boot complete
-        self._mark_first_boot_complete()
+        """Complete the wizard and apply all user settings."""
+        logger.info("Finishing onboarding wizard...")
+        logger.info(f"User selections: {self._user_data}")
 
-        # Close wizard
+        # Apply settings in background to avoid blocking UI
+        def apply_settings():
+            try:
+                self._save_preferences()
+                self._configure_gpu()
+                self._setup_vms()
+                self._start_migration()
+                self._finalize_setup()
+            except Exception as e:
+                logger.error(f"Onboarding error: {e}")
+            finally:
+                GLib.idle_add(self._finish_and_close)
+
+        import threading
+        thread = threading.Thread(target=apply_settings, daemon=True)
+        thread.start()
+
+    def _save_preferences(self):
+        """Save user preferences to config file."""
+        from datetime import datetime
+        
+        config_dir = Path.home() / ".config/neuronos"
+        config_dir.mkdir(parents=True, exist_ok=True)
+
+        preferences = {
+            "setup_windows_vm": self._user_data.get("setup_windows_vm", False),
+            "setup_macos_vm": self._user_data.get("setup_macos_vm", False),
+            "gpu_passthrough": self._user_data.get("gpu_passthrough", False),
+            "migrate_files": self._user_data.get("migrate_files", False),
+            "onboarding_completed_at": datetime.now().isoformat(),
+        }
+
+        try:
+            from utils.atomic_write import atomic_write_json
+            atomic_write_json(config_dir / "preferences.json", preferences)
+        except ImportError:
+            import json
+            (config_dir / "preferences.json").write_text(json.dumps(preferences, indent=2))
+        
+        logger.info("Preferences saved")
+
+    def _configure_gpu(self):
+        """Configure GPU passthrough if requested."""
+        if not self._user_data.get("gpu_passthrough"):
+            logger.info("GPU passthrough not requested, skipping")
+            return
+
+        try:
+            from hardware_detect.config_generator import ConfigGenerator
+
+            generator = ConfigGenerator()
+            configs = generator.generate()
+
+            if configs:
+                config_dir = Path.home() / ".config/neuronos/pending-gpu-config"
+                config_dir.mkdir(parents=True, exist_ok=True)
+
+                for filename, content in configs.items():
+                    (config_dir / filename).write_text(content)
+
+                logger.info("GPU passthrough config generated (pending apply)")
+
+        except Exception as e:
+            logger.error(f"GPU configuration failed: {e}")
+
+    def _setup_vms(self):
+        """Queue VMs for creation based on user selections."""
+        from datetime import datetime
+        
+        queue_dir = Path.home() / ".config/neuronos/pending-vms"
+        queue_dir.mkdir(parents=True, exist_ok=True)
+
+        for vm_type, key in [("windows", "setup_windows_vm"), ("macos", "setup_macos_vm")]:
+            if self._user_data.get(key):
+                vm_config = {
+                    "type": vm_type,
+                    "queued_at": datetime.now().isoformat(),
+                    "status": "pending",
+                }
+                import json
+                (queue_dir / f"{vm_type}.json").write_text(json.dumps(vm_config, indent=2))
+                logger.info(f"Queued {vm_type} VM for creation")
+
+    def _start_migration(self):
+        """Queue file migration if requested."""
+        if not self._user_data.get("migrate_files"):
+            logger.info("File migration not requested, skipping")
+            return
+
+        source = self._user_data.get("migration_source")
+        if not source:
+            logger.info("No migration source selected")
+            return
+
+        try:
+            from datetime import datetime
+            
+            config_dir = Path.home() / ".config/neuronos/pending-migration"
+            config_dir.mkdir(parents=True, exist_ok=True)
+
+            migration_config = {
+                "source_path": str(getattr(source, 'path', source)),
+                "queued_at": datetime.now().isoformat(),
+                "status": "pending",
+            }
+
+            import json
+            (config_dir / "migration.json").write_text(json.dumps(migration_config, indent=2))
+            logger.info("Migration queued")
+
+        except Exception as e:
+            logger.error(f"Migration setup failed: {e}")
+
+    def _finalize_setup(self):
+        """Create autostart entry for pending tasks if any exist."""
+        pending_dir = Path.home() / ".config/neuronos"
+        has_pending = any([
+            (pending_dir / "pending-vms").exists(),
+            (pending_dir / "pending-migration").exists(),
+            (pending_dir / "pending-gpu-config").exists(),
+        ])
+
+        if has_pending:
+            autostart_dir = Path.home() / ".config/autostart"
+            autostart_dir.mkdir(parents=True, exist_ok=True)
+
+            desktop_entry = """[Desktop Entry]
+Type=Application
+Name=NeuronOS Setup
+Exec=neuron-pending-tasks
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Comment=Complete NeuronOS setup tasks
+"""
+            (autostart_dir / "neuron-pending-tasks.desktop").write_text(desktop_entry)
+
+        logger.info("Finalization complete")
+
+    def _finish_and_close(self):
+        """Mark first boot complete and close wizard."""
+        self._mark_first_boot_complete()
         self.close()
 
     def _mark_first_boot_complete(self):

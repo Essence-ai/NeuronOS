@@ -340,11 +340,46 @@ class LookingGlassManager:
         """Check if Looking Glass is running for a VM."""
         return self.get_state(vm_name) == LookingGlassState.RUNNING
 
-    def toggle_fullscreen(self, vm_name: str) -> None:
-        """Toggle fullscreen mode (sends key to Looking Glass)."""
-        # Looking Glass uses F11 by default for fullscreen toggle
-        # This would need to send an event to the window
-        pass  # TODO: Implement via X11/Wayland IPC
+    def toggle_fullscreen(self, vm_name: str) -> bool:
+        """
+        Toggle fullscreen mode for Looking Glass.
+        
+        Since Looking Glass doesn't expose IPC for fullscreen toggle,
+        we restart it with the opposite fullscreen setting.
+        
+        Args:
+            vm_name: Name of the VM
+            
+        Returns:
+            True if toggle succeeded
+        """
+        if not self.is_running(vm_name):
+            return False
+        
+        # Get current config and toggle fullscreen
+        config = self.get_config(vm_name)
+        config.fullscreen = not config.fullscreen
+        
+        # Save updated config
+        self.configure(vm_name, config)
+        
+        # Restart with new config
+        return self.restart(vm_name, config)
+
+    def restart(self, vm_name: str, config: Optional[LookingGlassConfig] = None) -> bool:
+        """
+        Restart Looking Glass for a VM.
+        
+        Args:
+            vm_name: Name of the VM
+            config: Optional new configuration
+            
+        Returns:
+            True if restart succeeded
+        """
+        self.stop(vm_name)
+        time.sleep(0.3)  # Brief pause for cleanup
+        return self.start(vm_name, config, wait_for_shmem=False)
 
     def cleanup_shmem(self, vm_name: str) -> None:
         """Remove shared memory file for a VM."""

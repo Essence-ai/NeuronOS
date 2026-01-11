@@ -40,6 +40,11 @@ public class CommandHandler : ICommandHandler
                 "maximize" => await HandleMaximizeAsync(message, cancellationToken),
                 "get_info" => await HandleGetInfoAsync(message, cancellationToken),
                 "ping" => HandlePing(message),
+                // Phase 3: Resolution and clipboard sync
+                "set_resolution" => await HandleSetResolutionAsync(message, cancellationToken),
+                "clipboard_get" => HandleClipboardGet(message),
+                "clipboard_set" => HandleClipboardSet(message),
+                "screenshot" => await HandleScreenshotAsync(message, cancellationToken),
                 _ => new GuestResponse
                 {
                     RequestId = message.Id,
@@ -253,4 +258,238 @@ public class CommandHandler : ICommandHandler
             }
         });
     }
+
+    // Phase 3: Resolution sync for Looking Glass
+    private async Task<GuestResponse> HandleSetResolutionAsync(GuestMessage message, CancellationToken cancellationToken)
+    {
+        var widthStr = message.Parameters?.GetValueOrDefault("width")?.ToString();
+        var heightStr = message.Parameters?.GetValueOrDefault("height")?.ToString();
+
+        if (string.IsNullOrEmpty(widthStr) || string.IsNullOrEmpty(heightStr) ||
+            !int.TryParse(widthStr, out var width) || !int.TryParse(heightStr, out var height))
+        {
+            return new GuestResponse
+            {
+                RequestId = message.Id,
+                Success = false,
+                Error = "Missing or invalid 'width' or 'height' parameter"
+            };
+        }
+
+        try
+        {
+            // Use Windows Display API to set resolution
+            var success = await Task.Run(() => SetDisplayResolution(width, height), cancellationToken);
+            
+            return new GuestResponse
+            {
+                RequestId = message.Id,
+                Success = success,
+                Data = success ? new Dictionary<string, object>
+                {
+                    ["width"] = width,
+                    ["height"] = height
+                } : null,
+                Error = success ? null : "Failed to set display resolution"
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to set resolution to {Width}x{Height}", width, height);
+            return new GuestResponse
+            {
+                RequestId = message.Id,
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    private bool SetDisplayResolution(int width, int height)
+    {
+        // P/Invoke for ChangeDisplaySettingsEx
+        var devMode = new DEVMODE();
+        devMode.dmSize = (short)System.Runtime.InteropServices.Marshal.SizeOf(devMode);
+        devMode.dmPelsWidth = width;
+        devMode.dmPelsHeight = height;
+        devMode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT;
+
+        int result = ChangeDisplaySettingsEx(null, ref devMode, IntPtr.Zero, CDS_UPDATEREGISTRY, IntPtr.Zero);
+        return result == DISP_CHANGE_SUCCESSFUL;
+    }
+
+    // Phase 3: Clipboard synchronization
+    private GuestResponse HandleClipboardGet(GuestMessage message)
+    {
+        try
+        {
+            string? text = null;
+            
+            // Must run on STA thread for clipboard access
+            var thread = new System.Threading.Thread(() =>
+            {
+                if (System.Windows.Forms.Clipboard.ContainsText())
+                {
+                    text = System.Windows.Forms.Clipboard.GetText();
+                }
+            });
+            thread.SetApartmentState(System.Threading.ApartmentState.STA);
+            thread.Start();
+            thread.Join(1000);
+
+            return new GuestResponse
+            {
+                RequestId = message.Id,
+                Success = true,
+                Data = new Dictionary<string, object>
+                {
+                    ["text"] = text ?? ""
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get clipboard");
+            return new GuestResponse
+            {
+                RequestId = message.Id,
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    private GuestResponse HandleClipboardSet(GuestMessage message)
+    {
+        var text = message.Parameters?.GetValueOrDefault("text")?.ToString();
+
+        if (text == null)
+        {
+            return new GuestResponse
+            {
+                RequestId = message.Id,
+                Success = false,
+                Error = "Missing 'text' parameter"
+            };
+        }
+
+        try
+        {
+            // Must run on STA thread for clipboard access
+            var thread = new System.Threading.Thread(() =>
+            {
+                System.Windows.Forms.Clipboard.SetText(text);
+            });
+            thread.SetApartmentState(System.Threading.ApartmentState.STA);
+            thread.Start();
+            thread.Join(1000);
+
+            return new GuestResponse
+            {
+                RequestId = message.Id,
+                Success = true
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to set clipboard");
+            return new GuestResponse
+            {
+                RequestId = message.Id,
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    // Phase 3: Screenshot capture
+    private async Task<GuestResponse> HandleScreenshotAsync(GuestMessage message, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var imageBase64 = await Task.Run(() =>
+            {
+                // Capture primary screen
+                var bounds = System.Windows.Forms.Screen.PrimaryScreen!.Bounds;
+                using var bitmap = new System.Drawing.Bitmap(bounds.Width, bounds.Height);
+                using var graphics = System.Drawing.Graphics.FromImage(bitmap);
+                graphics.CopyFromScreen(bounds.Location, System.Drawing.Point.Empty, bounds.Size);
+
+                using var ms = new System.IO.MemoryStream();
+                bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                return Convert.ToBase64String(ms.ToArray());
+            }, cancellationToken);
+
+            return new GuestResponse
+            {
+                RequestId = message.Id,
+                Success = true,
+                Data = new Dictionary<string, object>
+                {
+                    ["image_base64"] = imageBase64
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to capture screenshot");
+            return new GuestResponse
+            {
+                RequestId = message.Id,
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    // P/Invoke declarations for display settings
+    private const int DM_PELSWIDTH = 0x80000;
+    private const int DM_PELSHEIGHT = 0x100000;
+    private const int CDS_UPDATEREGISTRY = 0x01;
+    private const int DISP_CHANGE_SUCCESSFUL = 0;
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    private struct DEVMODE
+    {
+        [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string dmDeviceName;
+        public short dmSpecVersion;
+        public short dmDriverVersion;
+        public short dmSize;
+        public short dmDriverExtra;
+        public int dmFields;
+        public int dmPositionX;
+        public int dmPositionY;
+        public int dmDisplayOrientation;
+        public int dmDisplayFixedOutput;
+        public short dmColor;
+        public short dmDuplex;
+        public short dmYResolution;
+        public short dmTTOption;
+        public short dmCollate;
+        [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.ByValTStr, SizeConst = 32)]
+        public string dmFormName;
+        public short dmLogPixels;
+        public int dmBitsPerPel;
+        public int dmPelsWidth;
+        public int dmPelsHeight;
+        public int dmDisplayFlags;
+        public int dmDisplayFrequency;
+        public int dmICMMethod;
+        public int dmICMIntent;
+        public int dmMediaType;
+        public int dmDitherType;
+        public int dmReserved1;
+        public int dmReserved2;
+        public int dmPanningWidth;
+        public int dmPanningHeight;
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern int ChangeDisplaySettingsEx(
+        string? lpszDeviceName,
+        ref DEVMODE lpDevMode,
+        IntPtr hwnd,
+        int dwflags,
+        IntPtr lParam);
 }

@@ -22,6 +22,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Callable
 from queue import Queue, Empty
+import ssl
+import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,8 @@ class CommandType(Enum):
     MAXIMIZE = "maximize"
     CLIPBOARD_GET = "clipboard_get"
     CLIPBOARD_SET = "clipboard_set"
+    SET_RESOLUTION = "set_resolution"  # Phase 3: Resolution sync for Looking Glass
+    SCREENSHOT = "screenshot"           # Phase 3: Capture guest screen
 
 
 @dataclass
@@ -128,6 +132,25 @@ class VirtioSerialClient:
         self._connected = False
         self._lock = threading.Lock()
         self._recv_buffer = b""
+        self._cert_path = Path.home() / ".config" / "neuronos" / "certs" / "host.crt"
+        self._key_path = Path.home() / ".config" / "neuronos" / "certs" / "host.key"
+
+    def _ensure_certificates(self):
+        """Ensure self-signed certificates exist for TLS."""
+        if self._cert_path.exists() and self._key_path.exists():
+            return
+
+        self._cert_path.parent.mkdir(parents=True, exist_ok=True)
+        logger.info("Generating self-signed certificate for Guest Agent communication")
+        
+        # Generate self-signed certificate using openssl
+        subprocess.run([
+            "openssl", "req", "-x509", "-newkey", "rsa:4096",
+            "-keyout", str(self._key_path),
+            "-out", str(self._cert_path),
+            "-sha256", "-days", "3650", "-nodes",
+            "-subj", "/CN=NeuronOS-Host"
+        ], check=True, capture_output=True)
 
     def connect(self, timeout: float = 5.0) -> bool:
         """
@@ -143,11 +166,20 @@ class VirtioSerialClient:
             return True
 
         try:
-            self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            self._socket.settimeout(timeout)
-            self._socket.connect(self.socket_path)
+            raw_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            raw_socket.settimeout(timeout)
+            raw_socket.connect(self.socket_path)
+
+            # Wrap with TLS
+            self._ensure_certificates()
+            context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            context.load_cert_chain(certfile=str(self._cert_path), keyfile=str(self._key_path))
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE  # In production, use client certs
+
+            self._socket = context.wrap_socket(raw_socket, server_side=True)
             self._connected = True
-            logger.info(f"Connected to guest agent at {self.socket_path}")
+            logger.info(f"Connected to guest agent at {self.socket_path} (Encrypted)")
             return True
 
         except socket.error as e:
@@ -421,6 +453,88 @@ class GuestAgentClient:
         except GuestAgentError as e:
             logger.error(f"Failed to maximize window: {e}")
             return False
+
+    # Phase 3: Resolution synchronization for Looking Glass
+    def set_resolution(self, width: int, height: int) -> bool:
+        """
+        Set guest display resolution.
+
+        Used to synchronize resolution when Looking Glass window resizes.
+
+        Args:
+            width: Display width in pixels
+            height: Display height in pixels
+
+        Returns:
+            True if resolution was set successfully
+        """
+        try:
+            response = self._client.send_command(
+                CommandType.SET_RESOLUTION,
+                {"width": width, "height": height}
+            )
+            if response.success:
+                logger.info(f"Set guest resolution to {width}x{height}")
+            return response.success
+        except GuestAgentError as e:
+            logger.error(f"Failed to set resolution: {e}")
+            return False
+
+    # Phase 3: Clipboard synchronization
+    def get_clipboard(self) -> Optional[str]:
+        """
+        Get clipboard content from guest.
+
+        Returns:
+            Clipboard text content, or None if failed
+        """
+        try:
+            response = self._client.send_command(CommandType.CLIPBOARD_GET)
+            if response.success:
+                return response.data.get("text")
+            return None
+        except GuestAgentError as e:
+            logger.error(f"Failed to get clipboard: {e}")
+            return None
+
+    def set_clipboard(self, text: str) -> bool:
+        """
+        Set clipboard content in guest.
+
+        Args:
+            text: Text to copy to guest clipboard
+
+        Returns:
+            True if clipboard was set successfully
+        """
+        try:
+            response = self._client.send_command(
+                CommandType.CLIPBOARD_SET,
+                {"text": text}
+            )
+            return response.success
+        except GuestAgentError as e:
+            logger.error(f"Failed to set clipboard: {e}")
+            return False
+
+    def screenshot(self) -> Optional[bytes]:
+        """
+        Capture a screenshot of the guest display.
+
+        Returns:
+            PNG image bytes, or None if failed
+        """
+        try:
+            response = self._client.send_command(CommandType.SCREENSHOT)
+            if response.success:
+                import base64
+                data = response.data.get("image_base64")
+                if data:
+                    return base64.b64decode(data)
+            return None
+        except GuestAgentError as e:
+            logger.error(f"Failed to capture screenshot: {e}")
+            return None
 
 
 class GuestAgentMonitor:

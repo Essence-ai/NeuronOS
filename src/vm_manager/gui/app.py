@@ -15,6 +15,8 @@ from __future__ import annotations
 import logging
 import sys
 import os
+import re
+import subprocess
 import threading
 from pathlib import Path
 from typing import Optional, List, Dict, Any
@@ -22,6 +24,28 @@ from dataclasses import dataclass
 from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+# VM name validation pattern - follows libvirt naming rules
+# Must start with alphanumeric, contain only alphanumeric, underscore, hyphen, or period
+# Maximum 64 characters
+VM_NAME_PATTERN = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_\-\.]{0,63}$')
+
+
+def _validate_vm_name(name: str) -> bool:
+    """
+    Validate VM name follows libvirt naming rules.
+    
+    Prevents command injection by ensuring only safe characters are allowed.
+    
+    Args:
+        name: VM name to validate
+        
+    Returns:
+        True if name is valid, False otherwise
+    """
+    if not name or len(name) > 64:
+        return False
+    return bool(VM_NAME_PATTERN.match(name))
 
 # GTK4 imports - will only work on Linux with GTK4 installed
 try:
@@ -210,12 +234,28 @@ if GTK_AVAILABLE:
                 self._on_delete(self.vm_info)
 
         def _on_open_clicked(self, button):
-            # Open Looking Glass or virt-viewer
+            """Open VM display safely."""
             if self.vm_info.has_looking_glass:
                 lg_manager = get_looking_glass_manager()
                 lg_manager.start(self.vm_info.name)
             else:
-                os.system(f"virt-viewer -c qemu:///system {self.vm_info.name} &")
+                # SECURITY: Validate VM name before execution to prevent command injection
+                if not _validate_vm_name(self.vm_info.name):
+                    logger.error(f"Invalid VM name rejected: {self.vm_info.name!r}")
+                    return
+
+                # SECURITY: Use subprocess with list args instead of shell
+                try:
+                    subprocess.Popen(
+                        ["virt-viewer", "-c", "qemu:///system", self.vm_info.name],
+                        start_new_session=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                except FileNotFoundError:
+                    logger.error("virt-viewer not installed")
+                except Exception as e:
+                    logger.error(f"Failed to launch virt-viewer: {e}")
 
 
     class CreateVMDialog(Adw.Window):
@@ -623,13 +663,88 @@ if GTK_AVAILABLE:
             dialog.present()
 
         def _create_vm(self, config: dict):
-            """Create a new VM with the given config."""
+            """Create a new VM with the given configuration."""
             logger.info(f"Creating VM: {config}")
-            # TODO: Implement actual VM creation via libvirt
-            # For now, show success message
-            toast = Adw.Toast.new(f"Creating VM: {config['name']}")
+
+            # Show progress toast
+            toast = Adw.Toast.new(f"Creating VM: {config['name']}...")
+            toast.set_timeout(0)  # Don't auto-dismiss
+            self.add_toast(toast)
+
+            # Run creation in background
+            def create():
+                try:
+                    if not MODULES_AVAILABLE:
+                        GLib.idle_add(self._show_error, "VM modules not available")
+                        return
+
+                    from vm_manager.core.vm_config import VMConfig, VMType
+                    
+                    # Map UI selection to VMType
+                    vm_type_map = {
+                        0: VMType.WINDOWS,   # Windows 11
+                        1: VMType.WINDOWS,   # Windows 10
+                        2: VMType.LINUX,
+                        3: VMType.MACOS,
+                    }
+
+                    # Build VM configuration
+                    vm_config = VMConfig(
+                        name=config['name'],
+                        vm_type=vm_type_map.get(config.get('type', 0), VMType.WINDOWS),
+                    )
+                    
+                    # Set resources
+                    vm_config.cpu.cores = config.get('cpus', 4)
+                    vm_config.memory.size_mb = config.get('memory_gb', 8) * 1024
+                    
+                    # Set storage
+                    if hasattr(vm_config, 'storage'):
+                        vm_config.storage.size_gb = config.get('disk_gb', 128)
+
+                    # Add GPU passthrough if selected
+                    if config.get('gpu_passthrough') and config.get('gpu'):
+                        from vm_manager.core.vm_config import GPUPassthroughConfig
+                        gpu = config['gpu']
+                        vm_config.gpu = GPUPassthroughConfig(
+                            enabled=True,
+                            pci_address=getattr(gpu, 'pci_address', None),
+                        )
+
+                    # Add Looking Glass if selected
+                    if config.get('looking_glass'):
+                        from vm_manager.core.vm_config import LookingGlassConfig
+                        vm_config.looking_glass = LookingGlassConfig(enabled=True)
+
+                    # Create VM using LibvirtManager
+                    manager = LibvirtManager()
+                    manager.connect()
+                    
+                    # Generate XML and define VM
+                    success = manager.create_vm(vm_config)
+
+                    if success:
+                        GLib.idle_add(self._on_vm_created, config['name'])
+                    else:
+                        GLib.idle_add(self._show_error, "VM creation failed")
+
+                except Exception as e:
+                    logger.error(f"VM creation error: {e}")
+                    GLib.idle_add(self._show_error, str(e))
+
+            thread = threading.Thread(target=create, daemon=True)
+            thread.start()
+
+        def _on_vm_created(self, vm_name: str):
+            """Called when VM creation succeeds."""
+            toast = Adw.Toast.new(f"VM '{vm_name}' created successfully!")
             self.add_toast(toast)
             self._load_vms()
+
+        def _show_error(self, message: str):
+            """Show error toast."""
+            toast = Adw.Toast.new(f"Error: {message}")
+            self.add_toast(toast)
 
         def _on_start_vm(self, vm: VMInfo):
             """Start a VM."""

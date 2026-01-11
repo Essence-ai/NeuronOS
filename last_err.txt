@@ -1,0 +1,36 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.11.7, pytest-8.2.1, pluggy-1.5.0 -- C:\Users\jasbh\AppData\Local\Programs\Python\Python311\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\jasbh\UserMS\Documenten\Projects\OS
+configfile: pytest.ini
+plugins: anyio-4.2.0
+collecting ... collected 26 items
+
+tests/test_audit_suite.py::TestPhase1Security::test_vm_name_validation_rigorous[my-vm-01-True] PASSED [  3%]
+tests/test_audit_suite.py::TestPhase1Security::test_vm_name_validation_rigorous[Windows_10-True] PASSED [  7%]
+tests/test_audit_suite.py::TestPhase1Security::test_vm_name_validation_rigorous[vm.test-True] PASSED [ 11%]
+tests/test_audit_suite.py::TestPhase1Security::test_vm_name_validation_rigorous[test; rm -rf /-False] PASSED [ 15%]
+tests/test_audit_suite.py::TestPhase1Security::test_vm_name_validation_rigorous[test | ls-False] PASSED [ 19%]
+tests/test_audit_suite.py::TestPhase1Security::test_vm_name_validation_rigorous[test & echo hello-False] PASSED [ 23%]
+tests/test_audit_suite.py::TestPhase1Security::test_vm_name_validation_rigorous[test$(whoami)-False] PASSED [ 26%]
+tests/test_audit_suite.py::TestPhase1Security::test_vm_name_validation_rigorous[`id`-False] PASSED [ 30%]
+tests/test_audit_suite.py::TestPhase1Security::test_vm_name_validation_rigorous[test\nls-False] PASSED [ 34%]
+tests/test_audit_suite.py::TestPhase1Security::test_vm_name_validation_rigorous[<script>-False] PASSED [ 38%]
+tests/test_audit_suite.py::TestPhase1Security::test_vm_name_validation_rigorous[-False] PASSED [ 42%]
+tests/test_audit_suite.py::TestPhase1Security::test_vm_name_validation_rigorous[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-False] PASSED [ 46%]
+tests/test_audit_suite.py::TestPhase1Security::test_path_traversal_prevention[http://test.com/app.exe-app.exe] PASSED [ 50%]
+tests/test_audit_suite.py::TestPhase1Security::test_path_traversal_prevention[http://test.com/../../../etc/passwd-etcpasswd] PASSED [ 53%]
+tests/test_audit_suite.py::TestPhase1Security::test_path_traversal_prevention[http://test.com/%2e%2e%2f%2e%2e%2fconfig-config] PASSED [ 57%]
+tests/test_audit_suite.py::TestPhase1Security::test_path_traversal_prevention[http://test.com/path/with/sep\\file-file] PASSED [ 61%]
+tests/test_audit_suite.py::TestPhase1Security::test_ensure_within_directory_enforcement PASSED [ 65%]
+tests/test_audit_suite.py::TestPhase2Features::test_proton_versions_detection PASSED [ 69%]
+tests/test_audit_suite.py::TestPhase2Features::test_libvirt_manager_delegation PASSED [ 73%]
+tests/test_audit_suite.py::TestPhase3GuestIntegration::test_guest_client_new_commands PASSED [ 76%]
+tests/test_audit_suite.py::TestPhase3GuestIntegration::test_application_migration_mapping PASSED [ 80%]
+tests/test_audit_suite.py::TestPhase4Robustness::test_retry_logic_with_backoff PASSED [ 84%]
+tests/test_audit_suite.py::TestPhase4Robustness::test_managed_resource_cleanup_on_error PASSED [ 88%]
+tests/test_audit_suite.py::TestPhase4Robustness::test_require_root_protection PASSED [ 92%]
+tests/test_audit_suite.py::TestPhase5QA::test_update_verifier_health_check PASSED [ 96%]
+tests/test_audit_suite.py::TestPhase5QA::test_compilation_integrity PASSED [100%]
+
+============================= 26 passed in 0.23s ==============================

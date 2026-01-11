@@ -16,6 +16,7 @@ public class VirtioSerialService : IVirtioSerialService, IDisposable
 {
     private readonly ILogger<VirtioSerialService> _logger;
     private SerialPort? _serialPort;
+    private System.Net.Security.SslStream? _sslStream;
     private readonly SemaphoreSlim _sendLock = new(1, 1);
     private readonly SemaphoreSlim _receiveLock = new(1, 1);
 
@@ -60,8 +61,15 @@ public class VirtioSerialService : IVirtioSerialService, IDisposable
         try
         {
             _serialPort.Open();
-            _logger.LogInformation("Connected to host via {Port}", portName);
+            _logger.LogInformation("Starting TLS handshake...");
+            _sslStream = new System.Net.Security.SslStream(_serialPort.BaseStream, leaveInnerStreamOpen: false, 
+                userCertificateValidationCallback: (sender, certificate, chain, sslPolicyErrors) => true);
+            await _sslStream.AuthenticateAsClientAsync("NeuronOS-Host");
+            _logger.LogInformation("TLS handshake successful. Communication is now encrypted.");
 
+            // Update encoding etc to work through the SslStream if needed, 
+            // but for now we'll just use the stream directly in Send/Receive
+            
             // Send hello message
             var hello = new GuestResponse
             {
@@ -144,6 +152,8 @@ public class VirtioSerialService : IVirtioSerialService, IDisposable
 
     public Task DisconnectAsync()
     {
+        _sslStream?.Dispose();
+        _sslStream = null;
         if (_serialPort != null)
         {
             if (_serialPort.IsOpen)
@@ -181,15 +191,19 @@ public class VirtioSerialService : IVirtioSerialService, IDisposable
         await _receiveLock.WaitAsync(cancellationToken);
         try
         {
-            if (_serialPort.BytesToRead == 0)
+            if (_sslStream == null)
                 return null;
 
             var buffer = new StringBuilder();
             var inMessage = false;
+            var byteBuffer = new byte[1];
 
-            while (_serialPort.BytesToRead > 0)
+            while (true)
             {
-                var b = _serialPort.ReadByte();
+                var read = await _sslStream.ReadAsync(byteBuffer, 0, 1, cancellationToken);
+                if (read == 0) break;
+
+                var b = byteBuffer[0];
 
                 if (b == MESSAGE_START)
                 {
@@ -227,7 +241,7 @@ public class VirtioSerialService : IVirtioSerialService, IDisposable
 
     public async Task SendResponseAsync(GuestResponse response, CancellationToken cancellationToken = default)
     {
-        if (!IsConnected || _serialPort == null)
+        if (!IsConnected || _sslStream == null)
             return;
 
         await _sendLock.WaitAsync(cancellationToken);
@@ -239,7 +253,8 @@ public class VirtioSerialService : IVirtioSerialService, IDisposable
             Encoding.UTF8.GetBytes(json, 0, json.Length, data, 1);
             data[^1] = MESSAGE_END;
 
-            _serialPort.Write(data, 0, data.Length);
+            await _sslStream.WriteAsync(data, 0, data.Length, cancellationToken);
+            await _sslStream.FlushAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -253,6 +268,7 @@ public class VirtioSerialService : IVirtioSerialService, IDisposable
 
     public void Dispose()
     {
+        _sslStream?.Dispose();
         _serialPort?.Dispose();
         _sendLock.Dispose();
         _receiveLock.Dispose();

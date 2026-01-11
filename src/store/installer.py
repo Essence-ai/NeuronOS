@@ -14,15 +14,122 @@ import logging
 import subprocess
 import os
 import shutil
+import hashlib
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Optional, Callable, Dict, Any
+from pathlib import Path, PurePosixPath
+from typing import Optional, Callable, Dict, Any, List
 from dataclasses import dataclass
 from enum import Enum
+from urllib.parse import urlparse, unquote
 
 from .app_catalog import AppInfo, CompatibilityLayer
 
 logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+# Security Functions - Path Safety and Download Verification
+# ============================================================================
+
+def _safe_filename(url: str, default: str = "download") -> str:
+    """
+    Extract safe filename from URL, preventing path traversal attacks.
+    
+    Prevents attacks where malicious URLs contain:
+    - Path separators: ../../../etc/passwd
+    - URL-encoded traversal: %2e%2e%2f
+    
+    Args:
+        url: URL to extract filename from
+        default: Default filename if extraction fails
+        
+    Returns:
+        Safe filename string
+    """
+    try:
+        # Parse URL and get path
+        parsed = urlparse(url)
+        path = unquote(parsed.path)
+        
+        # Get just the filename (last component)
+        filename = PurePosixPath(path).name
+        
+        # Remove any remaining path separators (paranoid check)
+        filename = filename.replace("/", "").replace("\\", "").replace("..", "")
+        
+        # Validate filename
+        if not filename or filename.startswith("."):
+            return default
+        
+        # Limit length to filesystem max
+        if len(filename) > 255:
+            # Keep extension if present
+            base, ext = os.path.splitext(filename)
+            filename = base[:255 - len(ext)] + ext
+        
+        return filename
+    except Exception:
+        return default
+
+
+def _ensure_within_directory(base: Path, target: Path) -> Path:
+    """
+    Ensure target path is within base directory.
+    
+    Raises ValueError if path traversal detected.
+    
+    Args:
+        base: Base directory path
+        target: Target path to validate
+        
+    Returns:
+        Resolved target path
+        
+    Raises:
+        ValueError: If target escapes base directory
+    """
+    # Resolve both paths to absolute
+    base_resolved = base.resolve()
+    target_resolved = target.resolve()
+    
+    # Check that target is within base
+    try:
+        target_resolved.relative_to(base_resolved)
+    except ValueError:
+        raise ValueError(f"Path traversal detected: {target} escapes {base}")
+    
+    return target_resolved
+
+
+def _verify_download(file_path: Path, expected_sha256: Optional[str]) -> bool:
+    """
+    Verify downloaded file matches expected SHA256 hash.
+    
+    Args:
+        file_path: Path to downloaded file
+        expected_sha256: Expected SHA256 hash (hex string)
+        
+    Returns:
+        True if hash matches or no hash provided, False otherwise
+    """
+    if expected_sha256 is None:
+        return True  # No verification available
+    
+    sha256 = hashlib.sha256()
+    try:
+        with open(file_path, "rb") as f:
+            for chunk in iter(lambda: f.read(8192), b""):
+                sha256.update(chunk)
+        actual_hash = sha256.hexdigest().lower()
+        expected_hash = expected_sha256.lower()
+        
+        if actual_hash != expected_hash:
+            logger.error(f"Hash mismatch: expected {expected_hash}, got {actual_hash}")
+            return False
+        return True
+    except Exception as e:
+        logger.error(f"Failed to verify download: {e}")
+        return False
 
 
 class InstallStatus(Enum):
@@ -262,11 +369,16 @@ class WineInstaller(BaseInstaller):
         if installer_url:
             progress.update(40, "Downloading installer...", InstallStatus.DOWNLOADING)
 
-            installer_name = Path(installer_url).name or "installer.exe"
+            # SECURITY: Use safe filename extraction to prevent path traversal
+            installer_name = _safe_filename(installer_url, "installer.exe")
             if not installer_name.lower().endswith(('.exe', '.msi')):
                 installer_name += ".exe"
 
-            download_path = prefix_path / installer_name
+            # SECURITY: Validate download path stays within prefix
+            download_path = _ensure_within_directory(
+                prefix_path,
+                prefix_path / installer_name
+            )
 
             try:
                 import requests
@@ -407,46 +519,182 @@ Keywords={';'.join(getattr(app, 'tags', []))};
 
 
 class VMInstaller(BaseInstaller):
-    """Installer for apps that require a Windows/macOS VM."""
+    """
+    Installer for apps that require a Windows/macOS VM.
+    
+    Integrates with VM Manager to:
+    - Find or create appropriate VMs
+    - Start VMs and open display
+    - Track which apps are installed in which VMs
+    """
 
-    VM_STORAGE_PATH = Path("/var/lib/neuron-os/vms")
+    CONFIG_PATH = Path.home() / ".config/neuronos/vm-apps"
+
+    def __init__(self):
+        self.CONFIG_PATH.mkdir(parents=True, exist_ok=True)
+        self._vm_manager = None
+
+    def _get_vm_manager(self):
+        """Lazy-load VM manager."""
+        if self._vm_manager is None:
+            try:
+                from vm_manager.core.libvirt_manager import LibvirtManager
+                self._vm_manager = LibvirtManager()
+                self._vm_manager.connect()
+            except Exception as e:
+                logger.warning(f"Could not connect to libvirt: {e}")
+        return self._vm_manager
+
+    def _find_compatible_vm(self, vm_type: str) -> Optional[str]:
+        """
+        Find an existing VM compatible with the app.
+
+        Args:
+            vm_type: "windows" or "macos"
+
+        Returns:
+            VM name if found, None otherwise
+        """
+        manager = self._get_vm_manager()
+        if not manager:
+            return None
+
+        try:
+            vms = manager.list_vms()
+            for vm in vms:
+                vm_name_lower = vm.name.lower()
+                if vm_type == "windows" and any(
+                    w in vm_name_lower for w in ["windows", "win10", "win11"]
+                ):
+                    return vm.name
+                elif vm_type == "macos" and any(
+                    m in vm_name_lower for m in ["macos", "mac", "osx"]
+                ):
+                    return vm.name
+        except Exception as e:
+            logger.error(f"Failed to list VMs: {e}")
+
+        return None
+
+    def _open_vm_display(self, vm_name: str):
+        """Open display for VM (Looking Glass or virt-viewer)."""
+        lg_config = Path.home() / ".config/neuronos/vms" / vm_name / "looking-glass.json"
+
+        if lg_config.exists():
+            try:
+                from vm_manager.core.looking_glass import get_looking_glass_manager
+                lg_manager = get_looking_glass_manager()
+                lg_manager.start(vm_name)
+                return
+            except Exception as e:
+                logger.warning(f"Looking Glass failed: {e}")
+
+        # Fall back to virt-viewer (with validated VM name)
+        import re
+        if re.match(r'^[a-zA-Z0-9][a-zA-Z0-9_\-\.]{0,63}$', vm_name):
+            subprocess.Popen(
+                ["virt-viewer", "-c", "qemu:///system", vm_name],
+                start_new_session=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
 
     def install(self, app: AppInfo, progress: InstallProgress) -> bool:
         """
         Install an app that requires a VM.
 
-        This doesn't actually install the app - it configures the VM
-        and prompts the user to install within the VM.
+        1. Checks system requirements
+        2. Finds or suggests creating appropriate VM
+        3. Starts VM and opens display
+        4. Creates app entry for tracking
         """
         progress.update(10, "Checking VM requirements...", InstallStatus.CONFIGURING)
 
-        # Check if appropriate VM exists
         vm_type = "windows" if app.layer == CompatibilityLayer.VM_WINDOWS else "macos"
 
         # Check system requirements
         if not self._check_requirements(app, progress):
             return False
 
-        progress.update(50, f"Configuring for {vm_type} VM...", InstallStatus.CONFIGURING)
+        progress.update(20, f"Looking for {vm_type} VM...", InstallStatus.CONFIGURING)
 
-        # Create app configuration
-        config_dir = Path.home() / ".config/neuron-os/vm-apps"
-        config_dir.mkdir(parents=True, exist_ok=True)
+        # Find compatible VM
+        vm_name = self._find_compatible_vm(vm_type)
 
+        if not vm_name:
+            progress.update(
+                30,
+                f"No {vm_type} VM found. Please create one in VM Manager first.",
+                InstallStatus.FAILED,
+            )
+            # Try to launch VM Manager for creation
+            try:
+                subprocess.Popen(
+                    ["neuron-vm-manager", "--create", vm_type],
+                    start_new_session=True,
+                )
+            except FileNotFoundError:
+                pass
+            return False
+
+        progress.update(50, f"Starting VM: {vm_name}...", InstallStatus.INSTALLING)
+
+        # Start VM if not running
+        manager = self._get_vm_manager()
+        if manager:
+            try:
+                vms = manager.list_vms()
+                vm = next((v for v in vms if v.name == vm_name), None)
+
+                if vm and getattr(vm.state, 'value', vm.state) != "running":
+                    manager.start_vm(vm_name)
+                    progress.update(60, "VM starting...", InstallStatus.INSTALLING)
+
+                    # Wait for VM to start
+                    import time
+                    for _ in range(15):
+                        time.sleep(1)
+                        vms = manager.list_vms()
+                        vm = next((v for v in vms if v.name == vm_name), None)
+                        if vm and getattr(vm.state, 'value', vm.state) == "running":
+                            break
+
+            except Exception as e:
+                logger.error(f"Failed to start VM: {e}")
+
+        progress.update(70, "Opening VM display...", InstallStatus.INSTALLING)
+
+        # Open display
+        self._open_vm_display(vm_name)
+
+        progress.update(80, "Creating app entry...", InstallStatus.CONFIGURING)
+
+        # Save app configuration
+        from datetime import datetime
         app_config = {
             "app_id": app.id,
             "app_name": app.name,
             "vm_type": vm_type,
+            "vm_name": vm_name,
             "requires_gpu": app.requires_gpu_passthrough,
             "min_ram_gb": getattr(app, 'min_ram_gb', 8),
+            "installed_at": datetime.now().isoformat(),
             "installed_in_vm": False,
         }
 
-        import json
-        with open(config_dir / f"{app.id}.json", 'w') as f:
-            json.dump(app_config, f, indent=2)
+        try:
+            from utils.atomic_write import atomic_write_json
+            atomic_write_json(self.CONFIG_PATH / f"{app.id}.json", app_config)
+        except ImportError:
+            import json
+            config_file = self.CONFIG_PATH / f"{app.id}.json"
+            config_file.write_text(json.dumps(app_config, indent=2))
 
-        progress.update(100, f"Ready - install {app.name} in {vm_type} VM", InstallStatus.COMPLETE)
+        progress.update(
+            100,
+            f"VM opened. Install {app.name} inside, then mark as complete.",
+            InstallStatus.COMPLETE,
+        )
         return True
 
     def _check_requirements(self, app: AppInfo, progress: InstallProgress) -> bool:
@@ -498,6 +746,344 @@ class VMInstaller(BaseInstaller):
         return config_file.exists()
 
 
+class ProtonInstaller(BaseInstaller):
+    """
+    Installer for games and apps via Steam's Proton.
+
+    Proton is Valve's compatibility layer for running Windows games/apps
+    on Linux. This installer handles:
+    - Ensuring Steam is installed
+    - Configuring Steam for non-Steam games
+    - Setting up Proton prefixes
+    """
+
+    STEAM_APPS_PATH = Path.home() / ".local/share/Steam/steamapps"
+    PROTON_PATH = STEAM_APPS_PATH / "common"
+    COMPAT_DATA_PATH = STEAM_APPS_PATH / "compatdata"
+    CONFIG_PATH = Path.home() / ".config/neuronos/proton-apps"
+
+    def __init__(self):
+        self._steam_installed: Optional[bool] = None
+        self._available_proton_versions: List[str] = []
+        self.CONFIG_PATH.mkdir(parents=True, exist_ok=True)
+
+    def _check_steam(self) -> bool:
+        """Check if Steam is installed."""
+        if self._steam_installed is not None:
+            return self._steam_installed
+
+        # Check for Steam binary
+        steam_paths = [
+            Path("/usr/bin/steam"),
+            Path("/usr/bin/steam-runtime"),
+            Path.home() / ".steam/steam.sh",
+        ]
+
+        for path in steam_paths:
+            if path.exists():
+                self._steam_installed = True
+                return True
+
+        # Check if Flatpak Steam exists
+        try:
+            result = subprocess.run(
+                ["flatpak", "list", "--app", "--columns=application"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if "com.valvesoftware.Steam" in result.stdout:
+                self._steam_installed = True
+                return True
+        except Exception:
+            pass
+
+        self._steam_installed = False
+        return False
+
+    def _get_proton_versions(self) -> List[str]:
+        """Get list of installed Proton versions."""
+        if self._available_proton_versions:
+            return self._available_proton_versions
+
+        versions = []
+
+        # Check common Steam library locations
+        library_paths = [
+            self.PROTON_PATH,
+            Path.home() / ".steam/steam/steamapps/common",
+        ]
+
+        for lib_path in library_paths:
+            if not lib_path.exists():
+                continue
+
+            try:
+                for item in lib_path.iterdir():
+                    if item.is_dir() and item.name.startswith("Proton"):
+                        versions.append(item.name)
+            except PermissionError:
+                continue
+
+        # Sort by version (Proton 8.0 > Proton 7.0)
+        versions.sort(key=lambda x: x.split()[-1] if " " in x else x, reverse=True)
+        self._available_proton_versions = versions
+        return versions
+
+    def _get_recommended_proton(self) -> Optional[Path]:
+        """Get path to recommended Proton version."""
+        versions = self._get_proton_versions()
+
+        # Prefer stable versions
+        preferred_order = [
+            "Proton 9",
+            "Proton 8",
+            "Proton-8",
+            "Proton Experimental",
+            "Proton 7",
+            "GE-Proton",
+        ]
+
+        for preferred in preferred_order:
+            for version in versions:
+                if preferred in version:
+                    return self.PROTON_PATH / version
+
+        # Fall back to first available
+        if versions:
+            return self.PROTON_PATH / versions[0]
+
+        return None
+
+    def install(self, app: AppInfo, progress: InstallProgress) -> bool:
+        """
+        Install an application via Proton.
+
+        For Steam games: Returns instructions to install via Steam
+        For non-Steam apps: Sets up Proton prefix and desktop entry
+        """
+        progress.update(10, "Checking Steam installation...", InstallStatus.CONFIGURING)
+
+        if not self._check_steam():
+            progress.update(
+                0,
+                "Steam is not installed. Please install Steam first.",
+                InstallStatus.FAILED,
+            )
+            return False
+
+        # Check Proton availability
+        proton_path = self._get_recommended_proton()
+        if not proton_path or not proton_path.exists():
+            progress.update(
+                0,
+                "No Proton version found. Open Steam and install Proton from Library > Tools.",
+                InstallStatus.FAILED,
+            )
+            return False
+
+        progress.update(30, f"Using {proton_path.name}...", InstallStatus.CONFIGURING)
+
+        # Check if this is a Steam game
+        steam_app_id = getattr(app, 'proton_app_id', None)
+        if steam_app_id:
+            return self._install_steam_game(app, steam_app_id, progress)
+        else:
+            return self._install_non_steam(app, proton_path, progress)
+
+    def _install_steam_game(
+        self,
+        app: AppInfo,
+        steam_id: int,
+        progress: InstallProgress,
+    ) -> bool:
+        """Handle Steam game installation."""
+        progress.update(50, "Opening Steam to install game...", InstallStatus.INSTALLING)
+
+        try:
+            # Open Steam to the game's store page for installation
+            subprocess.Popen(
+                ["steam", f"steam://install/{steam_id}"],
+                start_new_session=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+            progress.update(
+                100,
+                f"Steam opened for {app.name}. Complete installation there.",
+                InstallStatus.COMPLETE,
+            )
+            return True
+
+        except FileNotFoundError:
+            # Try Flatpak Steam
+            try:
+                subprocess.Popen(
+                    ["flatpak", "run", "com.valvesoftware.Steam", f"steam://install/{steam_id}"],
+                    start_new_session=True,
+                )
+                progress.update(
+                    100,
+                    "Steam opened. Complete installation there.",
+                    InstallStatus.COMPLETE,
+                )
+                return True
+            except Exception:
+                pass
+
+        progress.update(0, "Could not launch Steam", InstallStatus.FAILED)
+        return False
+
+    def _install_non_steam(
+        self,
+        app: AppInfo,
+        proton_path: Path,
+        progress: InstallProgress,
+    ) -> bool:
+        """Install a non-Steam Windows app with Proton."""
+        # Create Proton prefix for this app
+        prefix_id = abs(hash(app.id)) % 1000000 + 1000000
+        prefix_path = self.COMPAT_DATA_PATH / str(prefix_id)
+
+        progress.update(40, "Creating Proton prefix...", InstallStatus.CONFIGURING)
+
+        try:
+            prefix_path.mkdir(parents=True, exist_ok=True)
+
+            # Initialize prefix
+            proton_exe = proton_path / "proton"
+            env = os.environ.copy()
+            env["STEAM_COMPAT_DATA_PATH"] = str(prefix_path)
+            env["STEAM_COMPAT_CLIENT_INSTALL_PATH"] = str(Path.home() / ".steam/steam")
+
+            # Run proton with wineboot to initialize
+            subprocess.run(
+                [str(proton_exe), "run", "wineboot", "--init"],
+                env=env,
+                capture_output=True,
+                timeout=120,
+            )
+
+            progress.update(70, "Prefix created", InstallStatus.CONFIGURING)
+
+        except Exception as e:
+            logger.error(f"Failed to create Proton prefix: {e}")
+            progress.update(0, f"Failed to create prefix: {e}", InstallStatus.FAILED)
+            return False
+
+        # Download installer if URL provided
+        installer_url = getattr(app, 'installer_url', None)
+        if installer_url:
+            progress.update(75, "Downloading installer...", InstallStatus.DOWNLOADING)
+
+            installer_name = _safe_filename(installer_url, "installer.exe")
+            download_path = prefix_path / "pfx" / "drive_c" / installer_name
+
+            download_path.parent.mkdir(parents=True, exist_ok=True)
+
+            try:
+                import requests
+                response = requests.get(installer_url, stream=True, timeout=300)
+                response.raise_for_status()
+
+                with open(download_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+
+                progress.update(90, "Launching installer...", InstallStatus.INSTALLING)
+
+                # Launch installer with Proton
+                subprocess.Popen(
+                    [str(proton_exe), "run", str(download_path)],
+                    env=env,
+                    start_new_session=True,
+                )
+
+            except Exception as e:
+                logger.error(f"Failed to download/run installer: {e}")
+                progress.update(0, f"Download failed: {e}", InstallStatus.FAILED)
+                return False
+
+        # Save configuration
+        self._save_app_config(app, prefix_path, proton_path)
+
+        progress.update(100, "Setup complete", InstallStatus.COMPLETE)
+        return True
+
+    def _save_app_config(self, app: AppInfo, prefix_path: Path, proton_path: Path):
+        """Save app configuration for later launching."""
+        from datetime import datetime
+
+        config = {
+            "app_id": app.id,
+            "app_name": app.name,
+            "prefix_path": str(prefix_path),
+            "proton_path": str(proton_path),
+            "installed_at": datetime.now().isoformat(),
+        }
+
+        try:
+            from utils.atomic_write import atomic_write_json
+            atomic_write_json(self.CONFIG_PATH / f"{app.id}.json", config)
+        except ImportError:
+            # Fallback if utils not available
+            import json
+            config_file = self.CONFIG_PATH / f"{app.id}.json"
+            config_file.write_text(json.dumps(config, indent=2))
+
+    def uninstall(self, app: AppInfo) -> bool:
+        """Remove Proton app and its prefix."""
+        config_path = self.CONFIG_PATH / f"{app.id}.json"
+
+        if not config_path.exists():
+            return False
+
+        try:
+            import json
+            with open(config_path) as f:
+                config = json.load(f)
+
+            # Remove prefix
+            prefix_path = Path(config.get("prefix_path", ""))
+            if prefix_path.exists():
+                shutil.rmtree(prefix_path)
+
+            # Remove config
+            config_path.unlink()
+
+            return True
+        except Exception as e:
+            logger.error(f"Failed to uninstall {app.id}: {e}")
+            return False
+
+    def is_installed(self, app: AppInfo) -> bool:
+        """Check if Proton app is configured."""
+        # For Steam games, check if installed
+        steam_app_id = getattr(app, 'proton_app_id', None)
+        if steam_app_id:
+            manifest = self.STEAM_APPS_PATH / f"appmanifest_{steam_app_id}.acf"
+            return manifest.exists()
+
+        # For non-Steam apps
+        config_path = self.CONFIG_PATH / f"{app.id}.json"
+        return config_path.exists()
+
+    def get_install_path(self, app: AppInfo) -> Optional[Path]:
+        """Get Proton prefix path."""
+        config_path = self.CONFIG_PATH / f"{app.id}.json"
+
+        if config_path.exists():
+            try:
+                import json
+                with open(config_path) as f:
+                    config = json.load(f)
+                return Path(config.get("prefix_path", ""))
+            except Exception:
+                pass
+
+        return None
+
 class AppInstaller:
     """
     Main application installer.
@@ -512,6 +1098,7 @@ class AppInstaller:
             CompatibilityLayer.NATIVE: PacmanInstaller(),
             CompatibilityLayer.FLATPAK: FlatpakInstaller(),
             CompatibilityLayer.WINE: WineInstaller(),
+            CompatibilityLayer.PROTON: ProtonInstaller(),  # Steam Proton support
             CompatibilityLayer.VM_WINDOWS: VMInstaller(),
             CompatibilityLayer.VM_MACOS: VMInstaller(),
         }
