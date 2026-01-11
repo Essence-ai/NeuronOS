@@ -52,7 +52,7 @@ try:
     import gi
     gi.require_version('Gtk', '4.0')
     gi.require_version('Adw', '1')
-    from gi.repository import Gtk, Adw, Gio, GLib, Pango
+    from gi.repository import Gtk, Adw, Gio, GLib, Pango, Gdk
     GTK_AVAILABLE = True
 except (ImportError, ValueError):
     GTK_AVAILABLE = False
@@ -87,6 +87,38 @@ class VMInfo:
 
 
 if GTK_AVAILABLE:
+    class ThemeManager:
+        """Manages GTK CSS themes at runtime."""
+        
+        def __init__(self):
+            self.provider = Gtk.CssProvider()
+            self.display = Gdk.Display.get_default() if Gtk else None
+            self.themes_dir = Path(__file__).parent / "themes"
+            self.current_theme = "neuron"
+
+        def apply_theme(self, theme_name: str):
+            """Load and apply a CSS theme."""
+            theme_file = self.themes_dir / f"{theme_name}.css"
+            if not theme_file.exists():
+                logger.error(f"Theme file not found: {theme_file}")
+                return
+
+            try:
+                # Remove prior provider if any (Gtk4 handles this by adding/removing providers)
+                Gtk.StyleContext.add_provider_for_display(
+                    Gdk.Display.get_default(),
+                    self.provider,
+                    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+                )
+                
+                with open(theme_file, "r") as f:
+                    css_data = f.read()
+                    self.provider.load_from_data(css_data, len(css_data))
+                
+                self.current_theme = theme_name
+                logger.info(f"Applied theme: {theme_name}")
+            except Exception as e:
+                logger.error(f"Failed to apply theme {theme_name}: {e}")
 
     class VMCard(Gtk.Box):
         """A card widget displaying VM information."""
@@ -98,7 +130,7 @@ if GTK_AVAILABLE:
             self._on_stop = on_stop
             self._on_delete = on_delete
 
-            self.add_css_class("card")
+            self.add_css_class("vm-card") # Changed from "card" to "vm-card" for our themes
             self.set_margin_start(12)
             self.set_margin_end(12)
             self.set_margin_top(6)
@@ -127,6 +159,8 @@ if GTK_AVAILABLE:
 
             status_label = Gtk.Label(label=self._get_status_text())
             status_label.add_css_class("dim-label")
+            if self.vm_info.state == "running":
+                status_label.add_css_class("status-running")
             status_label.set_halign(Gtk.Align.START)
             info_box.append(status_label)
 
@@ -507,6 +541,31 @@ if GTK_AVAILABLE:
             new_btn.connect("clicked", self._on_new_vm_clicked)
             header.pack_start(new_btn)
 
+            # Theme Switcher
+            self.theme_combo = Adw.ComboRow(title="Appearance")
+            self.theme_combo.set_model(Gtk.StringList.new(["Neuron", "Windows 11", "macOS"]))
+            self.theme_combo.connect("notify::selected", self._on_theme_changed)
+            # Find a way to put it in the header or a popover
+            theme_btn = Gtk.MenuButton()
+            theme_btn.set_icon_name("preferences-desktop-theme-symbolic")
+            
+            popover = Gtk.Popover()
+            pop_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            pop_box.set_margin_all(6)
+            
+            theme_title = Gtk.Label(label="Select Theme")
+            theme_title.add_css_class("title-4")
+            pop_box.append(theme_title)
+            
+            for i, name in enumerate(["Neuron", "Windows 11", "macOS"]):
+                btn = Gtk.Button(label=name)
+                btn.connect("clicked", lambda b, idx=i: self._on_theme_btn_clicked(idx))
+                pop_box.append(btn)
+                
+            popover.set_child(pop_box)
+            theme_btn.set_popover(popover)
+            header.pack_end(theme_btn)
+
             # Refresh button
             refresh_btn = Gtk.Button.new_from_icon_name("view-refresh-symbolic")
             refresh_btn.set_tooltip_text("Refresh VM list")
@@ -526,6 +585,7 @@ if GTK_AVAILABLE:
             scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
             self.content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+            self.content_box.add_css_class("window-content") # Added for theme backgrounds
             self.content_box.set_margin_start(24)
             self.content_box.set_margin_end(24)
             self.content_box.set_margin_top(24)
@@ -552,6 +612,19 @@ if GTK_AVAILABLE:
             scroll.set_child(self.content_box)
             toolbar_view.set_content(scroll)
             self.set_content(toolbar_view)
+            
+            # Application instance theme manager
+            self.theme_manager = ThemeManager()
+            self.theme_manager.apply_theme("neuron")
+
+        def _on_theme_btn_clicked(self, index):
+            themes = ["neuron", "win11", "macos"]
+            self.theme_manager.apply_theme(themes[index])
+
+        def _on_theme_changed(self, combo, param):
+            idx = combo.get_selected()
+            themes = ["neuron", "win11", "macos"]
+            self.theme_manager.apply_theme(themes[idx])
 
         def _create_status_banner(self) -> Gtk.Widget:
             """Create system status banner."""

@@ -1,0 +1,1112 @@
+/* 
+ * NeuronOS Theme - "Neural" (Default)
+ * Concept: Future-Minimalist with deep space aesthetics and neural glow accents
+ * Version: 2.0 - Production Grade
+ * 
+ * This is the signature NeuronOS theme - unique to our OS.
+ */
+
+/* ============================================
+   COLOR TOKENS & DESIGN VARIABLES
+   ============================================ */
+
+:root {
+    /* Primary Palette */
+    --neuron-bg-base: #0f111a;
+    --neuron-bg-elevated: #151822;
+    --neuron-bg-surface: #1a1d2d;
+    --neuron-bg-overlay: rgba(26, 29, 45, 0.95);
+
+    /* Accent Colors */
+    --neuron-accent: #7289da;
+    --neuron-accent-hover: #5b6eae;
+    --neuron-accent-pressed: #4a5d9e;
+    --neuron-accent-glow: rgba(114, 137, 218, 0.4);
+    --neuron-accent-glow-intense: rgba(114, 137, 218, 0.7);
+
+    /* Semantic Colors */
+    --neuron-success: #43b581;
+    --neuron-success-glow: rgba(67, 181, 129, 0.4);
+    --neuron-warning: #faa61a;
+    --neuron-warning-glow: rgba(250, 166, 26, 0.4);
+    --neuron-error: #f04747;
+    --neuron-error-glow: rgba(240, 71, 71, 0.4);
+    --neuron-info: #5dadec;
+
+    /* Text Colors */
+    --neuron-text-primary: #ffffff;
+    --neuron-text-secondary: #dcddde;
+    --neuron-text-muted: #72767d;
+    --neuron-text-disabled: #4f545c;
+
+    /* Glass/Translucent Tokens */
+    --glass-surface: rgba(26, 29, 45, 0.65);
+    --glass-surface-hover: rgba(40, 44, 60, 0.75);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+    --glass-border-hover: 1px solid rgba(114, 137, 218, 0.3);
+    --glass-blur: blur(24px);
+    --glass-blur-heavy: blur(40px);
+
+    /* Border Radii */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+    --radius-pill: 999px;
+
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.25);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.35);
+    --shadow-glow: 0 0 20px var(--neuron-accent-glow);
+
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ============================================
+   BASE WINDOW STYLING
+   ============================================ */
+
+window {
+    background-color: var(--neuron-bg-base);
+    color: var(--neuron-text-primary);
+    font-family: "Outfit", "Inter", "Cantarell", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+window.background {
+    background:
+        radial-gradient(circle at 0% 0%, rgba(114, 137, 218, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(67, 181, 129, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(240, 71, 71, 0.04) 0%, transparent 70%),
+        var(--neuron-bg-base);
+}
+
+.window-content,
+.content {
+    background: transparent;
+}
+
+/* ============================================
+   HEADER BAR (TITLE BAR)
+   ============================================ */
+
+headerbar {
+    background: var(--glass-surface);
+    backdrop-filter: var(--glass-blur);
+    border-bottom: var(--glass-border);
+    min-height: 46px;
+    padding: 0 var(--space-sm);
+    box-shadow: none;
+}
+
+headerbar:backdrop {
+    background: rgba(21, 24, 34, 0.9);
+}
+
+headerbar .title {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--neuron-text-secondary);
+}
+
+headerbar .subtitle {
+    font-size: 11px;
+    color: var(--neuron-text-muted);
+}
+
+/* Window Controls (Traffic Lights) */
+headerbar windowcontrols button {
+    min-width: 14px;
+    min-height: 14px;
+    padding: 0;
+    margin: 0 3px;
+    border-radius: 50%;
+    background-size: 14px 14px;
+    background-position: center;
+    background-repeat: no-repeat;
+    border: none;
+    box-shadow: var(--shadow-sm);
+}
+
+headerbar windowcontrols button.close {
+    background-color: var(--neuron-error);
+    box-shadow: 0 0 8px var(--neuron-error-glow);
+}
+
+headerbar windowcontrols button.minimize {
+    background-color: var(--neuron-warning);
+    box-shadow: 0 0 8px var(--neuron-warning-glow);
+}
+
+headerbar windowcontrols button.maximize {
+    background-color: var(--neuron-success);
+    box-shadow: 0 0 8px var(--neuron-success-glow);
+}
+
+headerbar windowcontrols button:hover {
+    filter: brightness(1.15);
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+button {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--neuron-text-primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm) var(--space-md);
+    min-height: 32px;
+    font-weight: 500;
+    font-size: 13px;
+    transition: all var(--transition-fast);
+}
+
+button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+button:active {
+    background-color: rgba(255, 255, 255, 0.03);
+    transform: scale(0.98);
+}
+
+button:disabled {
+    opacity: 0.4;
+    color: var(--neuron-text-disabled);
+}
+
+button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--neuron-accent-glow);
+}
+
+/* Primary/Suggested Action Button */
+button.suggested-action {
+    background: linear-gradient(135deg, var(--neuron-accent) 0%, #5b6eae 100%);
+    color: white;
+    box-shadow: var(--shadow-sm), var(--shadow-glow);
+    font-weight: 600;
+}
+
+button.suggested-action:hover {
+    background: linear-gradient(135deg, var(--neuron-accent-hover) 0%, #4a5d9e 100%);
+    box-shadow: var(--shadow-md), 0 0 30px var(--neuron-accent-glow);
+    transform: translateY(-1px);
+}
+
+button.suggested-action:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Destructive Action Button */
+button.destructive-action {
+    background: rgba(240, 71, 71, 0.15);
+    color: var(--neuron-error);
+    border: 1px solid rgba(240, 71, 71, 0.3);
+}
+
+button.destructive-action:hover {
+    background: var(--neuron-error);
+    color: white;
+    box-shadow: 0 0 20px var(--neuron-error-glow);
+}
+
+/* Flat Button */
+button.flat {
+    background: transparent;
+    border: none;
+}
+
+button.flat:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Circular Button */
+button.circular {
+    border-radius: 50%;
+    padding: var(--space-sm);
+    min-width: 36px;
+    min-height: 36px;
+}
+
+/* Icon Button in Headerbar */
+headerbar button {
+    background: transparent;
+    margin: var(--space-xs);
+    border-radius: var(--radius-sm);
+}
+
+headerbar button:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* ============================================
+   ENTRIES (TEXT INPUTS)
+   ============================================ */
+
+entry {
+    background-color: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    color: var(--neuron-text-primary);
+    padding: var(--space-sm) var(--space-md);
+    min-height: 36px;
+    caret-color: var(--neuron-accent);
+    transition: all var(--transition-fast);
+}
+
+entry:focus {
+    border-color: var(--neuron-accent);
+    box-shadow: 0 0 0 3px var(--neuron-accent-glow);
+    background-color: rgba(0, 0, 0, 0.35);
+}
+
+entry:disabled {
+    opacity: 0.5;
+}
+
+entry placeholder {
+    color: var(--neuron-text-muted);
+}
+
+/* Search Entry */
+entry.search {
+    border-radius: var(--radius-pill);
+    padding-left: var(--space-lg);
+}
+
+/* ============================================
+   LABELS & TYPOGRAPHY
+   ============================================ */
+
+label {
+    color: var(--neuron-text-primary);
+}
+
+label.dim-label {
+    color: var(--neuron-text-secondary);
+    font-size: 13px;
+}
+
+label.title-1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+label.title-2 {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+label.title-3 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+label.title-4 {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+label.caption {
+    font-size: 11px;
+    color: var(--neuron-text-muted);
+}
+
+label.monospace {
+    font-family: "JetBrains Mono", "Fira Code", "Source Code Pro", monospace;
+}
+
+/* Status Labels with Glow */
+label.success,
+.status-running {
+    color: var(--neuron-success);
+    text-shadow: 0 0 10px var(--neuron-success-glow);
+    font-weight: 600;
+}
+
+label.warning {
+    color: var(--neuron-warning);
+    text-shadow: 0 0 10px var(--neuron-warning-glow);
+}
+
+label.error,
+.status-stopped {
+    color: var(--neuron-error);
+    text-shadow: 0 0 10px var(--neuron-error-glow);
+}
+
+label.accent {
+    color: var(--neuron-accent);
+    text-shadow: 0 0 10px var(--neuron-accent-glow);
+}
+
+/* ============================================
+   CARDS (VM Cards, Info Cards, etc.)
+   ============================================ */
+
+.card,
+.vm-card {
+    background: var(--glass-surface);
+    border: var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-sm);
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+}
+
+.card:hover,
+.vm-card:hover {
+    background: var(--glass-surface-hover);
+    border: var(--glass-border-hover);
+    transform: translateY(-2px) scale(1.005);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
+
+.card.selected,
+.vm-card.selected {
+    border-color: var(--neuron-accent);
+    box-shadow: 0 0 0 2px var(--neuron-accent-glow);
+}
+
+/* ============================================
+   LISTS AND LIST ROWS
+   ============================================ */
+
+listview,
+list,
+listbox {
+    background: transparent;
+    border-radius: var(--radius-md);
+}
+
+row {
+    padding: var(--space-md) var(--space-md);
+    border-radius: var(--radius-sm);
+    margin: 2px 0;
+    transition: background var(--transition-fast);
+}
+
+row:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+row:selected {
+    background: var(--neuron-accent);
+    color: white;
+}
+
+row:selected label {
+    color: white;
+}
+
+row separator {
+    background: rgba(255, 255, 255, 0.06);
+    margin: var(--space-xs) 0;
+}
+
+/* Preferences Group */
+preferencesgroup {
+    background: var(--glass-surface);
+    border-radius: var(--radius-md);
+    border: var(--glass-border);
+    margin-bottom: var(--space-md);
+}
+
+preferencesgroup>box>label {
+    font-weight: 600;
+    padding: var(--space-md);
+    color: var(--neuron-text-secondary);
+}
+
+/* ============================================
+   SWITCHES
+   ============================================ */
+
+switch {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-pill);
+    min-width: 48px;
+    min-height: 26px;
+    border: none;
+    transition: all var(--transition-normal);
+}
+
+switch:checked {
+    background: linear-gradient(135deg, var(--neuron-success) 0%, #2d9c6d 100%);
+    box-shadow: 0 0 15px var(--neuron-success-glow);
+}
+
+switch slider {
+    background: white;
+    border-radius: 50%;
+    min-width: 22px;
+    min-height: 22px;
+    margin: 2px;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+}
+
+switch:checked slider {
+    margin-left: 24px;
+}
+
+/* ============================================
+   CHECKBOXES AND RADIO BUTTONS
+   ============================================ */
+
+checkbutton check,
+radiobutton radio {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-xs);
+    min-width: 20px;
+    min-height: 20px;
+    transition: all var(--transition-fast);
+}
+
+checkbutton check:checked,
+radiobutton radio:checked {
+    background: var(--neuron-accent);
+    border-color: var(--neuron-accent);
+    box-shadow: 0 0 10px var(--neuron-accent-glow);
+}
+
+radiobutton radio {
+    border-radius: 50%;
+}
+
+/* ============================================
+   PROGRESS BARS
+   ============================================ */
+
+progressbar {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-pill);
+    min-height: 6px;
+}
+
+progressbar progress {
+    background: linear-gradient(90deg, var(--neuron-accent) 0%, #a29bfe 100%);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 0 10px var(--neuron-accent-glow);
+    transition: all var(--transition-slow);
+}
+
+progressbar.osd {
+    min-height: 4px;
+}
+
+/* ============================================
+   SCALES (SLIDERS)
+   ============================================ */
+
+scale {
+    padding: var(--space-sm) 0;
+}
+
+scale trough {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-pill);
+    min-height: 4px;
+}
+
+scale highlight {
+    background: var(--neuron-accent);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 0 8px var(--neuron-accent-glow);
+}
+
+scale slider {
+    background: white;
+    border-radius: 50%;
+    min-width: 18px;
+    min-height: 18px;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
+}
+
+scale slider:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px var(--neuron-accent-glow);
+}
+
+/* ============================================
+   SPINBUTTONS
+   ============================================ */
+
+spinbutton {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+}
+
+spinbutton entry {
+    border: none;
+    background: transparent;
+}
+
+spinbutton button {
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    min-width: 30px;
+}
+
+spinbutton button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   POPOVERS AND MENUS
+   ============================================ */
+
+popover,
+popover.background {
+    background: var(--neuron-bg-overlay);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xl);
+    padding: var(--space-sm);
+}
+
+popover arrow {
+    background: var(--neuron-bg-overlay);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+popover contents {
+    padding: var(--space-xs);
+}
+
+popover modelbutton,
+popover button.model {
+    background: transparent;
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm) var(--space-md);
+    min-height: 36px;
+    text-align: left;
+}
+
+popover modelbutton:hover {
+    background: var(--neuron-accent);
+    color: white;
+}
+
+popover separator {
+    background: rgba(255, 255, 255, 0.08);
+    margin: var(--space-xs) 0;
+}
+
+/* Context Menu */
+menu,
+.context-menu {
+    background: var(--neuron-bg-overlay);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: var(--space-xs);
+    box-shadow: var(--shadow-xl);
+}
+
+menuitem {
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-fast);
+}
+
+menuitem:hover {
+    background: var(--neuron-accent);
+    color: white;
+}
+
+/* ============================================
+   SCROLLBARS
+   ============================================ */
+
+scrollbar {
+    background: transparent;
+    border: none;
+}
+
+scrollbar slider {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-pill);
+    min-width: 8px;
+    min-height: 48px;
+    border: 2px solid transparent;
+    transition: all var(--transition-fast);
+}
+
+scrollbar slider:hover {
+    background: rgba(255, 255, 255, 0.25);
+    min-width: 10px;
+}
+
+scrollbar slider:active {
+    background: var(--neuron-accent);
+}
+
+scrollbar.overlay-indicator slider {
+    min-width: 4px;
+}
+
+/* ============================================
+   NOTEBOOKS (TABS)
+   ============================================ */
+
+notebook {
+    background: transparent;
+}
+
+notebook>header {
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: var(--glass-border);
+}
+
+notebook>header tab {
+    background: transparent;
+    padding: var(--space-sm) var(--space-lg);
+    border-bottom: 2px solid transparent;
+    color: var(--neuron-text-secondary);
+    transition: all var(--transition-fast);
+}
+
+notebook>header tab:hover {
+    color: var(--neuron-text-primary);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+notebook>header tab:checked {
+    color: var(--neuron-accent);
+    border-bottom-color: var(--neuron-accent);
+    box-shadow: 0 2px 10px var(--neuron-accent-glow);
+}
+
+notebook>stack {
+    background: transparent;
+}
+
+/* ============================================
+   DIALOGS AND MESSAGE DIALOGS
+   ============================================ */
+
+dialog,
+messagedialog {
+    background: var(--neuron-bg-overlay);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+}
+
+dialog headerbar,
+messagedialog headerbar {
+    background: transparent;
+    border-bottom: var(--glass-border);
+}
+
+messagedialog .dialog-action-area {
+    padding: var(--space-md);
+}
+
+messagedialog .dialog-action-area button {
+    min-width: 100px;
+}
+
+/* ============================================
+   TOOLTIPS
+   ============================================ */
+
+tooltip {
+    background: var(--neuron-bg-surface);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs) var(--space-sm);
+    box-shadow: var(--shadow-md);
+}
+
+tooltip label {
+    color: var(--neuron-text-primary);
+    font-size: 12px;
+}
+
+/* ============================================
+   INFO BARS AND BANNERS
+   ============================================ */
+
+infobar {
+    border-radius: var(--radius-sm);
+    border: none;
+    padding: var(--space-sm) var(--space-md);
+}
+
+infobar.info {
+    background: rgba(93, 173, 236, 0.15);
+    color: var(--neuron-info);
+}
+
+infobar.warning {
+    background: rgba(250, 166, 26, 0.15);
+    color: var(--neuron-warning);
+}
+
+infobar.error {
+    background: rgba(240, 71, 71, 0.15);
+    color: var(--neuron-error);
+}
+
+infobar.success {
+    background: rgba(67, 181, 129, 0.15);
+    color: var(--neuron-success);
+}
+
+/* ============================================
+   SIDEBAR NAVIGATION
+   ============================================ */
+
+.sidebar,
+.navigation-sidebar {
+    background: rgba(0, 0, 0, 0.2);
+    border-right: var(--glass-border);
+    padding: var(--space-sm);
+}
+
+.sidebar row {
+    border-radius: var(--radius-sm);
+    margin: 2px var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+}
+
+.sidebar row:selected {
+    background: var(--neuron-accent);
+}
+
+.sidebar row:selected label {
+    color: white;
+}
+
+.sidebar-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--neuron-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: var(--space-md) var(--space-md) var(--space-sm);
+}
+
+/* ============================================
+   STACK SWITCHER
+   ============================================ */
+
+stackswitcher button {
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: transparent;
+    color: var(--neuron-text-secondary);
+}
+
+stackswitcher button:checked {
+    background: var(--neuron-accent);
+    color: white;
+    box-shadow: var(--shadow-glow);
+}
+
+/* ============================================
+   SPINNER AND LOADING STATES
+   ============================================ */
+
+spinner {
+    color: var(--neuron-accent);
+}
+
+.loading-overlay {
+    background: rgba(15, 17, 26, 0.8);
+    backdrop-filter: var(--glass-blur);
+}
+
+/* ============================================
+   BADGES AND TAGS
+   ============================================ */
+
+.badge {
+    padding: 2px 10px;
+    border-radius: var(--radius-xs);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.badge.success {
+    background: rgba(67, 181, 129, 0.2);
+    color: var(--neuron-success);
+}
+
+.badge.accent {
+    background: rgba(114, 137, 218, 0.2);
+    color: var(--neuron-accent);
+}
+
+.badge.warning {
+    background: rgba(250, 166, 26, 0.2);
+    color: var(--neuron-warning);
+}
+
+.badge.error {
+    background: rgba(240, 71, 71, 0.2);
+    color: var(--neuron-error);
+}
+
+/* ============================================
+   CALENDAR
+   ============================================ */
+
+calendar {
+    background: var(--glass-surface);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+}
+
+calendar:selected {
+    background: var(--neuron-accent);
+    color: white;
+    border-radius: var(--radius-sm);
+}
+
+calendar.header {
+    font-weight: 600;
+}
+
+calendar.button {
+    background: transparent;
+}
+
+calendar.button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   LIBADWAITA SPECIFIC STYLES
+   ============================================ */
+
+/* AdwViewSwitcher */
+viewswitcher button {
+    background: transparent;
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm);
+}
+
+viewswitcher button:checked {
+    background: rgba(114, 137, 218, 0.2);
+    color: var(--neuron-accent);
+}
+
+/* AdwStatusPage */
+statuspage {
+    background: transparent;
+}
+
+statuspage .icon {
+    color: var(--neuron-accent);
+    opacity: 0.7;
+}
+
+/* AdwActionRow */
+row.activatable {
+    padding: var(--space-md);
+}
+
+row.activatable:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* AdwPreferencesWindow */
+preferenceswindow>leaflet>box>stack>box>clamp>box {
+    margin: var(--space-lg);
+}
+
+/* AdwToast */
+toast {
+    background: var(--neuron-bg-surface);
+    border: var(--glass-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    margin: var(--space-lg);
+}
+
+/* ============================================
+   FILE MANAGER / NAUTILUS SPECIFICS
+   ============================================ */
+
+.nautilus-window .sidebar {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.nautilus-window .view {
+    background: transparent;
+}
+
+.nautilus-window .path-bar button {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    margin: 2px;
+}
+
+.nautilus-window .path-bar button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nautilus-window .floating-bar {
+    background: var(--neuron-bg-surface);
+    border: var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+}
+
+/* ============================================
+   TERMINAL SPECIFIC
+   ============================================ */
+
+terminal-window vte-terminal {
+    background: rgba(0, 0, 0, 0.4);
+    padding: var(--space-md);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes neuron-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        box-shadow: 0 0 10px var(--neuron-accent-glow);
+    }
+
+    50% {
+        opacity: 0.7;
+        box-shadow: 0 0 25px var(--neuron-accent-glow-intense);
+    }
+}
+
+@keyframes neuron-glow {
+
+    0%,
+    100% {
+        text-shadow: 0 0 5px var(--neuron-accent-glow);
+    }
+
+    50% {
+        text-shadow: 0 0 20px var(--neuron-accent-glow-intense);
+    }
+}
+
+.pulse {
+    animation: neuron-pulse 2s infinite;
+}
+
+.glow {
+    animation: neuron-glow 2s infinite;
+}
+
+/* ============================================
+   APPLICATION-SPECIFIC: VM MANAGER
+   ============================================ */
+
+.vm-manager-window {
+    background: transparent;
+}
+
+.vm-manager-window .sidebar {
+    min-width: 240px;
+}
+
+.vm-manager-window .content-view {
+    padding: var(--space-lg);
+}
+
+.vm-status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: neuron-pulse 2s infinite;
+}
+
+.vm-status-indicator.running {
+    background: var(--neuron-success);
+    box-shadow: 0 0 10px var(--neuron-success-glow);
+}
+
+.vm-status-indicator.stopped {
+    background: var(--neuron-text-muted);
+    animation: none;
+}
+
+.vm-status-indicator.error {
+    background: var(--neuron-error);
+    box-shadow: 0 0 10px var(--neuron-error-glow);
+}
+
+/* ============================================
+   WELCOME / INSTALLER THEMING
+   ============================================ */
+
+.welcome-window {
+    background:
+        radial-gradient(circle at 20% 20%, rgba(114, 137, 218, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(67, 181, 129, 0.15) 0%, transparent 50%),
+        var(--neuron-bg-base);
+}
+
+.welcome-logo {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--neuron-accent);
+    text-shadow: 0 0 40px var(--neuron-accent-glow);
+    letter-spacing: -1px;
+}
+
+.welcome-subtitle {
+    color: var(--neuron-text-secondary);
+    font-size: 16px;
+}
+
+.theme-preview-card {
+    background: var(--glass-surface);
+    border: var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.theme-preview-card:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-lg);
+}
+
+.theme-preview-card.selected {
+    border: 2px solid var(--neuron-accent);
+    box-shadow: 0 0 20px var(--neuron-accent-glow);
+}
+
+/* ============================================
+   END OF NEURONOS THEME
+   ============================================ */

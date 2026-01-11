@@ -1,0 +1,2615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuronOS 11</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI+Variable:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* NeuronOS: Windows 11 Fluent Theme */
+        :root {
+            --win-mica-bg: #f3f3f3;
+            --win-surface: #ffffff;
+            --win-border: #e5e5e5;
+            --win-text-primary: #000000;
+            --win-text-secondary: #5d5d5d;
+            --win-accent: #0067c0;
+            --win-accent-hover: #1975c5;
+            --win-accent-text: white;
+            --win-control-bg: #ffffff;
+            --win-control-border: #d1d1d1;
+            --win-control-hover: #f9f9f9;
+            --win-taskbar-bg: rgba(243, 243, 243, 0.85);
+            --radius-control: 4px;
+            --radius-overlay: 8px;
+            --radius-window: 8px;
+            --win-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            --win-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .dark-mode {
+            --win-mica-bg: #202020;
+            --win-surface: #2c2c2c;
+            --win-border: #383838;
+            --win-text-primary: #ffffff;
+            --win-text-secondary: #a0a0a0;
+            --win-accent: #60cdff;
+            --win-accent-hover: #7ad4ff;
+            --win-accent-text: black;
+            --win-control-bg: #2d2d2d;
+            --win-control-border: #454545;
+            --win-control-hover: #323232;
+            --win-taskbar-bg: rgba(32, 32, 32, 0.85);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: "Segoe UI Variable", "Segoe UI", -apple-system, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            font-size: 14px;
+            color: var(--win-text-primary);
+            background: var(--win-mica-bg);
+        }
+
+        /* Scrollbar - Windows 11 style */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        .dark-mode ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.3);
+            background-clip: padding-box;
+        }
+
+        /* Desktop */
+        #desktop {
+            position: absolute;
+            inset: 0;
+            background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80') center/cover;
+        }
+
+        /* Desktop Icons */
+        #desktop-icons {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            border-radius: var(--radius-control);
+            cursor: pointer;
+            width: 76px;
+            transition: background 0.1s;
+        }
+
+        .desktop-icon:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .desktop-icon:active {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .desktop-icon i {
+            font-size: 40px;
+            margin-bottom: 6px;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+        }
+
+        .desktop-icon span {
+            font-size: 12px;
+            color: white;
+            text-align: center;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            word-wrap: break-word;
+            max-width: 70px;
+        }
+
+        /* Taskbar */
+        #taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: var(--win-taskbar-bg);
+            backdrop-filter: blur(20px) saturate(150%);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 0 12px;
+        }
+
+        .taskbar-left, .taskbar-right {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .taskbar-left {
+            left: 12px;
+        }
+
+        .taskbar-right {
+            right: 12px;
+            gap: 2px;
+        }
+
+        .taskbar-center {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .taskbar-item {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-control);
+            cursor: pointer;
+            transition: background 0.1s;
+            position: relative;
+        }
+
+        .taskbar-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .taskbar-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .taskbar-item i {
+            font-size: 20px;
+            color: var(--win-text-primary);
+        }
+
+        .taskbar-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            width: 20px;
+            height: 3px;
+            background: var(--win-accent);
+            border-radius: 2px;
+        }
+
+        .taskbar-item.start-btn {
+            width: 44px;
+        }
+
+        .taskbar-item.start-btn i {
+            font-size: 18px;
+            color: var(--win-accent);
+        }
+
+        /* System Tray */
+        .system-tray {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: var(--radius-control);
+            cursor: pointer;
+        }
+
+        .system-tray:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .system-tray:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .system-tray i {
+            font-size: 14px;
+            color: var(--win-text-primary);
+        }
+
+        .tray-time {
+            text-align: right;
+            padding: 4px 10px;
+            border-radius: var(--radius-control);
+            cursor: pointer;
+        }
+
+        .tray-time:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .tray-time:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .tray-time-text {
+            font-size: 12px;
+            color: var(--win-text-primary);
+        }
+
+        /* Windows */
+        .window {
+            position: absolute;
+            background: var(--win-mica-bg);
+            border-radius: var(--radius-window);
+            box-shadow: var(--win-shadow);
+            border: 1px solid var(--win-border);
+            min-width: 400px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: windowOpen 0.2s ease-out;
+        }
+
+        @keyframes windowOpen {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .window.maximized {
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: calc(100vh - 48px) !important;
+            border-radius: 0;
+        }
+
+        .window.minimized {
+            transform: scale(0) translateY(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Window Header */
+        .window-header {
+            height: 32px;
+            background: var(--win-surface);
+            display: flex;
+            align-items: center;
+            padding: 0 6px;
+            cursor: grab;
+            flex-shrink: 0;
+        }
+
+        .window-header:active {
+            cursor: grabbing;
+        }
+
+        .window-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            font-size: 14px;
+            color: var(--win-text-primary);
+        }
+
+        .window-title {
+            flex: 1;
+            font-size: 12px;
+            color: var(--win-text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .window-controls {
+            display: flex;
+            margin-left: auto;
+        }
+
+        .window-control {
+            width: 46px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .window-control i {
+            font-size: 10px;
+            color: var(--win-text-primary);
+        }
+
+        .window-control:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .window-control:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .window-control.close:hover {
+            background: #c42b1c;
+        }
+
+        .window-control.close:hover i {
+            color: white;
+        }
+
+        .window-content {
+            flex: 1;
+            overflow: auto;
+            background: var(--win-mica-bg);
+        }
+
+        .resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 16px;
+            height: 16px;
+            cursor: nwse-resize;
+        }
+
+        /* Start Menu */
+        #start-menu {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 640px;
+            background: var(--win-mica-bg);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-overlay);
+            box-shadow: var(--win-shadow);
+            border: 1px solid var(--win-border);
+            display: none;
+            overflow: hidden;
+            z-index: 10000;
+        }
+
+        #start-menu.active {
+            display: block;
+            animation: startMenuOpen 0.15s ease-out;
+        }
+
+        @keyframes startMenuOpen {
+            from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        .start-search {
+            padding: 20px 24px;
+        }
+
+        .start-search input {
+            width: 100%;
+            padding: 8px 12px;
+            padding-left: 36px;
+            background: var(--win-control-bg);
+            border: 1px solid var(--win-control-border);
+            border-radius: var(--radius-control);
+            font-size: 14px;
+            color: var(--win-text-primary);
+            outline: none;
+        }
+
+        .start-search input:focus {
+            border-color: var(--win-accent);
+            border-bottom-width: 2px;
+        }
+
+        .start-search i {
+            position: absolute;
+            left: 36px;
+            top: 30px;
+            color: var(--win-text-secondary);
+        }
+
+        .start-section {
+            padding: 0 24px 20px;
+        }
+
+        .start-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .start-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--win-text-primary);
+        }
+
+        .start-section-link {
+            font-size: 12px;
+            color: var(--win-accent);
+            cursor: pointer;
+        }
+
+        .pinned-apps {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 4px;
+        }
+
+        .pinned-app {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 8px;
+            border-radius: var(--radius-control);
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .pinned-app:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .pinned-app:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .pinned-app i {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .pinned-app span {
+            font-size: 12px;
+            color: var(--win-text-primary);
+            text-align: center;
+        }
+
+        .start-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: var(--win-surface);
+            border-top: 1px solid var(--win-border);
+        }
+
+        .start-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: var(--radius-control);
+            cursor: pointer;
+        }
+
+        .start-user:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .start-user:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .start-user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--win-accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--win-accent-text);
+        }
+
+        .start-user-name {
+            font-size: 13px;
+            color: var(--win-text-primary);
+        }
+
+        .start-power {
+            padding: 8px;
+            border-radius: var(--radius-control);
+            cursor: pointer;
+        }
+
+        .start-power:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .start-power:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Quick Settings */
+        #quick-settings {
+            position: fixed;
+            bottom: 60px;
+            right: 12px;
+            width: 360px;
+            background: var(--win-mica-bg);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-overlay);
+            box-shadow: var(--win-shadow);
+            border: 1px solid var(--win-border);
+            display: none;
+            z-index: 10000;
+            padding: 16px;
+        }
+
+        #quick-settings.active {
+            display: block;
+            animation: quickSettingsOpen 0.15s ease-out;
+        }
+
+        @keyframes quickSettingsOpen {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .quick-toggles {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .quick-toggle {
+            background: var(--win-surface);
+            border: 1px solid var(--win-border);
+            border-radius: var(--radius-overlay);
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .quick-toggle:hover {
+            background: var(--win-control-hover);
+        }
+
+        .quick-toggle.active {
+            background: var(--win-accent);
+            border-color: var(--win-accent);
+        }
+
+        .quick-toggle.active i,
+        .quick-toggle.active span {
+            color: var(--win-accent-text);
+        }
+
+        .quick-toggle i {
+            font-size: 16px;
+            margin-bottom: 6px;
+            display: block;
+            color: var(--win-text-primary);
+        }
+
+        .quick-toggle span {
+            font-size: 12px;
+            color: var(--win-text-primary);
+        }
+
+        .quick-slider {
+            margin-bottom: 12px;
+        }
+
+        .quick-slider-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .quick-slider-label i {
+            color: var(--win-text-primary);
+        }
+
+        .quick-slider input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 4px;
+            background: var(--win-border);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .quick-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--win-accent);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 4px solid var(--win-surface);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+
+        .quick-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--win-border);
+        }
+
+        .quick-footer-btn {
+            padding: 6px 12px;
+            border-radius: var(--radius-control);
+            font-size: 12px;
+            color: var(--win-text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .quick-footer-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .quick-footer-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Calendar/Notifications Panel */
+        #calendar-panel {
+            position: fixed;
+            bottom: 60px;
+            right: 12px;
+            width: 360px;
+            background: var(--win-mica-bg);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-overlay);
+            box-shadow: var(--win-shadow);
+            border: 1px solid var(--win-border);
+            display: none;
+            z-index: 10000;
+        }
+
+        #calendar-panel.active {
+            display: block;
+            animation: quickSettingsOpen 0.15s ease-out;
+        }
+
+        .calendar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--win-border);
+        }
+
+        .calendar-month {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--win-text-primary);
+        }
+
+        .calendar-grid {
+            padding: 12px;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            text-align: center;
+        }
+
+        .calendar-day-name {
+            font-size: 11px;
+            color: var(--win-text-secondary);
+            padding: 8px 4px;
+        }
+
+        .calendar-day {
+            font-size: 13px;
+            padding: 8px 4px;
+            border-radius: var(--radius-control);
+            cursor: pointer;
+            color: var(--win-text-primary);
+        }
+
+        .calendar-day:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .calendar-day:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .calendar-day.today {
+            background: var(--win-accent);
+            color: var(--win-accent-text);
+        }
+
+        .calendar-day.other-month {
+            color: var(--win-text-secondary);
+        }
+
+        .notifications-section {
+            padding: 16px;
+            border-top: 1px solid var(--win-border);
+        }
+
+        .notifications-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .notification-item {
+            background: var(--win-surface);
+            border: 1px solid var(--win-border);
+            border-radius: var(--radius-overlay);
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .notification-app {
+            font-size: 11px;
+            color: var(--win-text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .notification-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--win-text-primary);
+            margin-bottom: 2px;
+        }
+
+        .notification-body {
+            font-size: 12px;
+            color: var(--win-text-secondary);
+        }
+
+        /* Context Menu */
+        #context-menu {
+            position: fixed;
+            background: var(--win-mica-bg);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-overlay);
+            box-shadow: var(--win-shadow);
+            border: 1px solid var(--win-border);
+            padding: 4px;
+            min-width: 200px;
+            display: none;
+            z-index: 10001;
+        }
+
+        #context-menu.active {
+            display: block;
+        }
+
+        .context-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: var(--radius-control);
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--win-text-primary);
+        }
+
+        .context-item:hover {
+            background: var(--win-accent);
+            color: var(--win-accent-text);
+        }
+
+        .context-item i {
+            width: 16px;
+            text-align: center;
+        }
+
+        .context-separator {
+            height: 1px;
+            background: var(--win-border);
+            margin: 4px 0;
+        }
+
+        /* Buttons */
+        button {
+            background: var(--win-control-bg);
+            border: 1px solid var(--win-control-border);
+            border-radius: var(--radius-control);
+            color: var(--win-text-primary);
+            padding: 6px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.1s;
+            font-family: inherit;
+        }
+
+        button:hover {
+            background: var(--win-control-hover);
+        }
+
+        button.suggested-action {
+            background: var(--win-accent);
+            color: var(--win-accent-text);
+            border-color: var(--win-accent);
+        }
+
+        button.suggested-action:hover {
+            background: var(--win-accent-hover);
+        }
+
+        button.destructive-action {
+            color: #c42b1c;
+            border-color: #c42b1c;
+        }
+
+        button.destructive-action:hover {
+            background: #c42b1c;
+            color: white;
+        }
+
+        /* Inputs */
+        input, textarea {
+            background: var(--win-control-bg);
+            border: 1px solid var(--win-control-border);
+            border-radius: var(--radius-control);
+            padding: 8px 12px;
+            font-size: 14px;
+            color: var(--win-text-primary);
+            font-family: inherit;
+            outline: none;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--win-accent);
+            border-bottom-width: 2px;
+        }
+
+        /* VM Card */
+        .vm-card {
+            background: var(--win-surface);
+            border: 1px solid var(--win-border);
+            border-radius: var(--radius-overlay);
+            padding: 16px;
+            margin-bottom: 8px;
+            box-shadow: var(--win-shadow-sm);
+            transition: all 0.1s;
+        }
+
+        .vm-card:hover {
+            background: var(--win-control-hover);
+            border-color: var(--win-accent);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Typography */
+        .title-1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--win-text-primary);
+        }
+
+        .title-3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--win-text-primary);
+        }
+
+        .dim-label {
+            font-size: 12px;
+            color: var(--win-text-secondary);
+        }
+
+        /* Status */
+        .status-running {
+            color: #107c10;
+            font-weight: 600;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.success {
+            background: #dff6dd;
+            color: #107c10;
+            border: 1px solid #107c10;
+        }
+
+        .dark-mode .badge.success {
+            background: rgba(16, 124, 16, 0.2);
+        }
+
+        .badge.accent {
+            background: rgba(0, 103, 192, 0.1);
+            color: var(--win-accent);
+            border: 1px solid var(--win-accent);
+        }
+
+        .badge.warning {
+            background: #fff4ce;
+            color: #9d5d00;
+            border: 1px solid #9d5d00;
+        }
+
+        .dark-mode .badge.warning {
+            background: rgba(157, 93, 0, 0.2);
+        }
+
+        /* Switch */
+        .switch {
+            width: 40px;
+            height: 20px;
+            background: var(--win-control-border);
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .switch.active {
+            background: var(--win-accent);
+        }
+
+        .switch::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            top: 4px;
+            left: 4px;
+            transition: left 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .switch.active::after {
+            left: 24px;
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--win-accent);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            transition: opacity 0.5s;
+        }
+
+        #loading-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .windows-logo {
+            width: 100px;
+            height: 100px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+            margin-bottom: 40px;
+        }
+
+        .windows-logo div {
+            background: white;
+            border-radius: 2px;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .loading-dots div {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: loadingDot 1.2s infinite ease-in-out;
+        }
+
+        .loading-dots div:nth-child(1) { animation-delay: 0s; }
+        .loading-dots div:nth-child(2) { animation-delay: 0.1s; }
+        .loading-dots div:nth-child(3) { animation-delay: 0.2s; }
+        .loading-dots div:nth-child(4) { animation-delay: 0.3s; }
+        .loading-dots div:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes loadingDot {
+            0%, 100% { transform: translateY(0); opacity: 0.4; }
+            50% { transform: translateY(-10px); opacity: 1; }
+        }
+
+        /* Lock Screen */
+        #lock-screen {
+            position: fixed;
+            inset: 0;
+            background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80') center/cover;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99998;
+        }
+
+        #lock-screen::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(30px);
+        }
+
+        #lock-screen.active {
+            display: flex;
+        }
+
+        .lock-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            color: white;
+        }
+
+        .lock-time {
+            font-size: 96px;
+            font-weight: 300;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+        }
+
+        .lock-date {
+            font-size: 18px;
+            margin-bottom: 60px;
+            text-shadow: 0 1px 10px rgba(0,0,0,0.3);
+        }
+
+        .lock-avatar {
+            width: 120px;
+            height: 120px;
+            background: var(--win-accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 48px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .lock-username {
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+
+        #lock-password {
+            width: 280px;
+            padding: 12px 16px;
+            border-radius: var(--radius-control);
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-align: center;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+
+        #lock-password::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        #lock-password:focus {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* App Styles */
+        /* File Explorer */
+        .explorer-sidebar {
+            width: 200px;
+            background: var(--win-surface);
+            border-right: 1px solid var(--win-border);
+            padding: 8px;
+        }
+
+        .explorer-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: var(--radius-control);
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--win-text-primary);
+            margin-bottom: 2px;
+        }
+
+        .explorer-nav-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .explorer-nav-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .explorer-nav-item.active {
+            background: rgba(0, 103, 192, 0.1);
+            color: var(--win-accent);
+        }
+
+        .dark-mode .explorer-nav-item.active {
+            background: rgba(96, 205, 255, 0.15);
+        }
+
+        .explorer-main {
+            flex: 1;
+            padding: 12px;
+        }
+
+        .explorer-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--win-surface);
+            border-bottom: 1px solid var(--win-border);
+        }
+
+        .explorer-address {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--win-control-bg);
+            border: 1px solid var(--win-control-border);
+            border-radius: var(--radius-control);
+            padding: 4px 12px;
+        }
+
+        .explorer-address input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 4px;
+        }
+
+        .explorer-files {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            padding: 16px;
+        }
+
+        .explorer-file {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+            border-radius: var(--radius-control);
+            cursor: pointer;
+        }
+
+        .explorer-file:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .explorer-file:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .explorer-file i {
+            font-size: 40px;
+            margin-bottom: 8px;
+            color: var(--win-accent);
+        }
+
+        .explorer-file span {
+            font-size: 12px;
+            text-align: center;
+            color: var(--win-text-primary);
+        }
+
+        /* Settings */
+        .settings-sidebar {
+            width: 280px;
+            background: var(--win-surface);
+            border-right: 1px solid var(--win-border);
+            padding: 16px;
+        }
+
+        .settings-nav-section {
+            margin-bottom: 20px;
+        }
+
+        .settings-nav-title {
+            font-size: 12px;
+            color: var(--win-text-secondary);
+            padding: 8px 12px;
+            text-transform: uppercase;
+        }
+
+        .settings-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: var(--radius-control);
+            cursor: pointer;
+            color: var(--win-text-primary);
+            margin-bottom: 2px;
+        }
+
+        .settings-nav-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .settings-nav-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .settings-nav-item.active {
+            background: rgba(0, 103, 192, 0.1);
+        }
+
+        .dark-mode .settings-nav-item.active {
+            background: rgba(96, 205, 255, 0.15);
+        }
+
+        .settings-main {
+            flex: 1;
+            padding: 24px;
+            overflow: auto;
+        }
+
+        .settings-section {
+            margin-bottom: 32px;
+        }
+
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--win-surface);
+            border: 1px solid var(--win-border);
+            border-radius: var(--radius-overlay);
+            margin-bottom: 8px;
+        }
+
+        .settings-row-info h4 {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--win-text-primary);
+            margin-bottom: 2px;
+        }
+
+        .settings-row-info p {
+            font-size: 12px;
+            color: var(--win-text-secondary);
+        }
+
+        /* Terminal */
+        .terminal-content {
+            background: #0c0c0c;
+            color: #cccccc;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: 14px;
+            padding: 12px;
+            height: 100%;
+        }
+
+        .terminal-line {
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .terminal-prompt {
+            color: #0078d4;
+        }
+
+        #terminal-input {
+            background: transparent;
+            border: none;
+            color: #cccccc;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            width: calc(100% - 300px);
+        }
+
+        /* Notepad */
+        .notepad-toolbar {
+            display: flex;
+            gap: 16px;
+            padding: 4px 12px;
+            background: var(--win-surface);
+            border-bottom: 1px solid var(--win-border);
+            font-size: 13px;
+        }
+
+        .notepad-toolbar span {
+            padding: 4px 8px;
+            cursor: pointer;
+            color: var(--win-text-primary);
+        }
+
+        .notepad-toolbar span:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .notepad-content {
+            flex: 1;
+            padding: 8px;
+        }
+
+        .notepad-content textarea {
+            width: 100%;
+            height: 100%;
+            border: none;
+            resize: none;
+            font-family: "Consolas", monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            background: transparent;
+        }
+
+        /* Calculator */
+        .calc-display {
+            background: var(--win-surface);
+            padding: 20px;
+            text-align: right;
+            font-size: 42px;
+            font-weight: 300;
+            border-bottom: 1px solid var(--win-border);
+            color: var(--win-text-primary);
+        }
+
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+            padding: 8px;
+        }
+
+        .calc-btn {
+            padding: 18px;
+            font-size: 18px;
+            border-radius: var(--radius-control);
+            border: none;
+            cursor: pointer;
+        }
+
+        .calc-btn:hover {
+            background: var(--win-control-hover);
+        }
+
+        .calc-btn.operator {
+            background: var(--win-surface);
+        }
+
+        .calc-btn.equals {
+            background: var(--win-accent);
+            color: var(--win-accent-text);
+        }
+
+        /* Edge Browser */
+        .browser-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--win-surface);
+            border-bottom: 1px solid var(--win-border);
+        }
+
+        .browser-toolbar button {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .browser-address {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: var(--win-control-bg);
+            border: 1px solid var(--win-control-border);
+            border-radius: var(--radius-control);
+            padding: 6px 12px;
+        }
+
+        .browser-address input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+        }
+
+        .browser-content {
+            flex: 1;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .browser-home {
+            text-align: center;
+        }
+
+        .browser-home h1 {
+            font-size: 48px;
+            font-weight: 300;
+            color: var(--win-text-primary);
+            margin-bottom: 24px;
+        }
+
+        .browser-search {
+            width: 500px;
+            padding: 12px 20px;
+            border-radius: 999px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="windows-logo">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="loading-dots">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+
+    <!-- Lock Screen -->
+    <div id="lock-screen">
+        <div class="lock-content">
+            <div class="lock-time" id="lock-time">12:00</div>
+            <div class="lock-date" id="lock-date">Monday, January 1</div>
+            <div class="lock-avatar"><i class="fas fa-user"></i></div>
+            <div class="lock-username">User</div>
+            <input type="password" id="lock-password" placeholder="PIN">
+        </div>
+    </div>
+
+    <!-- Desktop -->
+    <div id="desktop">
+        <div id="desktop-icons">
+            <div class="desktop-icon" ondblclick="openApp('explorer')">
+                <i class="fas fa-folder" style="color: #ffc107;"></i>
+                <span>File Explorer</span>
+            </div>
+            <div class="desktop-icon" ondblclick="openApp('edge')">
+                <i class="fab fa-edge" style="color: #0078d4;"></i>
+                <span>Microsoft Edge</span>
+            </div>
+            <div class="desktop-icon" ondblclick="openApp('settings')">
+                <i class="fas fa-cog" style="color: #ffffff;"></i>
+                <span>Settings</span>
+            </div>
+            <div class="desktop-icon" ondblclick="openApp('recycle')">
+                <i class="fas fa-trash-alt" style="color: #ffffff;"></i>
+                <span>Recycle Bin</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div id="taskbar">
+        <div class="taskbar-left">
+            <div class="taskbar-item" onclick="openApp('widgets')" title="Widgets">
+                <i class="fas fa-th-large"></i>
+            </div>
+        </div>
+        
+        <div class="taskbar-center">
+            <div class="taskbar-item start-btn" onclick="toggleStartMenu()" title="Start">
+                <i class="fab fa-windows"></i>
+            </div>
+            <div class="taskbar-item" onclick="toggleSearch()" title="Search">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="taskbar-item" onclick="openApp('explorer')" title="File Explorer">
+                <i class="fas fa-folder" style="color: #ffc107;"></i>
+            </div>
+            <div class="taskbar-item" onclick="openApp('edge')" title="Microsoft Edge">
+                <i class="fab fa-edge" style="color: #0078d4;"></i>
+            </div>
+            <div class="taskbar-item" onclick="openApp('terminal')" title="Terminal">
+                <i class="fas fa-terminal"></i>
+            </div>
+            <div class="taskbar-item" onclick="openApp('notepad')" title="Notepad">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="taskbar-item" onclick="openApp('settings')" title="Settings">
+                <i class="fas fa-cog"></i>
+            </div>
+        </div>
+        
+        <div class="taskbar-right">
+            <div class="taskbar-item" title="Hidden icons">
+                <i class="fas fa-chevron-up"></i>
+            </div>
+            <div class="system-tray" onclick="toggleQuickSettings()">
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-volume-up"></i>
+                <i class="fas fa-battery-three-quarters"></i>
+            </div>
+            <div class="tray-time" onclick="toggleCalendarPanel()">
+                <div class="tray-time-text" id="taskbar-time">12:00 PM</div>
+                <div class="tray-time-text" id="taskbar-date">1/1/2024</div>
+            </div>
+            <div class="taskbar-item" style="width: 8px;"></div>
+        </div>
+    </div>
+
+    <!-- Start Menu -->
+    <div id="start-menu">
+        <div class="start-search">
+            <input type="text" placeholder="Type here to search" id="start-search-input">
+            <i class="fas fa-search"></i>
+        </div>
+        <div class="start-section">
+            <div class="start-section-header">
+                <span class="start-section-title">Pinned</span>
+                <span class="start-section-link">All apps <i class="fas fa-chevron-right"></i></span>
+            </div>
+            <div class="pinned-apps">
+                <div class="pinned-app" onclick="openApp('edge'); toggleStartMenu();">
+                    <i class="fab fa-edge" style="color: #0078d4;"></i>
+                    <span>Edge</span>
+                </div>
+                <div class="pinned-app" onclick="openApp('explorer'); toggleStartMenu();">
+                    <i class="fas fa-folder" style="color: #ffc107;"></i>
+                    <span>File Explorer</span>
+                </div>
+                <div class="pinned-app" onclick="openApp('settings'); toggleStartMenu();">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </div>
+                <div class="pinned-app" onclick="openApp('terminal'); toggleStartMenu();">
+                    <i class="fas fa-terminal"></i>
+                    <span>Terminal</span>
+                </div>
+                <div class="pinned-app" onclick="openApp('notepad'); toggleStartMenu();">
+                    <i class="fas fa-file-alt" style="color: #0078d4;"></i>
+                    <span>Notepad</span>
+                </div>
+                <div class="pinned-app" onclick="openApp('calculator'); toggleStartMenu();">
+                    <i class="fas fa-calculator"></i>
+                    <span>Calculator</span>
+                </div>
+                <div class="pinned-app" onclick="openApp('photos'); toggleStartMenu();">
+                    <i class="fas fa-image" style="color: #ff9800;"></i>
+                    <span>Photos</span>
+                </div>
+                <div class="pinned-app" onclick="openApp('mail'); toggleStartMenu();">
+                    <i class="fas fa-envelope" style="color: #0078d4;"></i>
+                    <span>Mail</span>
+                </div>
+                <div class="pinned-app" onclick="openApp('calendar'); toggleStartMenu();">
+                    <i class="fas fa-calendar" style="color: #0078d4;"></i>
+                    <span>Calendar</span>
+                </div>
+                <div class="pinned-app" onclick="openApp('store'); toggleStartMenu();">
+                    <i class="fas fa-shopping-bag" style="color: #0078d4;"></i>
+                    <span>Store</span>
+                </div>
+                <div class="pinned-app" onclick="openApp('music'); toggleStartMenu();">
+                    <i class="fas fa-music" style="color: #e91e63;"></i>
+                    <span>Music</span>
+                </div>
+                <div class="pinned-app" onclick="openApp('video'); toggleStartMenu();">
+                    <i class="fas fa-film" style="color: #673ab7;"></i>
+                    <span>Movies</span>
+                </div>
+            </div>
+        </div>
+        <div class="start-section">
+            <div class="start-section-header">
+                <span class="start-section-title">Recommended</span>
+                <span class="start-section-link">More <i class="fas fa-chevron-right"></i></span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                <div class="vm-card" style="display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer;">
+                    <i class="fas fa-file-word" style="font-size: 24px; color: #2b579a;"></i>
+                    <div>
+                        <div style="font-size: 13px;">Document.docx</div>
+                        <div class="dim-label">Recently opened</div>
+                    </div>
+                </div>
+                <div class="vm-card" style="display: flex; align-items: center; gap: 12px; padding: 12px; cursor: pointer;">
+                    <i class="fas fa-file-excel" style="font-size: 24px; color: #217346;"></i>
+                    <div>
+                        <div style="font-size: 13px;">Budget.xlsx</div>
+                        <div class="dim-label">Yesterday</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="start-footer">
+            <div class="start-user">
+                <div class="start-user-avatar"><i class="fas fa-user"></i></div>
+                <span class="start-user-name">User</span>
+            </div>
+            <div class="start-power" onclick="shutdown()">
+                <i class="fas fa-power-off"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Settings -->
+    <div id="quick-settings">
+        <div class="quick-toggles">
+            <div class="quick-toggle active" onclick="this.classList.toggle('active')">
+                <i class="fas fa-wifi"></i>
+                <span>Wi-Fi</span>
+            </div>
+            <div class="quick-toggle active" onclick="this.classList.toggle('active')">
+                <i class="fas fa-bluetooth-b"></i>
+                <span>Bluetooth</span>
+            </div>
+            <div class="quick-toggle" onclick="this.classList.toggle('active')">
+                <i class="fas fa-plane"></i>
+                <span>Airplane</span>
+            </div>
+            <div class="quick-toggle" onclick="this.classList.toggle('active')">
+                <i class="fas fa-battery-half"></i>
+                <span>Battery saver</span>
+            </div>
+            <div class="quick-toggle" onclick="toggleDarkMode(); this.classList.toggle('active')">
+                <i class="fas fa-moon"></i>
+                <span>Night light</span>
+            </div>
+            <div class="quick-toggle" onclick="this.classList.toggle('active')">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Location</span>
+            </div>
+        </div>
+        <div class="quick-slider">
+            <div class="quick-slider-label">
+                <i class="fas fa-sun"></i>
+            </div>
+            <input type="range" min="0" max="100" value="80">
+        </div>
+        <div class="quick-slider">
+            <div class="quick-slider-label">
+                <i class="fas fa-volume-up"></i>
+            </div>
+            <input type="range" min="0" max="100" value="60">
+        </div>
+        <div class="quick-footer">
+            <div class="quick-footer-btn" onclick="openApp('settings'); closeAllPanels();">
+                <i class="fas fa-cog"></i>
+                All settings
+            </div>
+            <div class="quick-footer-btn">
+                <i class="fas fa-pen"></i>
+                Edit
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Panel -->
+    <div id="calendar-panel">
+        <div class="calendar-header">
+            <span class="calendar-month" id="calendar-month">January 2024</span>
+        </div>
+        <div class="calendar-grid">
+            <div class="calendar-days" id="calendar-days"></div>
+        </div>
+        <div class="notifications-section">
+            <div class="notifications-header">
+                <span class="title-3">Notifications</span>
+                <span class="dim-label" style="cursor: pointer;">Clear all</span>
+            </div>
+            <div class="notification-item">
+                <div class="notification-app">Microsoft Store</div>
+                <div class="notification-title">Updates available</div>
+                <div class="notification-body">3 apps have updates available</div>
+            </div>
+            <div class="notification-item">
+                <div class="notification-app">Windows Security</div>
+                <div class="notification-title">Protection active</div>
+                <div class="notification-body">Your device is protected</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu">
+        <div class="context-item"><i class="fas fa-eye"></i> View</div>
+        <div class="context-item"><i class="fas fa-sort"></i> Sort by</div>
+        <div class="context-item"><i class="fas fa-sync"></i> Refresh</div>
+        <div class="context-separator"></div>
+        <div class="context-item"><i class="fas fa-folder-plus"></i> New folder</div>
+        <div class="context-item"><i class="fas fa-file-plus"></i> New file</div>
+        <div class="context-separator"></div>
+        <div class="context-item"><i class="fas fa-desktop"></i> Display settings</div>
+        <div class="context-item"><i class="fas fa-palette"></i> Personalize</div>
+        <div class="context-separator"></div>
+        <div class="context-item" onclick="openApp('terminal'); closeContextMenu();"><i class="fas fa-terminal"></i> Open Terminal</div>
+    </div>
+
+    <!-- Windows Container -->
+    <div id="windows"></div>
+
+    <script>
+        // Window Management
+        let windows = {};
+        let windowZIndex = 100;
+        let activeWindow = null;
+        let isDarkMode = false;
+
+        // App Templates
+        const appTemplates = {
+            explorer: {
+                title: 'File Explorer',
+                icon: 'fa-folder',
+                width: 900,
+                height: 600,
+                content: `
+                    <div style="display: flex; height: 100%;">
+                        <div class="explorer-sidebar">
+                            <div class="explorer-nav-item active"><i class="fas fa-home"></i> Home</div>
+                            <div class="explorer-nav-item"><i class="fas fa-images"></i> Gallery</div>
+                            <div style="margin: 16px 0 8px; padding: 0 12px; font-size: 12px; color: var(--win-text-secondary);">Quick access</div>
+                            <div class="explorer-nav-item"><i class="fas fa-desktop"></i> Desktop</div>
+                            <div class="explorer-nav-item"><i class="fas fa-download"></i> Downloads</div>
+                            <div class="explorer-nav-item"><i class="fas fa-file-alt"></i> Documents</div>
+                            <div class="explorer-nav-item"><i class="fas fa-image"></i> Pictures</div>
+                            <div class="explorer-nav-item"><i class="fas fa-music"></i> Music</div>
+                            <div class="explorer-nav-item"><i class="fas fa-video"></i> Videos</div>
+                            <div style="margin: 16px 0 8px; padding: 0 12px; font-size: 12px; color: var(--win-text-secondary);">This PC</div>
+                            <div class="explorer-nav-item"><i class="fas fa-hdd"></i> Local Disk (C:)</div>
+                        </div>
+                        <div style="flex: 1; display: flex; flex-direction: column;">
+                            <div class="explorer-toolbar">
+                                <button><i class="fas fa-arrow-left"></i></button>
+                                <button><i class="fas fa-arrow-right"></i></button>
+                                <button><i class="fas fa-arrow-up"></i></button>
+                                <div class="explorer-address">
+                                    <i class="fas fa-folder" style="color: #ffc107;"></i>
+                                    <input type="text" value="This PC > Desktop">
+                                </div>
+                                <button><i class="fas fa-search"></i></button>
+                            </div>
+                            <div class="explorer-files">
+                                <div class="explorer-file"><i class="fas fa-folder"></i><span>Documents</span></div>
+                                <div class="explorer-file"><i class="fas fa-folder"></i><span>Downloads</span></div>
+                                <div class="explorer-file"><i class="fas fa-folder"></i><span>Pictures</span></div>
+                                <div class="explorer-file"><i class="fas fa-folder"></i><span>Music</span></div>
+                                <div class="explorer-file"><i class="fas fa-folder"></i><span>Videos</span></div>
+                                <div class="explorer-file"><i class="fas fa-folder"></i><span>Projects</span></div>
+                                <div class="explorer-file"><i class="fas fa-file-word" style="color: #2b579a;"></i><span>Resume.docx</span></div>
+                                <div class="explorer-file"><i class="fas fa-file-excel" style="color: #217346;"></i><span>Budget.xlsx</span></div>
+                                <div class="explorer-file"><i class="fas fa-file-pdf" style="color: #f40f02;"></i><span>Report.pdf</span></div>
+                                <div class="explorer-file"><i class="fas fa-file-image" style="color: #ff9800;"></i><span>Photo.png</span></div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            edge: {
+                title: 'Microsoft Edge',
+                icon: 'fab fa-edge',
+                width: 1000,
+                height: 700,
+                content: `
+                    <div style="display: flex; flex-direction: column; height: 100%;">
+                        <div class="browser-toolbar">
+                            <button><i class="fas fa-arrow-left"></i></button>
+                            <button><i class="fas fa-arrow-right"></i></button>
+                            <button><i class="fas fa-redo"></i></button>
+                            <button><i class="fas fa-home"></i></button>
+                            <div class="browser-address">
+                                <i class="fas fa-lock" style="color: var(--win-text-secondary);"></i>
+                                <input type="text" value="https://www.bing.com">
+                            </div>
+                            <button><i class="fas fa-star"></i></button>
+                            <button><i class="fas fa-ellipsis-h"></i></button>
+                        </div>
+                        <div class="browser-content" style="background: var(--win-mica-bg);">
+                            <div class="browser-home">
+                                <h1>Microsoft Bing</h1>
+                                <input type="text" class="browser-search" placeholder="Search the web">
+                                <div style="display: flex; justify-content: center; gap: 24px; margin-top: 40px;">
+                                    <div style="text-align: center; cursor: pointer;">
+                                        <div style="width: 48px; height: 48px; background: var(--win-surface); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; box-shadow: var(--win-shadow-sm);"><i class="fab fa-microsoft" style="font-size: 24px; color: var(--win-accent);"></i></div>
+                                        <span style="font-size: 12px;">Microsoft</span>
+                                    </div>
+                                    <div style="text-align: center; cursor: pointer;">
+                                        <div style="width: 48px; height: 48px; background: var(--win-surface); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; box-shadow: var(--win-shadow-sm);"><i class="fab fa-github" style="font-size: 24px;"></i></div>
+                                        <span style="font-size: 12px;">GitHub</span>
+                                    </div>
+                                    <div style="text-align: center; cursor: pointer;">
+                                        <div style="width: 48px; height: 48px; background: var(--win-surface); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; box-shadow: var(--win-shadow-sm);"><i class="fab fa-youtube" style="font-size: 24px; color: #ff0000;"></i></div>
+                                        <span style="font-size: 12px;">YouTube</span>
+                                    </div>
+                                    <div style="text-align: center; cursor: pointer;">
+                                        <div style="width: 48px; height: 48px; background: var(--win-surface); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; box-shadow: var(--win-shadow-sm);"><i class="fab fa-twitter" style="font-size: 24px; color: #1da1f2;"></i></div>
+                                        <span style="font-size: 12px;">Twitter</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            terminal: {
+                title: 'Windows Terminal',
+                icon: 'fa-terminal',
+                width: 800,
+                height: 500,
+                content: `
+                    <div class="terminal-content" id="terminal-output">
+                        <div class="terminal-line">Windows Terminal [Version 11.0.22000]</div>
+                        <div class="terminal-line">(c) NeuronOS. All rights reserved.</div>
+                        <div class="terminal-line" style="margin-top: 12px;"><span class="terminal-prompt">C:\\Users\\User></span> <input type="text" id="terminal-input" autofocus onkeypress="handleTerminal(event)"></div>
+                    </div>
+                `
+            },
+            settings: {
+                title: 'Settings',
+                icon: 'fa-cog',
+                width: 1000,
+                height: 650,
+                content: `
+                    <div style="display: flex; height: 100%;">
+                        <div class="settings-sidebar">
+                            <div style="padding: 16px;">
+                                <input type="text" placeholder="Find a setting" style="width: 100%;">
+                            </div>
+                            <div class="settings-nav-section">
+                                <div class="settings-nav-item active"><i class="fas fa-home"></i> System</div>
+                                <div class="settings-nav-item"><i class="fas fa-bluetooth-b"></i> Bluetooth & devices</div>
+                                <div class="settings-nav-item"><i class="fas fa-wifi"></i> Network & internet</div>
+                                <div class="settings-nav-item"><i class="fas fa-palette"></i> Personalization</div>
+                                <div class="settings-nav-item"><i class="fas fa-mobile-alt"></i> Apps</div>
+                                <div class="settings-nav-item"><i class="fas fa-user-circle"></i> Accounts</div>
+                                <div class="settings-nav-item"><i class="fas fa-clock"></i> Time & language</div>
+                                <div class="settings-nav-item"><i class="fas fa-gamepad"></i> Gaming</div>
+                                <div class="settings-nav-item"><i class="fas fa-universal-access"></i> Accessibility</div>
+                                <div class="settings-nav-item"><i class="fas fa-shield-alt"></i> Privacy & security</div>
+                                <div class="settings-nav-item"><i class="fas fa-sync"></i> Windows Update</div>
+                            </div>
+                        </div>
+                        <div class="settings-main">
+                            <h1 class="title-1" style="margin-bottom: 8px;">System</h1>
+                            <p class="dim-label" style="margin-bottom: 24px;">Display, sound, notifications, power</p>
+                            
+                            <div class="settings-section">
+                                <div class="settings-row">
+                                    <div class="settings-row-info">
+                                        <h4><i class="fas fa-desktop" style="margin-right: 12px;"></i> Display</h4>
+                                        <p>Brightness, night light, display profiles</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right" style="color: var(--win-text-secondary);"></i>
+                                </div>
+                                <div class="settings-row">
+                                    <div class="settings-row-info">
+                                        <h4><i class="fas fa-volume-up" style="margin-right: 12px;"></i> Sound</h4>
+                                        <p>Volume levels, output, input, sound devices</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right" style="color: var(--win-text-secondary);"></i>
+                                </div>
+                                <div class="settings-row">
+                                    <div class="settings-row-info">
+                                        <h4><i class="fas fa-bell" style="margin-right: 12px;"></i> Notifications</h4>
+                                        <p>Alerts from apps and system</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right" style="color: var(--win-text-secondary);"></i>
+                                </div>
+                                <div class="settings-row" onclick="toggleDarkMode();" style="cursor: pointer;">
+                                    <div class="settings-row-info">
+                                        <h4><i class="fas fa-moon" style="margin-right: 12px;"></i> Dark mode</h4>
+                                        <p>Switch between light and dark themes</p>
+                                    </div>
+                                    <div class="switch ${isDarkMode ? 'active' : ''}" id="dark-mode-switch"></div>
+                                </div>
+                                <div class="settings-row">
+                                    <div class="settings-row-info">
+                                        <h4><i class="fas fa-power-off" style="margin-right: 12px;"></i> Power & battery</h4>
+                                        <p>Sleep, battery usage, power mode</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right" style="color: var(--win-text-secondary);"></i>
+                                </div>
+                                <div class="settings-row">
+                                    <div class="settings-row-info">
+                                        <h4><i class="fas fa-hdd" style="margin-right: 12px;"></i> Storage</h4>
+                                        <p>Storage usage, drives, configurations</p>
+                                    </div>
+                                    <span class="badge accent">64GB used</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            notepad: {
+                title: 'Notepad',
+                icon: 'fa-file-alt',
+                width: 700,
+                height: 500,
+                content: `
+                    <div style="display: flex; flex-direction: column; height: 100%;">
+                        <div class="notepad-toolbar">
+                            <span>File</span>
+                            <span>Edit</span>
+                            <span>View</span>
+                        </div>
+                        <div class="notepad-content">
+                            <textarea placeholder="Start typing...">Welcome to NeuronOS 11 Notepad!
+
+This is a simple text editor inspired by Windows 11 design.
+
+Features:
+- Clean, minimal interface
+- Fluent Design System
+- Light and dark mode support
+
+Try out the other apps in this simulated operating system!</textarea>
+                        </div>
+                    </div>
+                `
+            },
+            calculator: {
+                title: 'Calculator',
+                icon: 'fa-calculator',
+                width: 320,
+                height: 480,
+                content: `
+                    <div style="height: 100%;">
+                        <div class="calc-display" id="calc-display">0</div>
+                        <div class="calc-buttons">
+                            <button class="calc-btn" onclick="calcClear()">C</button>
+                            <button class="calc-btn operator" onclick="calcOp('/')">÷</button>
+                            <button class="calc-btn operator" onclick="calcOp('*')">×</button>
+                            <button class="calc-btn operator" onclick="calcBackspace()">⌫</button>
+                            <button class="calc-btn" onclick="calcNum('7')">7</button>
+                            <button class="calc-btn" onclick="calcNum('8')">8</button>
+                            <button class="calc-btn" onclick="calcNum('9')">9</button>
+                            <button class="calc-btn operator" onclick="calcOp('-')">−</button>
+                            <button class="calc-btn" onclick="calcNum('4')">4</button>
+                            <button class="calc-btn" onclick="calcNum('5')">5</button>
+                            <button class="calc-btn" onclick="calcNum('6')">6</button>
+                            <button class="calc-btn operator" onclick="calcOp('+')">+</button>
+                            <button class="calc-btn" onclick="calcNum('1')">1</button>
+                            <button class="calc-btn" onclick="calcNum('2')">2</button>
+                            <button class="calc-btn" onclick="calcNum('3')">3</button>
+                            <button class="calc-btn equals" onclick="calcEquals()" style="grid-row: span 2;">=</button>
+                            <button class="calc-btn" onclick="calcNum('0')" style="grid-column: span 2;">0</button>
+                            <button class="calc-btn" onclick="calcNum('.')">.</button>
+                        </div>
+                    </div>
+                `
+            },
+            recycle: {
+                title: 'Recycle Bin',
+                icon: 'fa-trash-alt',
+                width: 600,
+                height: 400,
+                content: `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column;">
+                        <i class="fas fa-trash-alt" style="font-size: 64px; color: var(--win-text-secondary); margin-bottom: 16px;"></i>
+                        <p style="font-size: 16px; color: var(--win-text-primary);">Recycle Bin is empty</p>
+                    </div>
+                `
+            },
+            photos: {
+                title: 'Photos',
+                icon: 'fa-image',
+                width: 900,
+                height: 600,
+                content: `
+                    <div style="padding: 24px;">
+                        <h2 class="title-1" style="margin-bottom: 16px;">Photos</h2>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div style="aspect-ratio: 1; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 4px;"></div>
+                            <div style="aspect-ratio: 1; background: linear-gradient(135deg, #f093fb, #f5576c); border-radius: 4px;"></div>
+                            <div style="aspect-ratio: 1; background: linear-gradient(135deg, #4facfe, #00f2fe); border-radius: 4px;"></div>
+                            <div style="aspect-ratio: 1; background: linear-gradient(135deg, #43e97b, #38f9d7); border-radius: 4px;"></div>
+                            <div style="aspect-ratio: 1; background: linear-gradient(135deg, #fa709a, #fee140); border-radius: 4px;"></div>
+                            <div style="aspect-ratio: 1; background: linear-gradient(135deg, #a8edea, #fed6e3); border-radius: 4px;"></div>
+                            <div style="aspect-ratio: 1; background: linear-gradient(135deg, #d299c2, #fef9d7); border-radius: 4px;"></div>
+                            <div style="aspect-ratio: 1; background: linear-gradient(135deg, #89f7fe, #66a6ff); border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                `
+            },
+            mail: {
+                title: 'Mail',
+                icon: 'fa-envelope',
+                width: 900,
+                height: 600,
+                content: `
+                    <div style="display: flex; height: 100%;">
+                        <div style="width: 60px; background: var(--win-surface); border-right: 1px solid var(--win-border); display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 16px;">
+                            <i class="fas fa-inbox" style="font-size: 20px; color: var(--win-accent);"></i>
+                            <i class="fas fa-paper-plane" style="font-size: 18px; color: var(--win-text-secondary);"></i>
+                            <i class="fas fa-star" style="font-size: 18px; color: var(--win-text-secondary);"></i>
+                            <i class="fas fa-trash" style="font-size: 18px; color: var(--win-text-secondary);"></i>
+                        </div>
+                        <div style="width: 300px; border-right: 1px solid var(--win-border); padding: 16px;">
+                            <h3 class="title-3" style="margin-bottom: 16px;">Inbox</h3>
+                            <div class="vm-card" style="cursor: pointer;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">NeuronOS Team</div>
+                                <div style="font-size: 13px; margin-bottom: 4px;">Welcome to NeuronOS 11!</div>
+                                <div class="dim-label">2 hours ago</div>
+                            </div>
+                            <div class="vm-card" style="cursor: pointer;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">System</div>
+                                <div style="font-size: 13px; margin-bottom: 4px;">Your backup is complete</div>
+                                <div class="dim-label">Yesterday</div>
+                            </div>
+                        </div>
+                        <div style="flex: 1; padding: 24px;">
+                            <h2 class="title-1" style="margin-bottom: 8px;">Welcome to NeuronOS 11!</h2>
+                            <div class="dim-label" style="margin-bottom: 24px;">From: NeuronOS Team • 2 hours ago</div>
+                            <p style="line-height: 1.6;">Hello and welcome to NeuronOS 11!<br><br>This is your new operating system experience, featuring the beautiful Fluent Design System with Mica materials, rounded corners, and a centered taskbar.<br><br>Explore the various apps and settings to customize your experience.<br><br>Best regards,<br>The NeuronOS Team</p>
+                        </div>
+                    </div>
+                `
+            },
+            calendar: {
+                title: 'Calendar',
+                icon: 'fa-calendar',
+                width: 800,
+                height: 600,
+                content: `
+                    <div style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                            <h2 class="title-1" id="app-calendar-month">${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h2>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="changeAppCalendar(-1)"><i class="fas fa-chevron-left"></i></button>
+                                <button onclick="changeAppCalendar(1)"><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                        <div class="calendar-days" id="app-calendar-days" style="font-size: 16px;"></div>
+                    </div>
+                `
+            },
+            store: {
+                title: 'Microsoft Store',
+                icon: 'fa-shopping-bag',
+                width: 900,
+                height: 600,
+                content: `
+                    <div style="padding: 24px;">
+                        <h2 class="title-1" style="margin-bottom: 24px;">Microsoft Store</h2>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                            <div class="vm-card" style="cursor: pointer;">
+                                <div style="height: 120px; background: linear-gradient(135deg, #0078d4, #00bcf2); border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center;"><i class="fab fa-spotify" style="font-size: 48px; color: white;"></i></div>
+                                <div style="font-weight: 600;">Spotify</div>
+                                <div class="dim-label">Music streaming</div>
+                            </div>
+                            <div class="vm-card" style="cursor: pointer;">
+                                <div style="height: 120px; background: linear-gradient(135deg, #7b68ee, #9370db); border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center;"><i class="fab fa-discord" style="font-size: 48px; color: white;"></i></div>
+                                <div style="font-weight: 600;">Discord</div>
+                                <div class="dim-label">Voice & text chat</div>
+                            </div>
+                            <div class="vm-card" style="cursor: pointer;">
+                                <div style="height: 120px; background: linear-gradient(135deg, #25d366, #128c7e); border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center;"><i class="fab fa-whatsapp" style="font-size: 48px; color: white;"></i></div>
+                                <div style="font-weight: 600;">WhatsApp</div>
+                                <div class="dim-label">Messaging</div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            music: {
+                title: 'Music',
+                icon: 'fa-music',
+                width: 400,
+                height: 500,
+                content: `
+                    <div style="padding: 24px; text-align: center;">
+                        <div style="width: 200px; height: 200px; background: linear-gradient(135deg, #e91e63, #9c27b0); border-radius: 8px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 32px rgba(233, 30, 99, 0.3);">
+                            <i class="fas fa-music" style="font-size: 64px; color: white;"></i>
+                        </div>
+                        <h3 class="title-3" style="margin-bottom: 4px;">Now Playing</h3>
+                        <p class="dim-label" style="margin-bottom: 24px;">Artist Name</p>
+                        <input type="range" style="width: 100%; margin-bottom: 24px;">
+                        <div style="display: flex; justify-content: center; gap: 24px; align-items: center;">
+                            <button><i class="fas fa-step-backward"></i></button>
+                            <button class="suggested-action" style="width: 48px; height: 48px; border-radius: 50%; padding: 0;"><i class="fas fa-play"></i></button>
+                            <button><i class="fas fa-step-forward"></i></button>
+                        </div>
+                    </div>
+                `
+            },
+            video: {
+                title: 'Movies & TV',
+                icon: 'fa-film',
+                width: 900,
+                height: 600,
+                content: `
+                    <div style="padding: 24px;">
+                        <h2 class="title-1" style="margin-bottom: 24px;">Movies & TV</h2>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                            <div style="cursor: pointer;">
+                                <div style="aspect-ratio: 2/3; background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 8px; margin-bottom: 8px;"></div>
+                                <div style="font-size: 13px;">Movie Title</div>
+                                <div class="dim-label">2024</div>
+                            </div>
+                            <div style="cursor: pointer;">
+                                <div style="aspect-ratio: 2/3; background: linear-gradient(135deg, #2c3e50, #3498db); border-radius: 8px; margin-bottom: 8px;"></div>
+                                <div style="font-size: 13px;">Another Movie</div>
+                                <div class="dim-label">2023</div>
+                            </div>
+                            <div style="cursor: pointer;">
+                                <div style="aspect-ratio: 2/3; background: linear-gradient(135deg, #8e44ad, #3498db); border-radius: 8px; margin-bottom: 8px;"></div>
+                                <div style="font-size: 13px;">Sci-Fi Film</div>
+                                <div class="dim-label">2024</div>
+                            </div>
+                            <div style="cursor: pointer;">
+                                <div style="aspect-ratio: 2/3; background: linear-gradient(135deg, #e74c3c, #c0392b); border-radius: 8px; margin-bottom: 8px;"></div>
+                                <div style="font-size: 13px;">Action Movie</div>
+                                <div class="dim-label">2024</div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        // Boot sequence
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('fade-out');
+                setTimeout(() => {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    document.getElementById('lock-screen').classList.add('active');
+                    updateTime();
+                }, 500);
+            }, 2500);
+        });
+
+        // Time updates
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('lock-time').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            document.getElementById('lock-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            document.getElementById('taskbar-time').textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            document.getElementById('taskbar-date').textContent = now.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+            document.getElementById('calendar-month').textContent = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            renderCalendar();
+        }
+        setInterval(updateTime, 1000);
+
+        // Lock screen
+        document.getElementById('lock-password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('lock-screen').classList.remove('active');
+            }
+        });
+
+        // Calendar
+        let currentCalendarDate = new Date();
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-days');
+            if (!grid) return;
+
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            const today = new Date();
+
+            const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+            let html = days.map(d => `<div class="calendar-day-name">${d}</div>`).join('');
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+            for (let i = firstDay - 1; i >= 0; i--) {
+                html += `<div class="calendar-day other-month">${daysInPrevMonth - i}</div>`;
+            }
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const isToday = i === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                html += `<div class="calendar-day ${isToday ? 'today' : ''}">${i}</div>`;
+            }
+
+            const remaining = 42 - (firstDay + daysInMonth);
+            for (let i = 1; i <= remaining; i++) {
+                html += `<div class="calendar-day other-month">${i}</div>`;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        let appCalendarDate = new Date();
+
+        function changeAppCalendar(delta) {
+            appCalendarDate.setMonth(appCalendarDate.getMonth() + delta);
+            document.getElementById('app-calendar-month').textContent = appCalendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            renderAppCalendar();
+        }
+
+        function renderAppCalendar() {
+            const grid = document.getElementById('app-calendar-days');
+            if (!grid) return;
+
+            const year = appCalendarDate.getFullYear();
+            const month = appCalendarDate.getMonth();
+            const today = new Date();
+
+            const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+            let html = days.map(d => `<div class="calendar-day-name">${d}</div>`).join('');
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+            for (let i = firstDay - 1; i >= 0; i--) {
+                html += `<div class="calendar-day other-month">${daysInPrevMonth - i}</div>`;
+            }
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const isToday = i === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                html += `<div class="calendar-day ${isToday ? 'today' : ''}">${i}</div>`;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        // Panels
+        function closeAllPanels() {
+            document.getElementById('start-menu').classList.remove('active');
+            document.getElementById('quick-settings').classList.remove('active');
+            document.getElementById('calendar-panel').classList.remove('active');
+            document.getElementById('context-menu').classList.remove('active');
+        }
+
+        function toggleStartMenu() {
+            const isActive = document.getElementById('start-menu').classList.contains('active');
+            closeAllPanels();
+            if (!isActive) document.getElementById('start-menu').classList.add('active');
+        }
+
+        function toggleQuickSettings() {
+            const isActive = document.getElementById('quick-settings').classList.contains('active');
+            closeAllPanels();
+            if (!isActive) document.getElementById('quick-settings').classList.add('active');
+        }
+
+        function toggleCalendarPanel() {
+            const isActive = document.getElementById('calendar-panel').classList.contains('active');
+            closeAllPanels();
+            if (!isActive) document.getElementById('calendar-panel').classList.add('active');
+        }
+
+        function toggleSearch() {
+            toggleStartMenu();
+            setTimeout(() => document.getElementById('start-search-input').focus(), 100);
+        }
+
+        function closeContextMenu() {
+            document.getElementById('context-menu').classList.remove('active');
+        }
+
+        // Dark mode
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode');
+            const switchEl = document.getElementById('dark-mode-switch');
+            if (switchEl) switchEl.classList.toggle('active');
+        }
+
+        // Window management
+        function openApp(appId) {
+            if (windows[appId]) {
+                bringToFront(appId);
+                return;
+            }
+
+            const template = appTemplates[appId];
+            if (!template) return;
+
+            closeAllPanels();
+
+            const windowEl = document.createElement('div');
+            windowEl.className = 'window';
+            windowEl.id = `window-${appId}`;
+            windowEl.style.width = template.width + 'px';
+            windowEl.style.height = template.height + 'px';
+            windowEl.style.left = (100 + Object.keys(windows).length * 30) + 'px';
+            windowEl.style.top = (50 + Object.keys(windows).length * 30) + 'px';
+            windowEl.style.zIndex = ++windowZIndex;
+
+            windowEl.innerHTML = `
+                <div class="window-header" onmousedown="startDrag(event, '${appId}')">
+                    <i class="window-icon ${template.icon.includes('fab') ? template.icon : 'fas ' + template.icon}"></i>
+                    <span class="window-title">${template.title}</span>
+                    <div class="window-controls">
+                        <div class="window-control minimize" onclick="minimizeWindow('${appId}')"><i class="fas fa-minus"></i></div>
+                        <div class="window-control maximize" onclick="maximizeWindow('${appId}')"><i class="far fa-square"></i></div>
+                        <div class="window-control close" onclick="closeWindow('${appId}')"><i class="fas fa-times"></i></div>
+                    </div>
+                </div>
+                <div class="window-content">${template.content}</div>
+                <div class="resize-handle" onmousedown="startResize(event, '${appId}')"></div>
+            `;
+
+            document.getElementById('windows').appendChild(windowEl);
+            windows[appId] = { el: windowEl, maximized: false };
+
+            if (appId === 'calendar') {
+                setTimeout(renderAppCalendar, 0);
+            }
+
+            updateTaskbar(appId, true);
+        }
+
+        function closeWindow(appId) {
+            const win = windows[appId];
+            if (win) {
+                win.el.style.animation = 'windowOpen 0.15s reverse';
+                setTimeout(() => {
+                    win.el.remove();
+                    delete windows[appId];
+                    updateTaskbar(appId, false);
+                }, 150);
+            }
+        }
+
+        function minimizeWindow(appId) {
+            const win = windows[appId];
+            if (win) win.el.classList.toggle('minimized');
+        }
+
+        function maximizeWindow(appId) {
+            const win = windows[appId];
+            if (win) {
+                win.maximized = !win.maximized;
+                win.el.classList.toggle('maximized');
+            }
+        }
+
+        function bringToFront(appId) {
+            const win = windows[appId];
+            if (win) {
+                win.el.style.zIndex = ++windowZIndex;
+                if (win.el.classList.contains('minimized')) {
+                    win.el.classList.remove('minimized');
+                }
+            }
+        }
+
+        function updateTaskbar(appId, isOpen) {
+            // Could update taskbar item state here
+        }
+
+        // Drag & Resize
+        let dragState = null;
+        let resizeState = null;
+
+        function startDrag(e, appId) {
+            if (e.target.closest('.window-controls')) return;
+            const win = windows[appId];
+            if (win.maximized) return;
+
+            dragState = {
+                appId,
+                startX: e.clientX,
+                startY: e.clientY,
+                startLeft: parseInt(win.el.style.left),
+                startTop: parseInt(win.el.style.top)
+            };
+            bringToFront(appId);
+        }
+
+        function startResize(e, appId) {
+            const win = windows[appId];
+            if (win.maximized) return;
+
+            resizeState = {
+                appId,
+                startX: e.clientX,
+                startY: e.clientY,
+                startWidth: win.el.offsetWidth,
+                startHeight: win.el.offsetHeight
+            };
+            bringToFront(appId);
+            e.stopPropagation();
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (dragState) {
+                const win = windows[dragState.appId];
+                win.el.style.left = (dragState.startLeft + e.clientX - dragState.startX) + 'px';
+                win.el.style.top = Math.max(0, dragState.startTop + e.clientY - dragState.startY) + 'px';
+            }
+            if (resizeState) {
+                const win = windows[resizeState.appId];
+                win.el.style.width = Math.max(400, resizeState.startWidth + e.clientX - resizeState.startX) + 'px';
+                win.el.style.height = Math.max(300, resizeState.startHeight + e.clientY - resizeState.startY) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            dragState = null;
+            resizeState = null;
+        });
+
+        // Context menu
+        document.getElementById('desktop').addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            closeAllPanels();
+            const menu = document.getElementById('context-menu');
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+            menu.classList.add('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#context-menu') && !e.target.closest('#start-menu') && 
+                !e.target.closest('#quick-settings') && !e.target.closest('#calendar-panel') &&
+                !e.target.closest('.taskbar-item') && !e.target.closest('.system-tray') &&
+                !e.target.closest('.tray-time')) {
+                closeAllPanels();
+            }
+        });
+
+        // Terminal
+        function handleTerminal(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('terminal-input');
+                const output = document.getElementById('terminal-output');
+                const command = input.value.trim();
+
+                let response = '';
+                if (command === 'help') {
+                    response = 'Available commands: help, dir, cls, date, time, whoami, ver, echo [text], color';
+                } else if (command === 'dir') {
+                    response = ' Directory of C:\\Users\\User\n\n Documents     Downloads     Pictures     Desktop     Music     Videos';
+                } else if (command === 'cls') {
+                    output.innerHTML = '<div class="terminal-line"><span class="terminal-prompt">C:\\Users\\User></span> <input type="text" id="terminal-input" autofocus onkeypress="handleTerminal(event)"></div>';
+                    document.getElementById('terminal-input').focus();
+                    return;
+                } else if (command === 'date') {
+                    response = 'The current date is: ' + new Date().toLocaleDateString();
+                } else if (command === 'time') {
+                    response = 'The current time is: ' + new Date().toLocaleTimeString();
+                } else if (command === 'whoami') {
+                    response = 'neuronos\\user';
+                } else if (command === 'ver') {
+                    response = 'NeuronOS [Version 11.0.22000]';
+                } else if (command.startsWith('echo ')) {
+                    response = command.substring(5);
+                } else if (command) {
+                    response = `'${command}' is not recognized as an internal or external command.`;
+                }
+
+                const newLine = document.createElement('div');
+                newLine.className = 'terminal-line';
+                newLine.innerHTML = `<span class="terminal-prompt">C:\\Users\\User></span> ${command}`;
+                input.parentElement.before(newLine);
+
+                if (response) {
+                    const responseLine = document.createElement('div');
+                    responseLine.className = 'terminal-line';
+                    responseLine.style.whiteSpace = 'pre';
+                    responseLine.textContent = response;
+                    input.parentElement.before(responseLine);
+                }
+
+                input.value = '';
+                output.scrollTop = output.scrollHeight;
+            }
+        }
+
+        // Calculator
+        let calcDisplay = '0';
+        let calcOperand = null;
+        let calcOperator = null;
+        let calcNewNumber = true;
+
+        function updateCalcDisplay() {
+            const display = document.getElementById('calc-display');
+            if (display) display.textContent = calcDisplay;
+        }
+
+        function calcNum(n) {
+            if (calcNewNumber) {
+                calcDisplay = n;
+                calcNewNumber = false;
+            } else {
+                calcDisplay = calcDisplay === '0' ? n : calcDisplay + n;
+            }
+            updateCalcDisplay();
+        }
+
+        function calcOp(op) {
+            calcOperand = parseFloat(calcDisplay);
+            calcOperator = op;
+            calcNewNumber = true;
+        }
+
+        function calcEquals() {
+            if (calcOperator && calcOperand !== null) {
+                const current = parseFloat(calcDisplay);
+                let result;
+                switch (calcOperator) {
+                    case '+': result = calcOperand + current; break;
+                    case '-': result = calcOperand - current; break;
+                    case '*': result = calcOperand * current; break;
+                    case '/': result = calcOperand / current; break;
+                }
+                calcDisplay = String(result);
+                calcOperator = null;
+                calcOperand = null;
+                calcNewNumber = true;
+                updateCalcDisplay();
+            }
+        }
+
+        function calcClear() {
+            calcDisplay = '0';
+            calcOperand = null;
+            calcOperator = null;
+            calcNewNumber = true;
+            updateCalcDisplay();
+        }
+
+        function calcBackspace() {
+            if (calcDisplay.length > 1) {
+                calcDisplay = calcDisplay.slice(0, -1);
+            } else {
+                calcDisplay = '0';
+            }
+            updateCalcDisplay();
+        }
+
+        // Shutdown
+        function shutdown() {
+            closeAllPanels();
+            document.getElementById('loading-screen').style.display = 'flex';
+            document.getElementById('loading-screen').classList.remove('fade-out');
+        }
+
+        // Initialize
+        updateTime();
+    </script>
+</body>
+</html>

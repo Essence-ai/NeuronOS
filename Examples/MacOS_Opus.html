@@ -1,0 +1,1905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuronOS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* NeuronOS: macOS Sonoma Theme */
+        :root {
+            --mac-bg-base: #f5f5f7;
+            --mac-surface-translucent: rgba(255, 255, 255, 0.72);
+            --mac-text-primary: #1d1d1f;
+            --mac-text-secondary: #86868b;
+            --mac-accent: #0071e3;
+            --mac-accent-hover: #0077ed;
+            --mac-destruction: #ff3b30;
+            --mac-blur: blur(20px) saturate(180%);
+            --radius-pill: 999px;
+            --radius-window: 12px;
+            --radius-card: 16px;
+            --dock-bg: rgba(255, 255, 255, 0.25);
+            --menubar-bg: rgba(255, 255, 255, 0.65);
+        }
+        .dark-mode {
+            --mac-bg-base: #1e1e1e;
+            --mac-surface-translucent: rgba(30, 30, 30, 0.72);
+            --mac-text-primary: #f5f5f7;
+            --mac-text-secondary: #86868b;
+            --mac-accent: #2997ff;
+            --dock-bg: rgba(30, 30, 30, 0.45);
+            --menubar-bg: rgba(30, 30, 30, 0.65);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            background: var(--mac-bg-base);
+            color: var(--mac-text-primary);
+        }
+        /* Desktop */
+        #desktop {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: cover;
+        }
+        .dark-mode #desktop {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+        /* Menu Bar */
+        #menubar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 28px;
+            background: var(--menubar-bg);
+            backdrop-filter: var(--mac-blur);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            z-index: 10000;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        .menubar-left, .menubar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .menubar-item {
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--mac-text-primary);
+        }
+        .menubar-item:hover {
+            background: rgba(0,0,0,0.08);
+        }
+        .apple-logo {
+            font-size: 16px;
+        }
+        .menubar-right .menubar-item {
+            font-size: 12px;
+            font-weight: 400;
+        }
+        /* Dock */
+        #dock {
+            position: fixed;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dock-bg);
+            backdrop-filter: var(--mac-blur);
+            border-radius: 22px;
+            padding: 6px 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 9999;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .dock-item {
+            width: 54px;
+            height: 54px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            cursor: pointer;
+            transition: transform 0.2s ease, margin 0.2s ease;
+            position: relative;
+        }
+        .dock-item:hover {
+            transform: translateY(-10px) scale(1.2);
+            margin: 0 8px;
+        }
+        .dock-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            width: 4px;
+            height: 4px;
+            background: var(--mac-text-primary);
+            border-radius: 50%;
+        }
+        .dock-separator {
+            width: 1px;
+            height: 48px;
+            background: rgba(255,255,255,0.3);
+            margin: 3px 4px;
+        }
+        /* Windows */
+        .window {
+            position: absolute;
+            background: var(--mac-surface-translucent);
+            backdrop-filter: var(--mac-blur);
+            border-radius: var(--radius-window);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.1);
+            min-width: 400px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .window.maximized {
+            top: 28px !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: calc(100vh - 28px - 76px) !important;
+            border-radius: 0;
+        }
+        .window.minimized {
+            transform: scale(0.1);
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* Headerbar */
+        .headerbar {
+            background: var(--mac-surface-translucent);
+            backdrop-filter: var(--mac-blur);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            min-height: 52px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            cursor: grab;
+        }
+        .headerbar:active {
+            cursor: grabbing;
+        }
+        .traffic-lights {
+            display: flex;
+            gap: 8px;
+            margin-right: 16px;
+        }
+        .traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: transparent;
+        }
+        .traffic-light:hover {
+            color: rgba(0,0,0,0.5);
+        }
+        .traffic-light.close {
+            background: #ff5f57;
+        }
+        .traffic-light.minimize {
+            background: #febc2e;
+        }
+        .traffic-light.maximize {
+            background: #28c840;
+        }
+        .window-title {
+            flex: 1;
+            text-align: center;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--mac-text-primary);
+        }
+        .window-content {
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+            background: var(--mac-bg-base);
+        }
+        /* VM Card */
+        .vm-card {
+            background-color: var(--mac-surface-translucent);
+            backdrop-filter: var(--mac-blur);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: var(--radius-card);
+            padding: 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .vm-card:hover {
+            background-color: rgba(255,255,255,0.9);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        }
+        .dark-mode .vm-card:hover {
+            background-color: rgba(50,50,50,0.9);
+        }
+        /* Typography */
+        .title-1 {
+            font-weight: 700;
+            font-size: 24px;
+            letter-spacing: -0.02em;
+        }
+        .title-3 {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .dim-label {
+            color: var(--mac-text-secondary);
+            font-size: 13px;
+        }
+        /* Buttons */
+        button {
+            background-color: rgba(0,0,0,0.05);
+            color: var(--mac-text-primary);
+            border: none;
+            border-radius: var(--radius-pill);
+            padding: 8px 16px;
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background-color: rgba(0,0,0,0.1);
+        }
+        button.suggested-action {
+            background-color: var(--mac-accent);
+            color: white;
+        }
+        button.suggested-action:hover {
+            background-color: var(--mac-accent-hover);
+            box-shadow: 0 2px 8px rgba(0,113,227,0.3);
+        }
+        button.destructive-action {
+            color: var(--mac-destruction);
+            background-color: rgba(255,59,48,0.1);
+        }
+        /* Inputs */
+        input, textarea {
+            border-radius: 8px;
+            padding: 10px 12px;
+            background-color: rgba(118,118,128,0.12);
+            border: none;
+            color: var(--mac-text-primary);
+            font-size: 14px;
+            width: 100%;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            background-color: rgba(118,118,128,0.2);
+            box-shadow: 0 0 0 3px rgba(0,122,255,0.3);
+        }
+        /* Switch */
+        .switch {
+            width: 42px;
+            height: 26px;
+            background: #e9e9ea;
+            border-radius: 99px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .switch.active {
+            background: var(--mac-accent);
+        }
+        .switch::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: left 0.3s;
+        }
+        .switch.active::after {
+            left: 18px;
+        }
+        /* Popover */
+        .popover {
+            position: absolute;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(50px);
+            border: 0.5px solid rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            padding: 6px;
+            z-index: 10001;
+            min-width: 200px;
+        }
+        .dark-mode .popover {
+            background: rgba(40,40,40,0.85);
+        }
+        .popover-item {
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .popover-item:hover {
+            background: var(--mac-accent);
+            color: white;
+        }
+        .popover-separator {
+            height: 1px;
+            background: rgba(0,0,0,0.1);
+            margin: 4px 0;
+        }
+        /* Spotlight */
+        #spotlight-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 150px;
+            z-index: 10002;
+        }
+        #spotlight-overlay.active {
+            display: flex;
+        }
+        #spotlight {
+            width: 600px;
+            background: var(--mac-surface-translucent);
+            backdrop-filter: var(--mac-blur);
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            overflow: hidden;
+        }
+        #spotlight input {
+            border-radius: 0;
+            padding: 16px 20px;
+            font-size: 20px;
+            background: transparent;
+        }
+        #spotlight-results {
+            max-height: 400px;
+            overflow: auto;
+        }
+        .spotlight-result {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+        .spotlight-result:hover, .spotlight-result.selected {
+            background: var(--mac-accent);
+            color: white;
+        }
+        /* Control Center */
+        #control-center {
+            position: fixed;
+            top: 36px;
+            right: 12px;
+            width: 320px;
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(50px);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 10001;
+        }
+        .dark-mode #control-center {
+            background: rgba(40,40,40,0.75);
+        }
+        #control-center.active {
+            display: block;
+        }
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .control-tile {
+            background: rgba(255,255,255,0.6);
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+        }
+        .dark-mode .control-tile {
+            background: rgba(60,60,60,0.6);
+        }
+        .control-tile.active {
+            background: var(--mac-accent);
+            color: white;
+        }
+        .control-tile i {
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+        .control-tile-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .slider-control {
+            background: rgba(255,255,255,0.6);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .dark-mode .slider-control {
+            background: rgba(60,60,60,0.6);
+        }
+        .slider-control input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            background: rgba(0,0,0,0.1);
+            height: 4px;
+            border-radius: 2px;
+            padding: 0;
+        }
+        .slider-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        /* Notification Center */
+        #notification-center {
+            position: fixed;
+            top: 36px;
+            right: 12px;
+            width: 350px;
+            max-height: calc(100vh - 100px);
+            overflow: auto;
+            display: none;
+            z-index: 10001;
+        }
+        #notification-center.active {
+            display: block;
+        }
+        .notification {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(30px);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        .dark-mode .notification {
+            background: rgba(50,50,50,0.85);
+        }
+        .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .notification-app {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--mac-text-secondary);
+        }
+        .notification-time {
+            font-size: 11px;
+            color: var(--mac-text-secondary);
+            margin-left: auto;
+        }
+        .notification-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .notification-body {
+            font-size: 13px;
+            color: var(--mac-text-secondary);
+        }
+        /* Widget */
+        .widget {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(30px);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 10px;
+        }
+        .dark-mode .widget {
+            background: rgba(50,50,50,0.85);
+        }
+        /* App Specific Styles */
+        /* Finder */
+        .finder-sidebar {
+            width: 180px;
+            background: rgba(0,0,0,0.03);
+            border-right: 1px solid rgba(0,0,0,0.1);
+            padding: 10px;
+        }
+        .finder-sidebar-item {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .finder-sidebar-item:hover, .finder-sidebar-item.active {
+            background: var(--mac-accent);
+            color: white;
+        }
+        .finder-main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            align-content: start;
+        }
+        .finder-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .finder-item:hover {
+            background: rgba(0,0,0,0.05);
+        }
+        .finder-item i {
+            font-size: 48px;
+            margin-bottom: 8px;
+            color: var(--mac-accent);
+        }
+        .finder-item span {
+            font-size: 11px;
+            text-align: center;
+        }
+        /* Terminal */
+        .terminal-content {
+            background: #1e1e1e;
+            color: #00ff00;
+            font-family: "SF Mono", Monaco, monospace;
+            font-size: 13px;
+            padding: 16px;
+            height: 100%;
+        }
+        .terminal-line {
+            margin-bottom: 4px;
+        }
+        .terminal-prompt {
+            color: #00aaff;
+        }
+        #terminal-input {
+            background: transparent;
+            border: none;
+            color: #00ff00;
+            font-family: inherit;
+            font-size: inherit;
+            width: calc(100% - 200px);
+            padding: 0;
+        }
+        #terminal-input:focus {
+            outline: none;
+            box-shadow: none;
+        }
+        /* Settings */
+        .settings-sidebar {
+            width: 220px;
+            background: rgba(0,0,0,0.03);
+            border-right: 1px solid rgba(0,0,0,0.1);
+            padding: 16px;
+        }
+        .settings-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2px;
+        }
+        .settings-item:hover, .settings-item.active {
+            background: var(--mac-accent);
+            color: white;
+        }
+        .settings-main {
+            flex: 1;
+            padding: 24px;
+            overflow: auto;
+        }
+        .settings-section {
+            margin-bottom: 32px;
+        }
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        /* Notes */
+        .notes-sidebar {
+            width: 200px;
+            background: rgba(0,0,0,0.03);
+            border-right: 1px solid rgba(0,0,0,0.1);
+            padding: 10px;
+            overflow: auto;
+        }
+        .note-item {
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 4px;
+        }
+        .note-item:hover, .note-item.active {
+            background: var(--mac-accent);
+            color: white;
+        }
+        .note-item-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+        .note-item-preview {
+            font-size: 11px;
+            opacity: 0.7;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .notes-editor {
+            flex: 1;
+            padding: 20px;
+        }
+        .notes-editor textarea {
+            height: 100%;
+            resize: none;
+            background: transparent;
+            border: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        /* Calculator */
+        .calc-display {
+            background: rgba(0,0,0,0.05);
+            padding: 20px;
+            text-align: right;
+            font-size: 48px;
+            font-weight: 300;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        .calc-btn {
+            padding: 20px;
+            font-size: 20px;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .calc-btn.operator {
+            background: #ff9500;
+            color: white;
+        }
+        .calc-btn.function {
+            background: rgba(0,0,0,0.1);
+        }
+        /* Calendar */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+        .calendar-day-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--mac-text-secondary);
+            padding: 8px;
+        }
+        .calendar-day {
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .calendar-day:hover {
+            background: rgba(0,0,0,0.05);
+        }
+        .calendar-day.today {
+            background: var(--mac-accent);
+            color: white;
+        }
+        .calendar-day.other-month {
+            color: var(--mac-text-secondary);
+        }
+        /* Weather Widget */
+        .weather-main {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .weather-temp {
+            font-size: 48px;
+            font-weight: 300;
+        }
+        .weather-icon {
+            font-size: 48px;
+            color: #ffb400;
+        }
+        /* Desktop Icons */
+        .desktop-icon {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 80px;
+        }
+        .desktop-icon:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .desktop-icon i {
+            font-size: 48px;
+            margin-bottom: 6px;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .desktop-icon span {
+            font-size: 11px;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        /* Context Menu */
+        #context-menu {
+            display: none;
+            z-index: 10003;
+        }
+        #context-menu.active {
+            display: block;
+        }
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            transition: opacity 0.5s;
+        }
+        #loading-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .apple-boot-logo {
+            font-size: 80px;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .loading-bar {
+            width: 200px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .loading-progress {
+            height: 100%;
+            background: white;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        /* Lock Screen */
+        #lock-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99998;
+        }
+        .dark-mode #lock-screen {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+        #lock-screen.active {
+            display: flex;
+        }
+        .lock-time {
+            font-size: 96px;
+            font-weight: 200;
+            color: white;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+        }
+        .lock-date {
+            font-size: 24px;
+            color: white;
+            opacity: 0.8;
+            margin-bottom: 40px;
+        }
+        .lock-avatar {
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            margin-bottom: 16px;
+        }
+        .lock-username {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+        #lock-password {
+            width: 200px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            color: white;
+            text-align: center;
+        }
+        #lock-password::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+        /* Music Player */
+        .music-cover {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #ee5a5a, #ff9a9a);
+            border-radius: 12px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            color: white;
+        }
+        .music-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .music-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .music-artist {
+            color: var(--mac-text-secondary);
+        }
+        .music-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            align-items: center;
+        }
+        .music-controls button {
+            background: none;
+            font-size: 24px;
+        }
+        .music-controls button.play-btn {
+            font-size: 40px;
+        }
+        /* Resize Handle */
+        .resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 16px;
+            height: 16px;
+            cursor: nwse-resize;
+        }
+        /* Animations */
+        @keyframes windowOpen {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        .window {
+            animation: windowOpen 0.2s ease-out;
+        }
+        /* Photos App */
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 4px;
+        }
+        .photo-item {
+            aspect-ratio: 1;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .photo-item:nth-child(2n) {
+            background: linear-gradient(45deg, #a8e6cf, #88d8b0);
+        }
+        .photo-item:nth-child(3n) {
+            background: linear-gradient(45deg, #ffeaa7, #fdcb6e);
+        }
+        .photo-item:nth-child(5n) {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <i class="fab fa-apple apple-boot-logo"></i>
+        <div class="loading-bar">
+            <div class="loading-progress" id="loading-progress"></div>
+        </div>
+    </div>
+    <!-- Lock Screen -->
+    <div id="lock-screen">
+        <div class="lock-time" id="lock-time">12:00</div>
+        <div class="lock-date" id="lock-date">Sunday, January 1</div>
+        <div class="lock-avatar"><i class="fas fa-user"></i></div>
+        <div class="lock-username">User</div>
+        <input type="password" id="lock-password" placeholder="Enter Password">
+    </div>
+    <!-- Desktop -->
+    <div id="desktop">
+        <!-- Desktop Icons -->
+        <div class="desktop-icon" style="top: 40px; right: 20px;" ondblclick="openApp('finder')">
+            <i class="fas fa-hdd"></i>
+            <span>Macintosh HD</span>
+        </div>
+        <div class="desktop-icon" style="top: 130px; right: 20px;" ondblclick="openApp('trash')">
+            <i class="fas fa-trash"></i>
+            <span>Trash</span>
+        </div>
+    </div>
+    <!-- Menu Bar -->
+    <div id="menubar">
+        <div class="menubar-left">
+            <div class="menubar-item apple-logo" onclick="toggleAppleMenu()"><i class="fab fa-apple"></i></div>
+            <div class="menubar-item" id="active-app-name">Finder</div>
+            <div class="menubar-item">File</div>
+            <div class="menubar-item">Edit</div>
+            <div class="menubar-item">View</div>
+            <div class="menubar-item">Go</div>
+            <div class="menubar-item">Window</div>
+            <div class="menubar-item">Help</div>
+        </div>
+        <div class="menubar-right">
+            <div class="menubar-item" onclick="toggleControlCenter()"><i class="fas fa-sliders-h"></i></div>
+            <div class="menubar-item"><i class="fas fa-battery-three-quarters"></i></div>
+            <div class="menubar-item"><i class="fas fa-wifi"></i></div>
+            <div class="menubar-item" onclick="toggleSpotlight()"><i class="fas fa-search"></i></div>
+            <div class="menubar-item" onclick="toggleNotificationCenter()"><i class="fas fa-clock"></i> <span id="menubar-time">12:00</span></div>
+        </div>
+    </div>
+    <!-- Apple Menu Popover -->
+    <div id="apple-menu" class="popover" style="top: 28px; left: 12px; display: none;">
+        <div class="popover-item"><i class="fab fa-apple"></i> About This Mac</div>
+        <div class="popover-separator"></div>
+        <div class="popover-item" onclick="openApp('settings')"><i class="fas fa-cog"></i> System Settings...</div>
+        <div class="popover-item"><i class="fas fa-store"></i> App Store...</div>
+        <div class="popover-separator"></div>
+        <div class="popover-item"><i class="fas fa-moon"></i> Sleep</div>
+        <div class="popover-item"><i class="fas fa-redo"></i> Restart...</div>
+        <div class="popover-item" onclick="shutdown()"><i class="fas fa-power-off"></i> Shut Down...</div>
+        <div class="popover-separator"></div>
+        <div class="popover-item" onclick="lockScreen()"><i class="fas fa-lock"></i> Lock Screen</div>
+    </div>
+    <!-- Control Center -->
+    <div id="control-center">
+        <div class="control-grid">
+            <div class="control-tile active" onclick="toggleWifi(this)">
+                <i class="fas fa-wifi"></i>
+                <div class="control-tile-label">Wi-Fi</div>
+            </div>
+            <div class="control-tile active" onclick="toggleBluetooth(this)">
+                <i class="fas fa-bluetooth-b"></i>
+                <div class="control-tile-label">Bluetooth</div>
+            </div>
+            <div class="control-tile" onclick="toggleAirdrop(this)">
+                <i class="fas fa-broadcast-tower"></i>
+                <div class="control-tile-label">AirDrop</div>
+            </div>
+            <div class="control-tile" onclick="toggleFocus(this)">
+                <i class="fas fa-moon"></i>
+                <div class="control-tile-label">Focus</div>
+            </div>
+        </div>
+        <div class="slider-control">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <i class="fas fa-sun"></i>
+                <span style="font-size: 12px;">Display</span>
+            </div>
+            <input type="range" min="0" max="100" value="80">
+        </div>
+        <div class="slider-control">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <i class="fas fa-volume-up"></i>
+                <span style="font-size: 12px;">Sound</span>
+            </div>
+            <input type="range" min="0" max="100" value="50">
+        </div>
+        <div class="control-grid">
+            <div class="control-tile" onclick="toggleDarkMode()">
+                <i class="fas fa-adjust"></i>
+                <div class="control-tile-label">Dark Mode</div>
+            </div>
+            <div class="control-tile" onclick="openApp('music')">
+                <i class="fas fa-music"></i>
+                <div class="control-tile-label">Music</div>
+            </div>
+        </div>
+    </div>
+    <!-- Notification Center -->
+    <div id="notification-center">
+        <div class="widget">
+            <div class="weather-main">
+                <i class="fas fa-sun weather-icon"></i>
+                <div>
+                    <div class="weather-temp">72°</div>
+                    <div class="dim-label">San Francisco</div>
+                </div>
+            </div>
+            <div class="dim-label">Sunny • H:78° L:65°</div>
+        </div>
+        <div class="notification">
+            <div class="notification-header">
+                <i class="fas fa-envelope" style="color: #007AFF;"></i>
+                <span class="notification-app">Mail</span>
+                <span class="notification-time">2m ago</span>
+            </div>
+            <div class="notification-title">New message from John</div>
+            <div class="notification-body">Hey! Just wanted to check in about the project...</div>
+        </div>
+        <div class="notification">
+            <div class="notification-header">
+                <i class="fas fa-message" style="color: #34C759;"></i>
+                <span class="notification-app">Messages</span>
+                <span class="notification-time">15m ago</span>
+            </div>
+            <div class="notification-title">Sarah</div>
+            <div class="notification-body">Are we still on for lunch tomorrow?</div>
+        </div>
+        <div class="notification">
+            <div class="notification-header">
+                <i class="fas fa-calendar" style="color: #FF3B30;"></i>
+                <span class="notification-app">Calendar</span>
+                <span class="notification-time">1h ago</span>
+            </div>
+            <div class="notification-title">Team Meeting</div>
+            <div class="notification-body">Starting in 30 minutes</div>
+        </div>
+    </div>
+    <!-- Spotlight -->
+    <div id="spotlight-overlay" onclick="if(event.target === this) toggleSpotlight()">
+        <div id="spotlight">
+            <input type="text" id="spotlight-input" placeholder="Spotlight Search" oninput="searchSpotlight(this.value)">
+            <div id="spotlight-results"></div>
+        </div>
+    </div>
+    <!-- Context Menu -->
+    <div id="context-menu" class="popover">
+        <div class="popover-item">New Folder</div>
+        <div class="popover-item">Get Info</div>
+        <div class="popover-separator"></div>
+        <div class="popover-item" onclick="toggleDarkMode()">Change Wallpaper...</div>
+        <div class="popover-separator"></div>
+        <div class="popover-item">Sort By</div>
+        <div class="popover-item">Clean Up</div>
+    </div>
+    <!-- Dock -->
+    <div id="dock">
+        <div class="dock-item active" onclick="openApp('finder')" title="Finder">
+            <i class="fas fa-folder" style="color: #1E90FF;"></i>
+        </div>
+        <div class="dock-item" onclick="openApp('safari')" title="Safari">
+            <i class="fas fa-compass" style="color: #006CFF;"></i>
+        </div>
+        <div class="dock-item" onclick="openApp('mail')" title="Mail">
+            <i class="fas fa-envelope" style="color: #007AFF;"></i>
+        </div>
+        <div class="dock-item" onclick="openApp('photos')" title="Photos">
+            <i class="fas fa-image" style="color: #FF2D55;"></i>
+        </div>
+        <div class="dock-item" onclick="openApp('music')" title="Music">
+            <i class="fas fa-music" style="color: #FC3C44;"></i>
+        </div>
+        <div class="dock-item" onclick="openApp('notes')" title="Notes">
+            <i class="fas fa-sticky-note" style="color: #FFCC00;"></i>
+        </div>
+        <div class="dock-item" onclick="openApp('calendar')" title="Calendar">
+            <i class="fas fa-calendar-alt" style="color: #FF3B30;"></i>
+        </div>
+        <div class="dock-separator"></div>
+        <div class="dock-item" onclick="openApp('calculator')" title="Calculator">
+            <i class="fas fa-calculator" style="color: #333;"></i>
+        </div>
+        <div class="dock-item" onclick="openApp('terminal')" title="Terminal">
+            <i class="fas fa-terminal" style="color: #333;"></i>
+        </div>
+        <div class="dock-item" onclick="openApp('settings')" title="System Settings">
+            <i class="fas fa-cog" style="color: #8E8E93;"></i>
+        </div>
+    </div>
+    <!-- Windows Container -->
+    <div id="windows"></div>
+    <script>
+        // Window Management
+        let windows = {};
+        let windowZIndex = 100;
+        let activeWindow = null;
+        // Boot Sequence
+        window.addEventListener('load', () => {
+            const progress = document.getElementById('loading-progress');
+            let width = 0;
+            const interval = setInterval(() => {
+                width += Math.random() * 15;
+                if (width >= 100) {
+                    width = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.getElementById('loading-screen').classList.add('fade-out');
+                        setTimeout(() => {
+                            document.getElementById('loading-screen').style.display = 'none';
+                            document.getElementById('lock-screen').classList.add('active');
+                            updateLockTime();
+                        }, 500);
+                    }, 300);
+                }
+                progress.style.width = width + '%';
+            }, 100);
+        });
+        // Lock Screen
+        function updateLockTime() {
+            const now = new Date();
+            document.getElementById('lock-time').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            document.getElementById('lock-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            document.getElementById('menubar-time').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+        setInterval(updateLockTime, 1000);
+        document.getElementById('lock-password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('lock-screen').classList.remove('active');
+            }
+        });
+        function lockScreen() {
+            document.getElementById('lock-screen').classList.add('active');
+            closeAllPopovers();
+        }
+        function shutdown() {
+            document.getElementById('loading-screen').style.display = 'flex';
+            document.getElementById('loading-screen').classList.remove('fade-out');
+            document.getElementById('loading-progress').style.width = '0%';
+            closeAllPopovers();
+        }
+        // Window Templates
+        const appTemplates = {
+            finder: {
+                title: 'Finder',
+                width: 800,
+                height: 500,
+                content: `
+                    <div style="display: flex; height: 100%;">
+                        <div class="finder-sidebar">
+                            <div class="dim-label" style="padding: 8px 10px;">Favorites</div>
+                            <div class="finder-sidebar-item active"><i class="fas fa-star"></i> Recents</div>
+                            <div class="finder-sidebar-item"><i class="fas fa-desktop"></i> Desktop</div>
+                            <div class="finder-sidebar-item"><i class="fas fa-file"></i> Documents</div>
+                            <div class="finder-sidebar-item"><i class="fas fa-download"></i> Downloads</div>
+                            <div class="finder-sidebar-item"><i class="fas fa-image"></i> Pictures</div>
+                            <div class="finder-sidebar-item"><i class="fas fa-music"></i> Music</div>
+                            <div class="dim-label" style="padding: 8px 10px; margin-top: 16px;">Locations</div>
+                            <div class="finder-sidebar-item"><i class="fas fa-hdd"></i> Macintosh HD</div>
+                            <div class="finder-sidebar-item"><i class="fas fa-network-wired"></i> Network</div>
+                        </div>
+                        <div class="finder-main">
+                            <div class="finder-item"><i class="fas fa-folder"></i><span>Applications</span></div>
+                            <div class="finder-item"><i class="fas fa-folder"></i><span>Documents</span></div>
+                            <div class="finder-item"><i class="fas fa-folder"></i><span>Downloads</span></div>
+                            <div class="finder-item"><i class="fas fa-folder"></i><span>Desktop</span></div>
+                            <div class="finder-item"><i class="fas fa-folder"></i><span>Pictures</span></div>
+                            <div class="finder-item"><i class="fas fa-folder"></i><span>Music</span></div>
+                            <div class="finder-item"><i class="fas fa-folder"></i><span>Movies</span></div>
+                            <div class="finder-item"><i class="fas fa-file-alt"></i><span>readme.txt</span></div>
+                            <div class="finder-item"><i class="fas fa-file-pdf" style="color: #FF3B30;"></i><span>Report.pdf</span></div>
+                            <div class="finder-item"><i class="fas fa-file-image" style="color: #34C759;"></i><span>Photo.png</span></div>
+                        </div>
+                    </div>
+                `
+            },
+            safari: {
+                title: 'Safari',
+                width: 900,
+                height: 600,
+                content: `
+                    <div style="padding: 12px; border-bottom: 1px solid rgba(0,0,0,0.1); display: flex; align-items: center; gap: 12px;">
+                        <button style="padding: 8px 12px;"><i class="fas fa-arrow-left"></i></button>
+                        <button style="padding: 8px 12px;"><i class="fas fa-arrow-right"></i></button>
+                        <input type="text" value="https://www.apple.com" style="flex: 1;">
+                        <button style="padding: 8px 12px;"><i class="fas fa-redo"></i></button>
+                        <button style="padding: 8px 12px;"><i class="fas fa-share"></i></button>
+                    </div>
+                    <div style="padding: 40px; text-align: center;">
+                        <h1 style="font-size: 48px; font-weight: 600; margin-bottom: 20px;">Welcome to Safari</h1>
+                        <p class="dim-label" style="margin-bottom: 30px;">Fast, efficient, and built for privacy.</p>
+                        <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                            <div class="vm-card" style="width: 150px; cursor: pointer;">
+                                <i class="fab fa-apple" style="font-size: 32px; color: var(--mac-accent);"></i>
+                                <div style="margin-top: 8px; font-weight: 500;">Apple</div>
+                            </div>
+                            <div class="vm-card" style="width: 150px; cursor: pointer;">
+                                <i class="fab fa-google" style="font-size: 32px; color: #4285F4;"></i>
+                                <div style="margin-top: 8px; font-weight: 500;">Google</div>
+                            </div>
+                            <div class="vm-card" style="width: 150px; cursor: pointer;">
+                                <i class="fab fa-github" style="font-size: 32px;"></i>
+                                <div style="margin-top: 8px; font-weight: 500;">GitHub</div>
+                            </div>
+                            <div class="vm-card" style="width: 150px; cursor: pointer;">
+                                <i class="fab fa-youtube" style="font-size: 32px; color: #FF0000;"></i>
+                                <div style="margin-top: 8px; font-weight: 500;">YouTube</div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            terminal: {
+                title: 'Terminal',
+                width: 700,
+                height: 450,
+                content: `
+                    <div class="terminal-content" id="terminal-output">
+                        <div class="terminal-line">Last login: ${new Date().toLocaleString()} on ttys000</div>
+                        <div class="terminal-line"><span class="terminal-prompt">user@NeuronOS ~ %</span> <input type="text" id="terminal-input" autofocus onkeypress="handleTerminal(event)"></div>
+                    </div>
+                `
+            },
+            settings: {
+                title: 'System Settings',
+                width: 850,
+                height: 550,
+                content: `
+                    <div style="display: flex; height: 100%;">
+                        <div class="settings-sidebar">
+                            <div class="settings-item active"><i class="fas fa-wifi"></i> Wi-Fi</div>
+                            <div class="settings-item"><i class="fas fa-bluetooth-b"></i> Bluetooth</div>
+                            <div class="settings-item"><i class="fas fa-network-wired"></i> Network</div>
+                            <div class="settings-item"><i class="fas fa-bell"></i> Notifications</div>
+                            <div class="settings-item"><i class="fas fa-volume-up"></i> Sound</div>
+                            <div class="settings-item"><i class="fas fa-moon"></i> Focus</div>
+                            <div class="settings-item"><i class="fas fa-desktop"></i> Displays</div>
+                            <div class="settings-item"><i class="fas fa-image"></i> Wallpaper</div>
+                            <div class="settings-item"><i class="fas fa-battery-full"></i> Battery</div>
+                            <div class="settings-item"><i class="fas fa-lock"></i> Privacy</div>
+                        </div>
+                        <div class="settings-main">
+                            <h2 class="title-1" style="margin-bottom: 24px;">Appearance</h2>
+                            <div class="settings-section">
+                                <div class="settings-row">
+                                    <div>
+                                        <div class="title-3">Dark Mode</div>
+                                        <div class="dim-label">Switch between light and dark appearance</div>
+                                    </div>
+                                    <div class="switch ${document.body.classList.contains('dark-mode') ? 'active' : ''}" onclick="toggleDarkMode(); this.classList.toggle('active');"></div>
+                                </div>
+                                <div class="settings-row">
+                                    <div>
+                                        <div class="title-3">Accent Color</div>
+                                        <div class="dim-label">Choose your accent color</div>
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <div style="width: 24px; height: 24px; background: #007AFF; border-radius: 50%; cursor: pointer;"></div>
+                                        <div style="width: 24px; height: 24px; background: #5856D6; border-radius: 50%; cursor: pointer;"></div>
+                                        <div style="width: 24px; height: 24px; background: #FF2D55; border-radius: 50%; cursor: pointer;"></div>
+                                        <div style="width: 24px; height: 24px; background: #FF9500; border-radius: 50%; cursor: pointer;"></div>
+                                        <div style="width: 24px; height: 24px; background: #34C759; border-radius: 50%; cursor: pointer;"></div>
+                                    </div>
+                                </div>
+                                <div class="settings-row">
+                                    <div>
+                                        <div class="title-3">Reduce Motion</div>
+                                        <div class="dim-label">Reduce window animations</div>
+                                    </div>
+                                    <div class="switch" onclick="this.classList.toggle('active');"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            notes: {
+                title: 'Notes',
+                width: 700,
+                height: 500,
+                content: `
+                    <div style="display: flex; height: 100%;">
+                        <div class="notes-sidebar">
+                            <div class="note-item active">
+                                <div class="note-item-title">Shopping List</div>
+                                <div class="note-item-preview">Milk, eggs, bread, butter...</div>
+                            </div>
+                            <div class="note-item">
+                                <div class="note-item-title">Meeting Notes</div>
+                                <div class="note-item-preview">Discussed Q4 targets...</div>
+                            </div>
+                            <div class="note-item">
+                                <div class="note-item-title">Ideas</div>
+                                <div class="note-item-preview">New app concept...</div>
+                            </div>
+                            <div class="note-item">
+                                <div class="note-item-title">Recipes</div>
+                                <div class="note-item-preview">Grandma's cookies...</div>
+                            </div>
+                        </div>
+                        <div class="notes-editor">
+                            <textarea placeholder="Start typing...">Shopping List
+• Milk
+• Eggs
+• Bread
+• Butter
+• Cheese
+• Apples
+• Orange Juice
+• Coffee</textarea>
+                        </div>
+                    </div>
+                `
+            },
+            calculator: {
+                title: 'Calculator',
+                width: 280,
+                height: 420,
+                content: `
+                    <div style="padding: 16px;">
+                        <div class="calc-display" id="calc-display">0</div>
+                        <div class="calc-buttons">
+                            <button class="calc-btn function" onclick="calcClear()">AC</button>
+                            <button class="calc-btn function" onclick="calcNegate()">±</button>
+                            <button class="calc-btn function" onclick="calcPercent()">%</button>
+                            <button class="calc-btn operator" onclick="calcOp('/')">÷</button>
+                            <button class="calc-btn" onclick="calcNum('7')">7</button>
+                            <button class="calc-btn" onclick="calcNum('8')">8</button>
+                            <button class="calc-btn" onclick="calcNum('9')">9</button>
+                            <button class="calc-btn operator" onclick="calcOp('*')">×</button>
+                            <button class="calc-btn" onclick="calcNum('4')">4</button>
+                            <button class="calc-btn" onclick="calcNum('5')">5</button>
+                            <button class="calc-btn" onclick="calcNum('6')">6</button>
+                            <button class="calc-btn operator" onclick="calcOp('-')">−</button>
+                            <button class="calc-btn" onclick="calcNum('1')">1</button>
+                            <button class="calc-btn" onclick="calcNum('2')">2</button>
+                            <button class="calc-btn" onclick="calcNum('3')">3</button>
+                            <button class="calc-btn operator" onclick="calcOp('+')">+</button>
+                            <button class="calc-btn" onclick="calcNum('0')" style="grid-column: span 2; width: auto; border-radius: 30px;">0</button>
+                            <button class="calc-btn" onclick="calcNum('.')">.</button>
+                            <button class="calc-btn operator" onclick="calcEquals()">=</button>
+                        </div>
+                    </div>
+                `
+            },
+            calendar: {
+                title: 'Calendar',
+                width: 400,
+                height: 450,
+                content: `
+                    <div style="padding: 20px;">
+                        <div class="calendar-header">
+                            <button onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                            <span class="title-3" id="calendar-month">${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                            <button onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <div class="calendar-grid" id="calendar-grid"></div>
+                    </div>
+                `
+            },
+            music: {
+                title: 'Music',
+                width: 400,
+                height: 500,
+                content: `
+                    <div style="padding: 24px; text-align: center;">
+                        <div class="music-cover">
+                            <i class="fas fa-music"></i>
+                        </div>
+                        <div class="music-info">
+                            <div class="music-title">Midnight City</div>
+                            <div class="music-artist">M83</div>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <input type="range" min="0" max="100" value="30" style="width: 100%;">
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--mac-text-secondary);">
+                                <span>1:23</span>
+                                <span>4:03</span>
+                            </div>
+                        </div>
+                        <div class="music-controls">
+                            <button><i class="fas fa-random"></i></button>
+                            <button><i class="fas fa-step-backward"></i></button>
+                            <button class="play-btn"><i class="fas fa-play-circle"></i></button>
+                            <button><i class="fas fa-step-forward"></i></button>
+                            <button><i class="fas fa-redo"></i></button>
+                        </div>
+                    </div>
+                `
+            },
+            photos: {
+                title: 'Photos',
+                width: 800,
+                height: 550,
+                content: `
+                    <div style="padding: 16px;">
+                        <h3 class="title-3" style="margin-bottom: 16px;">Library</h3>
+                        <div class="photos-grid">
+                            ${Array(24).fill().map(() => '<div class="photo-item"></div>').join('')}
+                        </div>
+                    </div>
+                `
+            },
+            mail: {
+                title: 'Mail',
+                width: 900,
+                height: 600,
+                content: `
+                    <div style="display: flex; height: 100%;">
+                        <div class="finder-sidebar" style="width: 200px;">
+                            <div class="finder-sidebar-item active"><i class="fas fa-inbox"></i> Inbox <span style="margin-left: auto; background: var(--mac-accent); color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px;">3</span></div>
+                            <div class="finder-sidebar-item"><i class="fas fa-star"></i> Starred</div>
+                            <div class="finder-sidebar-item"><i class="fas fa-paper-plane"></i> Sent</div>
+                            <div class="finder-sidebar-item"><i class="fas fa-file"></i> Drafts</div>
+                            <div class="finder-sidebar-item"><i class="fas fa-archive"></i> Archive</div>
+                            <div class="finder-sidebar-item"><i class="fas fa-trash"></i> Trash</div>
+                        </div>
+                        <div style="flex: 1; padding: 16px;">
+                            <div class="vm-card" style="cursor: pointer;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                    <strong>Apple</strong>
+                                    <span class="dim-label">10:30 AM</span>
+                                </div>
+                                <div style="font-weight: 500; margin-bottom: 2px;">Your Apple ID was used to sign in</div>
+                                <div class="dim-label">Your Apple ID (user@icloud.com) was used to sign in to iCloud...</div>
+                            </div>
+                            <div class="vm-card" style="cursor: pointer;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                    <strong>GitHub</strong>
+                                    <span class="dim-label">9:15 AM</span>
+                                </div>
+                                <div style="font-weight: 500; margin-bottom: 2px;">[GitHub] A new security advisory</div>
+                                <div class="dim-label">A new security advisory has been published for a repository you watch...</div>
+                            </div>
+                            <div class="vm-card" style="cursor: pointer;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                    <strong>Newsletter</strong>
+                                    <span class="dim-label">Yesterday</span>
+                                </div>
+                                <div style="font-weight: 500; margin-bottom: 2px;">Weekly Tech Digest</div>
+                                <div class="dim-label">This week's top stories in technology and innovation...</div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            trash: {
+                title: 'Trash',
+                width: 600,
+                height: 400,
+                content: `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column;">
+                        <i class="fas fa-trash" style="font-size: 64px; color: var(--mac-text-secondary); margin-bottom: 16px;"></i>
+                        <p class="dim-label">Trash is Empty</p>
+                    </div>
+                `
+            }
+        };
+        // Open App
+        function openApp(appId) {
+            if (windows[appId]) {
+                bringToFront(appId);
+                return;
+            }
+            const template = appTemplates[appId];
+            if (!template) return;
+            const windowEl = document.createElement('div');
+            windowEl.className = 'window';
+            windowEl.id = `window-${appId}`;
+            windowEl.style.width = template.width + 'px';
+            windowEl.style.height = template.height + 'px';
+            windowEl.style.left = (100 + Object.keys(windows).length * 30) + 'px';
+            windowEl.style.top = (60 + Object.keys(windows).length * 30) + 'px';
+            windowEl.style.zIndex = ++windowZIndex;
+            windowEl.innerHTML = `
+                <div class="headerbar" onmousedown="startDrag(event, '${appId}')">
+                    <div class="traffic-lights">
+                        <div class="traffic-light close" onclick="closeWindow('${appId}')"><i class="fas fa-times"></i></div>
+                        <div class="traffic-light minimize" onclick="minimizeWindow('${appId}')"><i class="fas fa-minus"></i></div>
+                        <div class="traffic-light maximize" onclick="maximizeWindow('${appId}')"><i class="fas fa-expand"></i></div>
+                    </div>
+                    <div class="window-title">${template.title}</div>
+                    <div style="width: 52px;"></div>
+                </div>
+                <div class="window-content">${template.content}</div>
+                <div class="resize-handle" onmousedown="startResize(event, '${appId}')"></div>
+            `;
+            document.getElementById('windows').appendChild(windowEl);
+            windows[appId] = { el: windowEl, maximized: false };
+            setActiveWindow(appId);
+            // Update dock
+            document.querySelectorAll('.dock-item').forEach(item => {
+                if (item.title.toLowerCase() === appId) {
+                    item.classList.add('active');
+                }
+            });
+            // Initialize calendar if needed
+            if (appId === 'calendar') {
+                renderCalendar();
+            }
+        }
+        function closeWindow(appId) {
+            const win = windows[appId];
+            if (win) {
+                win.el.remove();
+                delete windows[appId];
+                document.querySelectorAll('.dock-item').forEach(item => {
+                    if (item.title.toLowerCase() === appId) {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+        }
+        function minimizeWindow(appId) {
+            const win = windows[appId];
+            if (win) {
+                win.el.classList.toggle('minimized');
+            }
+        }
+        function maximizeWindow(appId) {
+            const win = windows[appId];
+            if (win) {
+                win.maximized = !win.maximized;
+                win.el.classList.toggle('maximized');
+            }
+        }
+        function bringToFront(appId) {
+            const win = windows[appId];
+            if (win) {
+                win.el.style.zIndex = ++windowZIndex;
+                if (win.el.classList.contains('minimized')) {
+                    win.el.classList.remove('minimized');
+                }
+                setActiveWindow(appId);
+            }
+        }
+        function setActiveWindow(appId) {
+            activeWindow = appId;
+            document.getElementById('active-app-name').textContent = appTemplates[appId]?.title || 'Finder';
+        }
+        // Drag and Resize
+        let dragState = null;
+        let resizeState = null;
+        function startDrag(e, appId) {
+            if (e.target.closest('.traffic-lights')) return;
+            const win = windows[appId];
+            if (win.maximized) return;
+            
+            dragState = {
+                appId,
+                startX: e.clientX,
+                startY: e.clientY,
+                startLeft: parseInt(win.el.style.left),
+                startTop: parseInt(win.el.style.top)
+            };
+            bringToFront(appId);
+        }
+        function startResize(e, appId) {
+            const win = windows[appId];
+            if (win.maximized) return;
+            
+            resizeState = {
+                appId,
+                startX: e.clientX,
+                startY: e.clientY,
+                startWidth: win.el.offsetWidth,
+                startHeight: win.el.offsetHeight
+            };
+            bringToFront(appId);
+            e.stopPropagation();
+        }
+        document.addEventListener('mousemove', (e) => {
+            if (dragState) {
+                const win = windows[dragState.appId];
+                win.el.style.left = (dragState.startLeft + e.clientX - dragState.startX) + 'px';
+                win.el.style.top = (dragState.startTop + e.clientY - dragState.startY) + 'px';
+            }
+            if (resizeState) {
+                const win = windows[resizeState.appId];
+                const newWidth = resizeState.startWidth + e.clientX - resizeState.startX;
+                const newHeight = resizeState.startHeight + e.clientY - resizeState.startY;
+                win.el.style.width = Math.max(400, newWidth) + 'px';
+                win.el.style.height = Math.max(300, newHeight) + 'px';
+            }
+        });
+        document.addEventListener('mouseup', () => {
+            dragState = null;
+            resizeState = null;
+        });
+        // Popovers
+        function closeAllPopovers() {
+            document.getElementById('apple-menu').style.display = 'none';
+            document.getElementById('control-center').classList.remove('active');
+            document.getElementById('notification-center').classList.remove('active');
+            document.getElementById('context-menu').classList.remove('active');
+        }
+        function toggleAppleMenu() {
+            closeAllPopovers();
+            const menu = document.getElementById('apple-menu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+        function toggleControlCenter() {
+            const cc = document.getElementById('control-center');
+            const isActive = cc.classList.contains('active');
+            closeAllPopovers();
+            if (!isActive) cc.classList.add('active');
+        }
+        function toggleNotificationCenter() {
+            const nc = document.getElementById('notification-center');
+            const isActive = nc.classList.contains('active');
+            closeAllPopovers();
+            if (!isActive) nc.classList.add('active');
+        }
+        function toggleSpotlight() {
+            document.getElementById('spotlight-overlay').classList.toggle('active');
+            if (document.getElementById('spotlight-overlay').classList.contains('active')) {
+                document.getElementById('spotlight-input').focus();
+            }
+        }
+        // Spotlight Search
+        const spotlightApps = ['Finder', 'Safari', 'Mail', 'Photos', 'Music', 'Notes', 'Calendar', 'Calculator', 'Terminal', 'Settings'];
+        
+        function searchSpotlight(query) {
+            const results = document.getElementById('spotlight-results');
+            if (!query) {
+                results.innerHTML = '';
+                return;
+            }
+            
+            const matches = spotlightApps.filter(app => app.toLowerCase().includes(query.toLowerCase()));
+            results.innerHTML = matches.map(app => `
+                <div class="spotlight-result" onclick="openApp('${app.toLowerCase()}'); toggleSpotlight();">
+                    <i class="fas fa-rocket"></i>
+                    <span>${app}</span>
+                </div>
+            `).join('');
+        }
+        // Context Menu
+        document.getElementById('desktop').addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            closeAllPopovers();
+            const menu = document.getElementById('context-menu');
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+            menu.classList.add('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.popover') && !e.target.closest('.menubar-item')) {
+                closeAllPopovers();
+            }
+        });
+        // Dark Mode
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+        // Control Center Toggles
+        function toggleWifi(el) { el.classList.toggle('active'); }
+        function toggleBluetooth(el) { el.classList.toggle('active'); }
+        function toggleAirdrop(el) { el.classList.toggle('active'); }
+        function toggleFocus(el) { el.classList.toggle('active'); }
+        // Terminal
+        function handleTerminal(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('terminal-input');
+                const output = document.getElementById('terminal-output');
+                const command = input.value;
+                
+                let response = '';
+                if (command === 'help') {
+                    response = 'Available commands: help, date, whoami, ls, clear, neofetch';
+                } else if (command === 'date') {
+                    response = new Date().toString();
+                } else if (command === 'whoami') {
+                    response = 'user';
+                } else if (command === 'ls') {
+                    response = 'Applications  Documents  Downloads  Desktop  Pictures  Music  Movies';
+                } else if (command === 'clear') {
+                    output.innerHTML = '';
+                    input.value = '';
+                    return;
+                } else if (command === 'neofetch') {
+                    response = `
+       .:'          user@NeuronOS
+    _ :'_           ---------------
+ .'\`_\`-'_\`\`.        OS: NeuronOS Sonoma
+:________.-'        Host: Browser
+:_______:           Kernel: JavaScript
+ :_______\`-;        Uptime: ${Math.floor(performance.now() / 1000)}s
+  \`._.-._.'         Shell: NeuronTerm
+                    Resolution: ${window.innerWidth}x${window.innerHeight}
+                    Terminal: NeuronOS Terminal`;
+                } else if (command) {
+                    response = `zsh: command not found: ${command}`;
+                }
+                const newLine = document.createElement('div');
+                newLine.className = 'terminal-line';
+                newLine.innerHTML = `<span class="terminal-prompt">user@NeuronOS ~ %</span> ${command}`;
+                input.parentElement.before(newLine);
+                if (response) {
+                    const responseLine = document.createElement('div');
+                    responseLine.className = 'terminal-line';
+                    responseLine.style.whiteSpace = 'pre';
+                    responseLine.textContent = response;
+                    input.parentElement.before(responseLine);
+                }
+                input.value = '';
+                output.scrollTop = output.scrollHeight;
+            }
+        }
+        // Calculator
+        let calcDisplay = '0';
+        let calcOperand = null;
+        let calcOperator = null;
+        let calcNewNumber = true;
+        function updateCalcDisplay() {
+            const display = document.getElementById('calc-display');
+            if (display) display.textContent = calcDisplay;
+        }
+        function calcNum(n) {
+            if (calcNewNumber) {
+                calcDisplay = n;
+                calcNewNumber = false;
+            } else {
+                calcDisplay = calcDisplay === '0' ? n : calcDisplay + n;
+            }
+            updateCalcDisplay();
+        }
+        function calcOp(op) {
+            calcOperand = parseFloat(calcDisplay);
+            calcOperator = op;
+            calcNewNumber = true;
+        }
+        function calcEquals() {
+            if (calcOperator && calcOperand !== null) {
+                const current = parseFloat(calcDisplay);
+                let result;
+                switch (calcOperator) {
+                    case '+': result = calcOperand + current; break;
+                    case '-': result = calcOperand - current; break;
+                    case '*': result = calcOperand * current; break;
+                    case '/': result = calcOperand / current; break;
+                }
+                calcDisplay = String(result);
+                calcOperator = null;
+                calcOperand = null;
+                calcNewNumber = true;
+                updateCalcDisplay();
+            }
+        }
+        function calcClear() {
+            calcDisplay = '0';
+            calcOperand = null;
+            calcOperator = null;
+            calcNewNumber = true;
+            updateCalcDisplay();
+        }
+        function calcNegate() {
+            calcDisplay = String(-parseFloat(calcDisplay));
+            updateCalcDisplay();
+        }
+        function calcPercent() {
+            calcDisplay = String(parseFloat(calcDisplay) / 100);
+            updateCalcDisplay();
+        }
+        // Calendar
+        let currentCalendarDate = new Date();
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            if (!grid) return;
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            const today = new Date();
+            document.getElementById('calendar-month').textContent = 
+                currentCalendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            let html = days.map(d => `<div class="calendar-day-name">${d}</div>`).join('');
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+            for (let i = firstDay - 1; i >= 0; i--) {
+                html += `<div class="calendar-day other-month">${daysInPrevMonth - i}</div>`;
+            }
+            for (let i = 1; i <= daysInMonth; i++) {
+                const isToday = i === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                html += `<div class="calendar-day ${isToday ? 'today' : ''}">${i}</div>`;
+            }
+            const remaining = 42 - (firstDay + daysInMonth);
+            for (let i = 1; i <= remaining; i++) {
+                html += `<div class="calendar-day other-month">${i}</div>`;
+            }
+            grid.innerHTML = html;
+        }
+        function changeMonth(delta) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+            renderCalendar();
+        }
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.metaKey || e.ctrlKey) {
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    toggleSpotlight();
+                }
+            }
+            if (e.key === 'Escape') {
+                toggleSpotlight();
+                closeAllPopovers();
+            }
+        });
+        // Initialize
+        updateLockTime();
+    </script>
+</body>
+</html>
