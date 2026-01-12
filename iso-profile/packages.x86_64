@@ -25,6 +25,7 @@ dosfstools
 e2fsprogs
 xfsprogs
 ntfs-3g
+archlinux-keyring
 
 # =============================================================================
 # BOOTLOADER
@@ -38,12 +39,17 @@ os-prober
 # =============================================================================
 xorg-server
 xorg-xinit
-sddm
-lxqt
-breeze-icons
-pcmanfm-qt
-qterminal
-lxqt-archiver
+# =============================================================================
+# DESKTOP ENVIRONMENT - GNOME (Modern, customizable, touch-friendly)
+# =============================================================================
+xorg-server
+xorg-xinit
+gdm
+gnome
+gnome-extra
+gnome-terminal
+gnome-tweaks
+gnome-shell-extensions
 xdg-user-dirs
 xdg-utils
 zenity
@@ -53,11 +59,9 @@ qt6-base
 qt6-svg
 
 # Premium theming
-papirus-icon-theme
-kvantum
-qt5ct
-qt6ct
-lxqt-themes
+# Premium theming
+# papirus-icon-theme (Optional, GNOME has Adwaita)
+# kvantum (Not needed for GNOME)
 materia-gtk-theme
 
 # =============================================================================
@@ -149,7 +153,8 @@ pciutils
 # =============================================================================
 flatpak
 xdg-desktop-portal
-xdg-desktop-portal-lxqt
+xdg-desktop-portal
+xdg-desktop-portal-gnome
 
 # =============================================================================
 # WINE (For lightweight Windows apps without VM)

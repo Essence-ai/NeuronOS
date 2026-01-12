@@ -56,6 +56,7 @@ if [ $? -eq 0 ]; then
     if command -v calamares &> /dev/null; then
         pkexec calamares &
     else
-        qterminal -e sudo archinstall &
+        # Refresh keys to prevent installation errors
+        gnome-terminal -- bash -c "echo 'Initializing package keys...' && sudo pacman-key --init && sudo pacman-key --populate archlinux && sudo pacman -Sy --noconfirm archlinux-keyring && sudo archinstall; echo 'Installer finished. Press Enter to close.'; read" &
     fi
 fi
