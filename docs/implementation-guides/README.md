@@ -1,209 +1,219 @@
-# NeuronOS Implementation Guides
+# NeuronOS Implementation Roadmap
 
-**Comprehensive roadmap for taking NeuronOS from pre-alpha to production**
-
-Based on the [Comprehensive Audit Report](../../COMPREHENSIVE_AUDIT_REPORT.md) which identified 287+ issues across the codebase.
-
----
+This directory contains comprehensive, phase-based implementation guides for bringing NeuronOS from its current state (~60% complete) to a production-ready v1.0 release.
 
 ## Overview
 
-| Phase | Focus | Time Estimate | Priority |
-|-------|-------|---------------|----------|
-| [Phase 1](./PHASE_1_CRITICAL_FIXES.md) | Critical Security & Data Loss Fixes | 1-2 weeks | **HIGHEST** |
-| [Phase 2](./PHASE_2_CORE_FEATURES.md) | Core Feature Completion | 2-3 weeks | HIGH |
-| [Phase 2A](./PHASE_2A_VM_MANAGER.md) | VM Manager Deep Dive | 1-2 weeks | HIGH |
-| [Phase 3](./PHASE_3_FEATURE_PARITY.md) | Feature Parity & Polish | 2 weeks | MEDIUM |
-| [Phase 3A](./PHASE_3A_GUEST_AGENT.md) | Guest Agent Protocol | 1-2 weeks | MEDIUM |
-| [Phase 4](./PHASE_4_ERROR_HANDLING.md) | Error Handling & Robustness | 1-2 weeks | MEDIUM |
-| [Phase 5](./PHASE_5_TESTING.md) | Testing & Quality Assurance | 2 weeks | MEDIUM |
-| [Phase 6](./PHASE_6_PRODUCTION.md) | Production Readiness | 2 weeks | Required for release |
+NeuronOS is a consumer-grade Linux distribution that seamlessly integrates Windows/macOS software compatibility through GPU passthrough VMs, Proton, and Wine. The project has a solid architectural foundation but requires completion of critical features, end-to-end integration, and comprehensive testing.
 
-**Total Estimated Time:** 10-16 weeks
+**Current Status**: Pre-Alpha (partially functional)
+**Target**: Production-Ready MVP
+**Estimated Timeline**: 6-12 weeks with appropriate resources
 
----
+## Phase Structure
 
-## Phase Summary
+Each phase is split into **logical sub-phases** focused on deliverable features, not just individual files. Every sub-phase includes:
 
-### Phase 1: Critical Fixes (MUST DO FIRST)
+- **Objective**: What are we building and why
+- **Features to Implement**: Specific functionality needed
+- **Acceptance Criteria**: How we know it's working
+- **Files to Modify/Create**: Specific locations
+- **Testing Checklist**: Verification before moving on
+- **Risks & Mitigations**: Known challenges
 
-Addresses security vulnerabilities and data loss bugs:
+### Phase 1: Critical Blockers (1-2 weeks)
+**Objective**: Fix showstopper bugs preventing any core functionality from working
 
-- **SEC-001:** Command injection in VM Manager GUI
-- **SEC-002:** Unsafe file path handling
-- **SEC-003:** Downloads without verification
-- **DATA-001:** Migration file/directory confusion (causes SSH key loss)
-- **DATA-002:** Non-atomic config writes
-- **SYS-001:** Hardcoded GRUB paths
-- **SYS-002:** Missing sudo for system operations
+| Sub-Phase | Focus | Time | Status |
+|-----------|-------|------|--------|
+| [1.1](./PHASE_1.1_GUEST_AGENT_FIX.md) | Fix guest agent C# compilation errors | 2 days | TODO |
+| [1.2](./PHASE_1.2_VM_LIFECYCLE.md) | Implement VM deletion & settings dialog | 2-3 days | TODO |
+| [1.3](./PHASE_1.3_MIGRATION_BUGFIX.md) | Fix file/directory type confusion in migration | 2 days | TODO |
+| [1.4](./PHASE_1.4_PROTON_INSTALLER.md) | Complete Proton non-Steam installer | 2-3 days | TODO |
+| [1.5](./PHASE_1.5_SECURITY_HARDENING.md) | Secure guest agent communication | 2-3 days | TODO |
 
-### Phase 2: Core Features
-
-Completes stub implementations:
-
-- **FEAT-001:** PROTON installer (currently missing)
-- **FEAT-002:** VMInstaller full implementation
-- **FEAT-003:** VM creation dialog (currently shows toast only)
-- **FEAT-004:** Onboarding wizard completion
-- **FEAT-005:** Looking Glass integration
-- **FEAT-006:** Fix broken test assertions
-
-### Phase 2A: VM Manager Deep Dive
-
-Refactors the VM manager for maintainability:
-
-- Split God class (LibvirtManager 529 lines)
-- Implement connection pooling
-- Full VM creator with templates
-- Complete Looking Glass integration
-- Proper state machine for VM lifecycle
-
-### Phase 3: Feature Parity
-
-Completes partial features:
-
-- Guest agent communication (host-side client)
-- Migration system improvements (browser profiles)
-- Hardware detection enhancements (ACS override)
-- Update system completion (verification)
-- UI/UX polish (consistent dialogs)
-
-### Phase 3A: Guest Agent Protocol
-
-Secure host-guest communication:
-
-- Protocol specification (length-prefix framing)
-- Encryption (X25519 + ChaCha20-Poly1305)
-- Authentication (HMAC challenge-response)
-- Clipboard synchronization
-- Resolution synchronization
-- Application launching
-
-### Phase 4: Error Handling
-
-Robust error management:
-
-- Custom exception hierarchy
-- Structured logging
-- Resource management (context managers)
-- Thread safety (singleton fixes)
-- Graceful degradation
-
-### Phase 5: Testing
-
-Comprehensive test coverage:
-
-- pytest configuration
-- Unit tests for all modules
-- Integration tests for critical paths
-- CI/CD pipeline (GitHub Actions)
-- Pre-commit hooks
-- Code quality (ruff, black, mypy)
-
-### Phase 6: Production Readiness
-
-Release preparation:
-
-- API documentation
-- User guide
-- Reproducible builds
-- Security hardening
-- Performance optimization
-- Release automation
+**Deliverable**: Core user workflows don't crash; VM creation→deletion→recreation works end-to-end
 
 ---
 
-## Quick Start
+### Phase 2: Core Functionality (2-3 weeks)
+**Objective**: Wire up onboarding, installer, and core integrations so users can actually use the system
 
-### 1. Fix Critical Security Issues (Day 1)
+| Sub-Phase | Focus | Time | Status |
+|-----------|-------|------|--------|
+| [2.1](./PHASE_2.1_ONBOARDING_EXECUTION.md) | Onboarding wizard actually performs setup | 2-3 days | TODO |
+| [2.2](./PHASE_2.2_STORE_GUI.md) | Complete Store app browsing & installation | 3-4 days | TODO |
+| [2.3](./PHASE_2.3_HARDWARE_SETUP.md) | Automatic IOMMU/VFIO setup from wizard | 2-3 days | TODO |
+| [2.4](./PHASE_2.4_LOOKING_GLASS_AUTO.md) | Looking Glass auto-start with VM | 2 days | TODO |
+| [2.5](./PHASE_2.5_PROTON_MANAGEMENT.md) | Proton version detection & switching | 2 days | TODO |
 
+**Deliverable**: First-time users can boot NeuronOS → run onboarding → create Windows VM → launch apps all in one session
+
+---
+
+### Phase 3: Polish & User Experience (1-2 weeks)
+**Objective**: Fix UI/UX issues, add missing features, improve robustness
+
+| Sub-Phase | Focus | Time | Status |
+|-----------|-------|------|--------|
+| [3.1](./PHASE_3.1_SETTINGS_UI.md) | VM settings editor (CPU, RAM, GPU config) | 2-3 days | TODO |
+| [3.2](./PHASE_3.2_ERROR_HANDLING.md) | User-friendly error messages & recovery | 2 days | TODO |
+| [3.3](./PHASE_3.3_MIGRATION_UI.md) | Complete file migration progress UI | 1-2 days | TODO |
+
+**Deliverable**: Users get clear feedback on what's happening and what went wrong; can adjust VM settings without recreating
+
+---
+
+### Phase 4: Testing & Hardening (1-2 weeks)
+**Objective**: Comprehensive testing, security audit, performance optimization
+
+| Sub-Phase | Focus | Time | Status |
+|-----------|-------|------|--------|
+| [4.1](./PHASE_4.1_TESTING_FRAMEWORK.md) | Unit/integration tests for critical paths | 2-3 days | TODO |
+| [4.2](./PHASE_4.2_SECURITY_AUDIT.md) | Security review of all privilege escalation, file I/O, network | 2-3 days | TODO |
+| [4.3](./PHASE_4.3_HARDWARE_TESTING.md) | Test on diverse hardware (Intel, AMD, NVMe, SATA) | 2-3 days | TODO |
+| [4.4](./PHASE_4.4_ISO_VALIDATION.md) | End-to-end ISO build and boot testing | 1-2 days | TODO |
+
+**Deliverable**: Confidence that the system works across different hardware, handles errors gracefully, and has no critical security flaws
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Linux system with Python 3.9+
+- GTK 4 development headers
+- libvirt and QEMU installed
+- Basic familiarity with the codebase (see [ARCHITECTURE.md](./ARCHITECTURE.md))
+
+### Step 1: Understand the Codebase
 ```bash
-# See Phase 1 for details
-# Priority: Command injection fix
-# File: src/vm_manager/gui/app.py:218
+# Read the architecture documentation
+cat ARCHITECTURE.md
 ```
 
-### 2. Run Tests
+### Step 2: Start with Phase 1
+```bash
+# Begin with the most critical issues
+cat PHASE_1.1_GUEST_AGENT_FIX.md
+```
 
+### Step 3: Run Tests
 ```bash
 # Install dev dependencies
+cd /home/user/NeuronOS
 pip install -e ".[dev]"
 
-# Run tests (many will fail initially)
-pytest tests/ -v
-
-# Check coverage
-pytest tests/ --cov=src --cov-report=html
+# Run tests to see current state
+pytest tests/ -v --tb=short
 ```
 
-### 3. Set Up CI/CD
+### Step 4: Follow Checklist
+Each sub-phase includes a **verification checklist**. Do NOT proceed to the next phase until all items are checked off.
+
+---
+
+## Key Principles
+
+These guides follow these principles:
+
+1. **Completeness**: Each guide specifies EVERYTHING that needs to be done, not just examples
+2. **Clarity**: Clear before/after, what works vs what's broken
+3. **Verification**: Every feature has acceptance criteria and test commands
+4. **Modularity**: Sub-phases can be worked on in parallel by different developers
+5. **Incrementalism**: Build working features step-by-step, not monolithic changes
+
+## File Organization
+
+```
+docs/implementation-guides/
+├── README.md                          # This file
+├── ARCHITECTURE.md                    # Codebase structure & design
+├── PHASE_1.1_GUEST_AGENT_FIX.md       # Fix C# compilation
+├── PHASE_1.2_VM_LIFECYCLE.md          # Delete/settings
+├── PHASE_1.3_MIGRATION_BUGFIX.md      # Fix file type bug
+├── PHASE_1.4_PROTON_INSTALLER.md      # Complete installer
+├── PHASE_1.5_SECURITY_HARDENING.md    # Secure guest agent
+├── PHASE_2.1_ONBOARDING_EXECUTION.md  # Wizard setup
+├── PHASE_2.2_STORE_GUI.md             # App store
+├── PHASE_2.3_HARDWARE_SETUP.md        # Auto IOMMU setup
+├── PHASE_2.4_LOOKING_GLASS_AUTO.md    # Auto-start LG
+├── PHASE_2.5_PROTON_MANAGEMENT.md     # Version switching
+├── PHASE_3.1_SETTINGS_UI.md           # VM settings
+├── PHASE_3.2_ERROR_HANDLING.md        # Error messages
+├── PHASE_3.3_MIGRATION_UI.md          # Progress UI
+├── PHASE_4.1_TESTING_FRAMEWORK.md     # Tests
+├── PHASE_4.2_SECURITY_AUDIT.md        # Security review
+├── PHASE_4.3_HARDWARE_TESTING.md      # Hardware tests
+└── PHASE_4.4_ISO_VALIDATION.md        # ISO testing
+```
+
+## Quick Status Check
+
+To see which sub-phases are done:
 
 ```bash
-# Copy GitHub Actions workflow
-mkdir -p .github/workflows
-# See Phase 5 for workflow configuration
+# Check for TODOs in guides
+grep -l "TODO:" PHASE_*.md
+
+# Check which tests pass
+pytest tests/ -v | grep -E "(PASSED|FAILED)"
+
+# See which features are stubbed
+grep -r "TODO\|FIXME\|pass  # " src/ | head -20
 ```
+
+## Common Issues & Solutions
+
+### Issue: Tests fail immediately
+**Solution**: Phase 1 is about fixing critical issues that cause test failures. Run Phase 1.1 first.
+
+### Issue: Can't understand how something works
+**Solution**: See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed component documentation.
+
+### Issue: Multiple developers working in parallel
+**Solution**: Divide developers by sub-phase. Phases 1.1-1.5 can mostly be done independently.
+
+### Issue: Lost track of progress
+**Solution**: Check the verification checklist in each sub-phase guide. Mark items as done as you complete them.
 
 ---
 
 ## Progress Tracking
 
-Use this checklist to track progress:
+Use this table to track overall progress:
 
-```markdown
-## Phase Progress
+| Phase | Sub-Phase | Status | Date Started | Date Completed |
+|-------|-----------|--------|--------------|-----------------|
+| 1.1 | Guest Agent Fix | ⏳ TODO | - | - |
+| 1.2 | VM Lifecycle | ⏳ TODO | - | - |
+| 1.3 | Migration Bugfix | ⏳ TODO | - | - |
+| 1.4 | Proton Installer | ⏳ TODO | - | - |
+| 1.5 | Security | ⏳ TODO | - | - |
+| 2.1 | Onboarding | ⏳ TODO | - | - |
+| 2.2 | Store GUI | ⏳ TODO | - | - |
+| 2.3 | Hardware Setup | ⏳ TODO | - | - |
+| 2.4 | Looking Glass | ⏳ TODO | - | - |
+| 2.5 | Proton Mgmt | ⏳ TODO | - | - |
+| 3.1 | Settings UI | ⏳ TODO | - | - |
+| 3.2 | Error Handling | ⏳ TODO | - | - |
+| 3.3 | Migration UI | ⏳ TODO | - | - |
+| 4.1 | Testing | ⏳ TODO | - | - |
+| 4.2 | Security Audit | ⏳ TODO | - | - |
+| 4.3 | Hardware Tests | ⏳ TODO | - | - |
+| 4.4 | ISO Validation | ⏳ TODO | - | - |
 
-### Phase 1: Critical Fixes
-- [ ] SEC-001: Command injection fixed
-- [ ] SEC-002: Path traversal fixed
-- [ ] SEC-003: Download verification added
-- [ ] DATA-001: Migration file/dir fixed
-- [ ] DATA-002: Atomic writes implemented
-- [ ] SYS-001: Dynamic GRUB paths
-- [ ] SYS-002: Sudo fallback added
-
-### Phase 2: Core Features
-- [ ] PROTON installer implemented
-- [ ] VMInstaller complete
-- [ ] VM creation works
-- [ ] Onboarding applies settings
-- [ ] Tests fixed
-
-### Phase 3+: Remaining
-- [ ] Guest agent secure
-- [ ] Error handling robust
-- [ ] 60%+ test coverage
-- [ ] Documentation complete
-- [ ] Ready for release
-```
+Update this table as you complete each sub-phase.
 
 ---
 
-## Key Files Changed
+## Questions or Stuck?
 
-Each phase modifies specific files. Here's a quick reference:
+If you're stuck on a sub-phase:
 
-| File | Phases | Changes |
-|------|--------|---------|
-| `src/vm_manager/gui/app.py` | 1, 2, 4 | Security fix, VM creation |
-| `src/store/installer.py` | 1, 2 | PROTON, path safety, downloads |
-| `src/migration/migrator.py` | 1, 3 | File/dir fix, browser migration |
-| `src/updater/rollback.py` | 1, 3 | GRUB paths, verification |
-| `src/guest_agent/**` | 1, 3A | Encryption, protocol |
-| `src/onboarding/wizard.py` | 2 | Apply settings |
-| `tests/**` | 2, 5 | Fix assertions, add tests |
-| `.github/workflows/**` | 5 | CI/CD pipeline |
+1. **Check the Acceptance Criteria** - Make sure you understand what "done" means
+2. **Review the Testing Checklist** - There may be edge cases you missed
+3. **Check the Risks & Mitigations** - Your issue might be listed there
+4. **Look at ARCHITECTURE.md** - You might need to understand the codebase structure better
 
----
-
-## Getting Help
-
-If you encounter issues implementing these guides:
-
-1. Check the [audit report](../../COMPREHENSIVE_AUDIT_REPORT.md) for context
-2. Review the specific phase guide for detailed code
-3. Open a GitHub issue with the phase number and problem
-
----
-
-*Generated from comprehensive code audit on January 2026*
+Good luck! 🚀
