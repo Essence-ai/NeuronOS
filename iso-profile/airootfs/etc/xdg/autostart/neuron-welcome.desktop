@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Welcome to NeuronOS
-Comment=Welcome message and installer prompt
-Exec=/usr/bin/neuron-welcome
-Icon=system-software-install
-Terminal=false
-X-GNOME-Autostart-enabled=true

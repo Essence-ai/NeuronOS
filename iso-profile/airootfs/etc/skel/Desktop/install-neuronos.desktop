@@ -2,6 +2,7 @@
 Type=Application
 Name=Install NeuronOS
 Comment=Install NeuronOS to your computer
-Icon=system-installer
-Exec=qterminal -e sudo archinstall
+Exec=sudo calamares
+Icon=calamares
 Terminal=false
+Categories=System;

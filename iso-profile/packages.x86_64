@@ -1,191 +1,49 @@
-# NeuronOS Package List
-# Packages to include in the live ISO and installed system
-
-# =============================================================================
-# ARCHISO REQUIREMENTS (Critical for live boot)
-# =============================================================================
-archinstall
-mkinitcpio-archiso
-syslinux
-memtest86+
-memtest86+-efi
-
-# =============================================================================
-# BASE SYSTEM
-# =============================================================================
+# Base System
 base
 linux
 linux-firmware
-linux-headers
 mkinitcpio
+mkinitcpio-archiso
+
+# Boot
+syslinux
+efibootmgr
+grub
+
+# Essential System
 sudo
 networkmanager
+dhcpcd
+iwd
+
+# Filesystem
 btrfs-progs
 dosfstools
 e2fsprogs
-xfsprogs
 ntfs-3g
-archlinux-keyring
+xfsprogs
 
-# =============================================================================
-# BOOTLOADER
-# =============================================================================
-grub
-efibootmgr
-os-prober
-
-# =============================================================================
-# DESKTOP ENVIRONMENT - LXQt (Lightweight, Windows-like)
-# =============================================================================
-xorg-server
-xorg-xinit
-# =============================================================================
-# DESKTOP ENVIRONMENT - GNOME (Modern, customizable, touch-friendly)
-# =============================================================================
-xorg-server
-xorg-xinit
-gdm
-gnome
-gnome-extra
-gnome-terminal
-gnome-tweaks
-gnome-shell-extensions
-xdg-user-dirs
-xdg-utils
-zenity
-
-# Qt6 base (required for PyQt6 apps)
-qt6-base
-qt6-svg
-
-# Premium theming
-# Premium theming
-# papirus-icon-theme (Optional, GNOME has Adwaita)
-# kvantum (Not needed for GNOME)
-materia-gtk-theme
-
-# =============================================================================
-# VIRTUALIZATION CORE (The Heart of NeuronOS)
-# =============================================================================
-qemu-full
-libvirt
-virt-manager
-edk2-ovmf
-swtpm
-dnsmasq
-bridge-utils
-iptables-nft
-
-# =============================================================================
-# INSTALLER
-# =============================================================================
-arch-install-scripts
-
-# =============================================================================
-# GPU DRIVERS
-# =============================================================================
-mesa
-vulkan-icd-loader
-vulkan-mesa-layers
-libva-mesa-driver
-libvdpau
-
-# Intel GPU
-intel-media-driver
-vulkan-intel
-
-# AMD GPU
-vulkan-radeon
-
-# =============================================================================
-# PYTHON & DEVELOPMENT TOOLS
-# =============================================================================
-python
-python-pip
-python-pyudev
-python-gobject
-python-jinja
-python-requests
-python-pyqt6
-libvirt-python
-git
-nano
-base-devel
-htop
-wget
-curl
-
-# =============================================================================
-# APPLICATIONS (Minimal for now)
-# =============================================================================
-firefox
-
-# =============================================================================
-# FONTS
-# =============================================================================
-noto-fonts
-ttf-dejavu
-ttf-liberation
-
-# =============================================================================
-# AUDIO
-# =============================================================================
-pipewire
-pipewire-alsa
-pipewire-pulse
-wireplumber
-
-# =============================================================================
-# NETWORKING
-# =============================================================================
-network-manager-applet
-iwd
-
-# =============================================================================
-# UTILITIES
-# =============================================================================
-bash-completion
-usbutils
+# Hardware
 pciutils
+usbutils
 
-# =============================================================================
-# FLATPAK (For sandboxed app installation)
-# =============================================================================
-flatpak
-xdg-desktop-portal
-xdg-desktop-portal
-xdg-desktop-portal-gnome
+# Desktop (LXQt - lightweight)
+xorg-server
+xorg-xinit
+lxqt
+sddm
+breeze-icons
+ttf-dejavu
 
-# =============================================================================
-# WINE (For lightweight Windows apps without VM)
-# =============================================================================
-wine
-wine-mono
-wine-gecko
-winetricks
-lib32-mesa
-lib32-vulkan-icd-loader
+# Installer
+calamares
+os-prober
+arch-install-scripts
+rsync
+squashfs-tools
 
-# =============================================================================
-# LOOKING GLASS DEPENDENCIES (For seamless VM display)
-# =============================================================================
-cmake
-fontconfig
-libsamplerate
-libxkbcommon
-libxi
-wayland
-wayland-protocols
-spice-protocol
-
-# =============================================================================
-# USB PASSTHROUGH
-# =============================================================================
-libusb
-usbredir
-
-# =============================================================================
-# ADDITIONAL VM TOOLS
-# =============================================================================
-virt-viewer
-spice-gtk
+# Basic Applications
+firefox
+konsole
+dolphin
+kate
