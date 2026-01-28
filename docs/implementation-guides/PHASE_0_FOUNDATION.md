@@ -25,14 +25,14 @@ This phase ensures your development environment is ready. You will NOT write any
 
 ### What Must Be Verified
 
-| Check | Description | Command |
-|-------|-------------|---------|
-| Arch ISO builds | Can build a basic Arch ISO | `mkarchiso` |
-| libvirt works | Can connect to libvirt | `virsh list --all` |
-| QEMU works | QEMU is installed | `qemu-system-x86_64 --version` |
-| Python 3.11+ | Correct Python version | `python --version` |
-| Git configured | Can commit/push | `git status` |
-| Test VM boots | A test VM can run | Manual test |
+| Check           | Description                | Command                          |
+| --------------- | -------------------------- | -------------------------------- |
+| Arch ISO builds | Can build a basic Arch ISO | `mkarchiso`                    |
+| libvirt works   | Can connect to libvirt     | `virsh list --all`             |
+| QEMU works      | QEMU is installed          | `qemu-system-x86_64 --version` |
+| Python 3.11+    | Correct Python version     | `python --version`             |
+| Git configured  | Can commit/push            | `git status`                   |
+| Test VM boots   | A test VM can run          | Manual test                      |
 
 ---
 
@@ -56,6 +56,7 @@ pacman -Q archiso qemu-full libvirt virt-manager dnsmasq ebtables 2>/dev/null ||
 ```
 
 **If packages are missing, install them:**
+
 ```bash
 sudo pacman -Syu --needed archiso qemu-full libvirt virt-manager dnsmasq ebtables python python-pip python-gobject python-jinja libvirt-python
 ```
@@ -111,6 +112,7 @@ lspci | grep -E "VGA|3D"
 ```
 
 **If IOMMU is not enabled:**
+
 1. This is a BIOS setting - enable Intel VT-d or AMD-Vi
 2. Add kernel parameter: `intel_iommu=on` or `amd_iommu=on`
 3. Reboot and verify again
@@ -160,15 +162,17 @@ python -m pytest tests/ --collect-only 2>/dev/null | head -10
 Before proceeding to Phase 1, ALL boxes must be checked:
 
 ### System Requirements
-- [ ] Running Arch Linux (or Arch-based distro)
-- [ ] Python 3.11+ installed
-- [ ] archiso package installed
-- [ ] qemu-full package installed
-- [ ] libvirt package installed
-- [ ] libvirtd service running
-- [ ] User is in libvirt group
+
+- [X] Running Arch Linux (or Arch-based distro)
+- [X] Python 3.11+ installed
+- [X] archiso package installed
+- [X] qemu-full package installed
+- [X] libvirt package installed
+- [X] libvirtd service running
+- [X] User is in libvirt group
 
 ### Functionality Tests
+
 - [ ] `virsh list --all` works without sudo
 - [ ] Python can import libvirt module
 - [ ] Python can import GTK4 (gi.require_version('Gtk', '4.0'))
@@ -177,22 +181,25 @@ Before proceeding to Phase 1, ALL boxes must be checked:
 - [ ] At least one GPU is detected
 
 ### Project Structure
-- [ ] NeuronOS repo is cloned and accessible
-- [ ] src/ directory contains all modules
-- [ ] iso-profile/ directory exists with packages.x86_64
-- [ ] tests/ directory exists
+
+- [X] NeuronOS repo is cloned and accessible
+- [X] src/ directory contains all modules
+- [X] iso-profile/ directory exists with packages.x86_64
+- [X] tests/ directory exists
 
 ---
 
 ## Troubleshooting Common Issues
 
 ### "virsh: command not found"
+
 ```bash
 sudo pacman -S libvirt
 sudo systemctl enable --now libvirtd
 ```
 
 ### "error: failed to connect to the hypervisor"
+
 ```bash
 sudo systemctl restart libvirtd
 sudo usermod -aG libvirt $USER
@@ -200,6 +207,7 @@ sudo usermod -aG libvirt $USER
 ```
 
 ### "No IOMMU groups found"
+
 1. Enter BIOS and enable Intel VT-d or AMD-Vi
 2. Add kernel parameter to bootloader:
    - For GRUB: Edit `/etc/default/grub`, add `intel_iommu=on` to `GRUB_CMDLINE_LINUX_DEFAULT`
@@ -207,6 +215,7 @@ sudo usermod -aG libvirt $USER
    - Reboot
 
 ### "mkarchiso fails with permission denied"
+
 ```bash
 sudo mkarchiso ...  # Always run with sudo
 ```
