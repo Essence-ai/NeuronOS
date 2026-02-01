@@ -35,8 +35,7 @@ sddm
 breeze-icons
 ttf-dejavu
 
-# Installer
-calamares
+# Installer Tools
 os-prober
 arch-install-scripts
 rsync

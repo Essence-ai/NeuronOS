@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Install NeuronOS
-Comment=Install NeuronOS to your computer
-Exec=sudo calamares
-Icon=calamares
-Terminal=false
-Categories=System;
