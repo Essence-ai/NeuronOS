@@ -19,5 +19,4 @@ file_permissions=(
   ["/etc/gshadow"]="0:0:400"
   ["/etc/sudoers.d"]="0:0:750"
   ["/etc/sudoers.d/liveuser"]="0:0:440"
-  ["/etc/skel/Desktop/install-neuronos.desktop"]="0:0:755"
 )
