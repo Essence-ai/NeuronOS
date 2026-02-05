@@ -69,9 +69,11 @@ copy_python_modules() {
     mkdir -p "$neuron_lib"
 
     # Copy Python source modules
-    cp -r "${SCRIPT_DIR}/src/hardware_detect" "$neuron_lib/"
-    cp -r "${SCRIPT_DIR}/src/vm_manager" "$neuron_lib/"
-    cp -r "${SCRIPT_DIR}/src/store" "$neuron_lib/"
+    for module in hardware_detect vm_manager store common onboarding migration updater utils; do
+        if [[ -d "${SCRIPT_DIR}/src/${module}" ]]; then
+            cp -r "${SCRIPT_DIR}/src/${module}" "$neuron_lib/"
+        fi
+    done
 
     # Copy data files
     mkdir -p "${PROFILE_DIR}/airootfs/usr/share/neuron-os"
@@ -114,8 +116,12 @@ setup_user_configs() {
     # Copy all skel configs
     cp -r "${PROFILE_DIR}/airootfs/etc/skel/." "$liveuser_home/"
 
-    # Set ownership (will be applied during build)
-    # liveuser uid:gid is 1000:1000
+    # Apply default NeuronOS theme to liveuser GTK4 config
+    local gtk4_dir="${liveuser_home}/.config/gtk-4.0"
+    mkdir -p "$gtk4_dir"
+    if [[ -f "${PROFILE_DIR}/airootfs/usr/share/neuron-os/themes/neuron.css" ]]; then
+        cp "${PROFILE_DIR}/airootfs/usr/share/neuron-os/themes/neuron.css" "${gtk4_dir}/gtk.css"
+    fi
 
     log_info "User configuration set up"
 }
