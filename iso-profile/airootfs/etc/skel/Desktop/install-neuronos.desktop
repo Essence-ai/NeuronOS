@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Install NeuronOS
+Comment=Install NeuronOS to your computer
+Exec=konsole -e sudo archinstall
+Icon=system-software-install
+Terminal=false
+Categories=System;
