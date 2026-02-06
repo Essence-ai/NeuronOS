@@ -1,597 +1,289 @@
 # Phase 6: App Store & Installation System
 
-**Status:** USER-FACING FEATURE - The application marketplace
+**Status:** BACKEND COMPLETE - Needs CLI, GUI, and integration testing
 **Estimated Time:** 5-7 days
-**Prerequisites:** Phase 5 complete (GPU passthrough working)
+**Prerequisites:** Phase 5 complete (Wine/Proton verified)
 
 ---
 
-## Recap: What We Are Building
+## What Already Exists (DO NOT Rewrite)
 
-**NeuronOS** provides a unified App Store that intelligently routes applications to the right compatibility layer:
-- **Native Linux** apps via pacman/Flatpak
-- **Wine/Proton** apps for simple Windows software
-- **VM apps** for professional software (Adobe, AutoCAD)
+### App Catalog — `src/store/app_catalog.py` (328 lines) — COMPLETE
 
-**This Phase's Goal:** Create a working App Store that:
-1. Displays a catalog of applications
-2. Shows compatibility information
-3. Installs apps using the correct method
-4. Tracks installed applications
-5. Works from both GUI and CLI
+Fully implemented app catalog with:
 
----
+- **`CompatibilityLayer` enum**: NATIVE, WINE, PROTON, VM_WINDOWS, VM_MACOS, FLATPAK, APPIMAGE
+- **`CompatibilityRating` enum**: PERFECT, GOOD, PLAYABLE, RUNS, BROKEN
+- **`AppCategory` enum**: PRODUCTIVITY, CREATIVE, GAMING, DEVELOPMENT, COMMUNICATION, MEDIA, UTILITIES, SYSTEM
+- **`AppInfo` dataclass**: Full app metadata with `to_dict()` / `from_dict()`
+- **`AppCatalog` class**: `load()`, `save()`, `get()`, `add()`, `remove()`, `all()`, `search()`, `by_category()`, `by_layer()`, `native_apps()`, `wine_apps()`, `vm_required_apps()`
 
-## Why This Phase Matters
+### Installer System — `src/store/installer.py` (1,177 lines) — COMPLETE
 
-The App Store is how users discover and install software. It abstracts away the complexity of different installation methods and presents a unified experience.
+All installer backends implemented with security functions:
+
+| Class | Status | What It Does |
+|-------|--------|-------------|
+| `PacmanInstaller` | Complete | `sudo pacman -S <pkg>`, checks with `pacman -Q` |
+| `FlatpakInstaller` | Complete | `flatpak install`, ensures Flathub remote exists |
+| `WineInstaller` | Complete | Creates isolated Wine prefixes, downloads/runs installers, creates `.desktop` entries |
+| `ProtonInstaller` | Complete | Detects Steam, handles Steam games + non-Steam apps, creates Proton prefixes |
+| `VMInstaller` | Complete | Finds compatible VMs, starts them, opens Looking Glass/virt-viewer |
+| `AppInstaller` | Complete | Routes to correct backend based on `app.layer` |
+
+Security functions (`_safe_filename`, `_ensure_within_directory`, `_verify_download`) are all implemented.
+
+### App Catalog Data — `data/apps.json` (714 lines, 46 apps) — COMPLETE
+
+| Layer | Count | Examples |
+|-------|-------|---------|
+| Native | 20 | Firefox, LibreOffice, GIMP, Blender, Steam, Godot |
+| Flatpak | 12 | VSCode, Discord, Zoom, Teams, Bottles |
+| Wine | 4 | Notepad++, Rufus, WinRAR, League of Legends |
+| VM Windows | 16 | Photoshop, Premiere Pro, MS Office, AutoCAD |
+| VM macOS | 2 | Final Cut Pro, Logic Pro |
+
+### What Does NOT Exist
+
+- **No `src/store/cli.py`** — CLI interface needs to be created
+- **No store GUI** — No GTK4/Adwaita storefront window
+- **No store entry point script** — `iso-profile/airootfs/usr/bin/neuron-store` exists but may need updates
 
 ---
 
 ## Phase 6 Objectives
 
-| Objective | Description | Verification |
-|-----------|-------------|--------------|
-| 6.1 | App catalog loads correctly | Can read apps.json |
-| 6.2 | Installer routing works | Correct installer for each layer |
-| 6.3 | Pacman installer works | Can install native apps |
-| 6.4 | Flatpak installer works | Can install Flatpak apps |
-| 6.5 | Wine installer works | Can install Wine apps |
-| 6.6 | Store CLI works | `neuron-store` commands work |
+| # | Objective | Verification |
+|---|-----------|-------------|
+| 6.1 | App catalog loads all 46 apps | `AppCatalog().load()` returns 46 apps with correct layers |
+| 6.2 | Installer routing selects correct backend | Each `CompatibilityLayer` maps to the right installer class |
+| 6.3 | PacmanInstaller installs/detects native apps | Can install `cowsay`, `is_installed()` detects it |
+| 6.4 | FlatpakInstaller works with Flathub | Can install a Flatpak app |
+| 6.5 | WineInstaller creates prefixes and runs apps | Creates prefix, installs app, creates `.desktop` entry |
+| 6.6 | Store CLI created and functional | `neuron-store search/info/install/list` commands work |
+| 6.7 | Store GUI scaffold created | GTK4/Adwaita window with catalog browsing |
+| 6.8 | ISO integration verified | Entry point, desktop shortcut, and store all work in live ISO |
 
 ---
 
-## Step 6.1: Verify App Catalog
+## Step 6.1: Verify App Catalog Loading
 
-The app catalog is stored in `data/apps.json`.
+The catalog is at `data/apps.json` and loaded by `src/store/app_catalog.py`.
 
-### Check Catalog Structure
-
-```bash
-cd /home/user/NeuronOS
-
-# View catalog structure
-python3 -c "
-import json
-with open('data/apps.json') as f:
-    catalog = json.load(f)
-
-print(f'Total apps: {len(catalog.get(\"apps\", []))}')
-print(f'Categories: {list(catalog.get(\"categories\", {}).keys())}')
-
-# Show first few apps
-for app in catalog.get('apps', [])[:5]:
-    print(f\"\\n{app['name']}:\"
-    print(f'  ID: {app[\"id\"]}'
-    print(f'  Layer: {app.get(\"layer\", \"native\")}'
-    print(f'  Category: {app.get(\"category\", \"other\")}'
-"
-```
-
-### Expected App Structure
-
-Each app in `apps.json` should have:
-
-```json
-{
-  "id": "unique-id",
-  "name": "Display Name",
-  "description": "What the app does",
-  "category": "productivity|gaming|creative|development|utilities",
-  "layer": "native|wine|proton|vm_windows|vm_macos|flatpak",
-  "icon": "icon-name or URL",
-  "package_name": "for native: arch package name",
-  "flatpak_id": "for flatpak: org.example.App",
-  "installer_url": "for wine: download URL",
-  "steam_app_id": "for proton: Steam app ID",
-  "compatibility_rating": "platinum|gold|silver|bronze|broken",
-  "requires_gpu_passthrough": false
-}
-```
-
-### Load Catalog in Code
+### Verification Commands
 
 ```bash
 cd /home/user/NeuronOS
 
 python3 -c "
-import sys
-sys.path.insert(0, 'src')
+import sys; sys.path.insert(0, 'src')
 from store.app_catalog import AppCatalog
 
 catalog = AppCatalog()
-apps = catalog.list_all()
+catalog.load('data/apps.json')
+apps = catalog.all()
+print(f'Total apps: {len(apps)}')
 
-print(f'Loaded {len(apps)} apps')
-
-# Group by layer
-layers = {}
-for app in apps:
-    layer = app.layer.value if hasattr(app.layer, 'value') else str(app.layer)
-    layers[layer] = layers.get(layer, 0) + 1
-
-print('\\nApps by layer:')
-for layer, count in sorted(layers.items()):
+# Count by layer
+from collections import Counter
+layers = Counter(app.layer.value for app in apps)
+for layer, count in layers.most_common():
     print(f'  {layer}: {count}')
+
+# Count by category
+cats = Counter(app.category.value for app in apps)
+print()
+for cat, count in cats.most_common():
+    print(f'  {cat}: {count}')
 "
 ```
 
-### Verification Criteria for 6.1
-- [ ] apps.json exists and is valid JSON
-- [ ] AppCatalog class loads apps
-- [ ] Each app has required fields
-- [ ] Apps have correct layer assignments
-- [ ] Categories are populated
+### What to Check
+
+- [ ] `catalog.load('data/apps.json')` succeeds without exceptions
+- [ ] Returns 46 apps (or more if new apps added)
+- [ ] All 5 layer types have at least 1 app
+- [ ] All 8 category types are populated
+- [ ] `catalog.search('firefox')` returns Firefox app
+- [ ] `catalog.by_layer(CompatibilityLayer.WINE)` returns Wine apps
+- [ ] `catalog.by_category(AppCategory.GAMING)` returns gaming apps
 
 ---
 
-## Step 6.2: Installer Routing
+## Step 6.2: Verify Installer Routing
 
-The AppInstaller class routes installation to the correct method.
+The `AppInstaller` class in `installer.py` routes based on `app.layer`.
 
-### Test Installer Routing
+### Verification Commands
 
 ```bash
 cd /home/user/NeuronOS
 
-python3 << 'EOF'
-import sys
-sys.path.insert(0, 'src')
-from store.app_catalog import AppCatalog
-from store.installer import AppInstaller, CompatibilityLayer
+python3 -c "
+import sys; sys.path.insert(0, 'src')
+from store.installer import AppInstaller
+from store.app_catalog import CompatibilityLayer
 
-catalog = AppCatalog()
 installer = AppInstaller()
 
-# Test each layer has an installer
-layers_to_test = [
-    CompatibilityLayer.NATIVE,
-    CompatibilityLayer.FLATPAK,
-    CompatibilityLayer.WINE,
-    CompatibilityLayer.PROTON,
-    CompatibilityLayer.VM_WINDOWS,
-]
-
-print("Checking installer routing:")
-for layer in layers_to_test:
-    has_installer = layer in installer._installers
-    status = "OK" if has_installer else "MISSING"
-    print(f"  {layer.value}: {status}")
-EOF
+# Check each layer has a registered installer
+for layer in CompatibilityLayer:
+    has_it = hasattr(installer, '_installers') and layer in installer._installers
+    # Alternative: check the routing method
+    print(f'  {layer.value}: registered={has_it}')
+"
 ```
 
-### Expected Result
-All layers should show "OK"
+### What to Check
 
-### If Installer Missing
-
-The `AppInstaller` class in `src/store/installer.py` needs all layers registered:
-
-```python
-def __init__(self):
-    self._installers: Dict[CompatibilityLayer, BaseInstaller] = {
-        CompatibilityLayer.NATIVE: PacmanInstaller(),
-        CompatibilityLayer.FLATPAK: FlatpakInstaller(),
-        CompatibilityLayer.WINE: WineInstaller(),
-        CompatibilityLayer.PROTON: ProtonInstaller(),
-        CompatibilityLayer.VM_WINDOWS: VMInstaller(),
-        CompatibilityLayer.VM_MACOS: VMInstaller(),
-    }
-```
-
-### Verification Criteria for 6.2
-- [ ] All layers have installers
-- [ ] Installer selection works based on app.layer
-- [ ] No KeyError when installing apps
+- [ ] `AppInstaller()` instantiates without error
+- [ ] NATIVE layer routes to `PacmanInstaller`
+- [ ] FLATPAK layer routes to `FlatpakInstaller`
+- [ ] WINE layer routes to `WineInstaller`
+- [ ] PROTON layer routes to `ProtonInstaller`
+- [ ] VM_WINDOWS and VM_MACOS route to `VMInstaller`
+- [ ] APPIMAGE layer has a handler (or graceful error)
 
 ---
 
-## Step 6.3: Pacman Installer (Native Apps)
+## Step 6.3: Test PacmanInstaller
 
-Test installation of native Arch packages.
-
-### Test Pacman Installer
+### Verification Commands
 
 ```bash
 cd /home/user/NeuronOS
 
-python3 << 'EOF'
-import sys
-sys.path.insert(0, 'src')
+# Test is_installed detection
+python3 -c "
+import sys; sys.path.insert(0, 'src')
 from store.installer import PacmanInstaller
 from store.app_catalog import AppInfo, CompatibilityLayer
 
-# Create a test app (use a small, safe package)
-test_app = AppInfo(
-    id="cowsay",
-    name="Cowsay",
-    description="A talking cow",
-    category="utilities",
-    layer=CompatibilityLayer.NATIVE,
-    package_name="cowsay",
-)
-
 installer = PacmanInstaller()
 
-# Check if already installed
-if installer.is_installed(test_app):
-    print("cowsay is already installed")
-else:
-    print("Installing cowsay...")
-    # Note: This requires root/sudo
-    print("Run: sudo pacman -S cowsay")
-EOF
+# Test with a package we know is installed
+test = AppInfo.from_dict({
+    'id': 'bash', 'name': 'Bash', 'description': 'Shell',
+    'category': 'system', 'layer': 'native', 'package_name': 'bash'
+})
+print(f'bash installed: {installer.is_installed(test)}')  # Should be True
+
+# Test with a package that's not installed
+test2 = AppInfo.from_dict({
+    'id': 'cowsay', 'name': 'Cowsay', 'description': 'Talking cow',
+    'category': 'utilities', 'layer': 'native', 'package_name': 'cowsay'
+})
+print(f'cowsay installed: {installer.is_installed(test2)}')
+"
 ```
 
-### Pacman Installer Requirements
+### What to Check
 
-The `PacmanInstaller` should:
-1. Check if package is installed: `pacman -Q <package>`
-2. Install package: `pacman -S <package>` (needs sudo)
-3. Handle errors gracefully
-
-### Verification Criteria for 6.3
-- [ ] is_installed() correctly detects packages
-- [ ] install() calls pacman with correct arguments
-- [ ] Handles package not found errors
-- [ ] Handles permission errors
+- [ ] `is_installed()` returns True for installed packages
+- [ ] `is_installed()` returns False for missing packages
+- [ ] `install()` method calls `sudo pacman -S --noconfirm <package>`
+- [ ] Error handling works when package doesn't exist in repos
 
 ---
 
-## Step 6.4: Flatpak Installer
+## Step 6.4: Test FlatpakInstaller
 
-Test Flatpak application installation.
-
-### Check Flatpak Availability
+### Verification Commands
 
 ```bash
-# Check if Flatpak is installed
+# First verify Flatpak is available
 flatpak --version
-
-# Check if Flathub is added
 flatpak remotes
-```
 
-### Test Flatpak Installer
-
-```bash
 cd /home/user/NeuronOS
 
-python3 << 'EOF'
-import sys
-sys.path.insert(0, 'src')
+python3 -c "
+import sys; sys.path.insert(0, 'src')
 from store.installer import FlatpakInstaller
-from store.app_catalog import AppInfo, CompatibilityLayer
-
-# Test app
-test_app = AppInfo(
-    id="org.gnome.Calculator",
-    name="GNOME Calculator",
-    description="A calculator",
-    category="utilities",
-    layer=CompatibilityLayer.FLATPAK,
-    flatpak_id="org.gnome.Calculator",
-)
 
 installer = FlatpakInstaller()
-
-# Check if installed
-print(f"Is installed: {installer.is_installed(test_app)}")
-
-# List available runtimes
-import subprocess
-result = subprocess.run(["flatpak", "remotes"], capture_output=True, text=True)
-print(f"Remotes: {result.stdout}")
-EOF
+print('FlatpakInstaller created successfully')
+# Check if Flathub remote setup works
+print('Ready for Flatpak installations')
+"
 ```
 
-### Flatpak Installer Requirements
+### What to Check
 
-```python
-class FlatpakInstaller(BaseInstaller):
-    def install(self, app: AppInfo, progress: InstallProgress) -> bool:
-        try:
-            subprocess.run(
-                ["flatpak", "install", "-y", "flathub", app.flatpak_id],
-                check=True,
-            )
-            return True
-        except subprocess.CalledProcessError:
-            return False
-
-    def is_installed(self, app: AppInfo) -> bool:
-        result = subprocess.run(
-            ["flatpak", "info", app.flatpak_id],
-            capture_output=True,
-        )
-        return result.returncode == 0
-```
-
-### Verification Criteria for 6.4
-- [ ] Flatpak available in ISO
-- [ ] Flathub remote configured
-- [ ] is_installed() works
-- [ ] install() downloads and installs
+- [ ] `flatpak` binary available in ISO packages
+- [ ] `FlatpakInstaller()` instantiates
+- [ ] Flathub remote is added on first use
+- [ ] `is_installed()` detects installed Flatpaks
+- [ ] `install()` calls `flatpak install -y flathub <id>`
 
 ---
 
-## Step 6.5: Wine Installer
+## Step 6.5: Test WineInstaller
 
-Test Wine application installation.
-
-### Test Wine Installer
+### Verification Commands
 
 ```bash
 cd /home/user/NeuronOS
 
-python3 << 'EOF'
-import sys
-sys.path.insert(0, 'src')
+python3 -c "
+import sys; sys.path.insert(0, 'src')
 from store.installer import WineInstaller
-from store.app_catalog import AppInfo, CompatibilityLayer
-from pathlib import Path
-
-# Test app (7-Zip as example)
-test_app = AppInfo(
-    id="7zip",
-    name="7-Zip",
-    description="File archiver",
-    category="utilities",
-    layer=CompatibilityLayer.WINE,
-    installer_url="https://www.7-zip.org/a/7z2301-x64.exe",
-)
 
 installer = WineInstaller()
+print('WineInstaller created successfully')
 
-print("Wine prefix directory:", installer.PREFIXES_DIR)
-print("Is installed:", installer.is_installed(test_app))
-
-# Don't actually install, just verify code works
-print("WineInstaller verified")
-EOF
+# Check prefix directory configuration
+import inspect
+source = inspect.getsource(WineInstaller)
+if 'WINEPREFIX' in source or 'wine_prefix' in source or 'prefix' in source.lower():
+    print('Has prefix management')
+if '.desktop' in source:
+    print('Has .desktop entry creation')
+if 'download' in source.lower():
+    print('Has download capability')
+"
 ```
 
-### Wine Installer Requirements
+### What to Check
 
-The Wine installer should:
-1. Create a prefix for the app
-2. Download the installer (with verification)
-3. Run the installer in Wine
-4. Track installation status
-
-### Key Security: Download Verification
-
-```python
-def _secure_download(self, url: str, dest: Path, sha256: Optional[str] = None) -> bool:
-    """Download with optional hash verification."""
-    import hashlib
-    import requests
-
-    response = requests.get(url, stream=True, timeout=30)
-    response.raise_for_status()
-
-    hasher = hashlib.sha256() if sha256 else None
-
-    with open(dest, 'wb') as f:
-        for chunk in response.iter_content(8192):
-            f.write(chunk)
-            if hasher:
-                hasher.update(chunk)
-
-    if sha256 and hasher.hexdigest().lower() != sha256.lower():
-        dest.unlink()
-        return False
-
-    return True
-```
-
-### Verification Criteria for 6.5
-- [ ] WineInstaller creates prefixes
-- [ ] Download works with HTTPS
-- [ ] Hash verification works (when provided)
-- [ ] App runs after installation
-- [ ] is_installed() detects Wine apps
+- [ ] Creates isolated Wine prefixes per app at `~/.local/share/neuron-os/wine/<app-id>/`
+- [ ] Runs `wineboot --init` for new prefixes
+- [ ] Downloads installer executables via HTTPS
+- [ ] Runs `_verify_download()` with SHA256 when hash is provided
+- [ ] Creates `.desktop` entry with `Exec=env WINEPREFIX=<prefix> wine <app.exe>`
+- [ ] `is_installed()` checks for prefix existence
 
 ---
 
-## Step 6.6: Store CLI
+## Step 6.6: Create Store CLI
 
-Create command-line interface for the store.
+**This module does not exist yet and must be created.**
 
-### Create CLI
+Create `src/store/cli.py` that provides a command-line interface to the store.
 
-Create or update `src/store/cli.py`:
+### Required Commands
 
-```python
-#!/usr/bin/env python3
-"""NeuronOS Store CLI."""
+| Command | Description | Example |
+|---------|-------------|---------|
+| `search <query>` | Search app catalog | `neuron-store search firefox` |
+| `info <app-id>` | Show app details | `neuron-store info photoshop` |
+| `install <app-id>` | Install an app | `neuron-store install gimp` |
+| `uninstall <app-id>` | Remove an app | `neuron-store uninstall cowsay` |
+| `list` | Show installed apps | `neuron-store list` |
+| `categories` | List categories with counts | `neuron-store categories` |
+| `layers` | Show apps grouped by layer | `neuron-store layers` |
 
-import argparse
-import sys
+### Implementation Requirements
 
-def cmd_search(args):
-    """Search for apps."""
-    from store.app_catalog import AppCatalog
+1. **Use `argparse` with subcommands** — standard Python CLI pattern
+2. **Load catalog from the correct path** — in ISO: `/usr/share/neuron-os/apps.json`, in dev: `data/apps.json`
+3. **Progress reporting** — `install` command should show download/install progress
+4. **Error messages** — clear, actionable error messages (not tracebacks)
+5. **Exit codes** — 0 for success, 1 for errors
 
-    catalog = AppCatalog()
-    apps = catalog.search(args.query)
+### Entry Point Integration
 
-    if not apps:
-        print(f"No apps found for: {args.query}")
-        return
-
-    print(f"Found {len(apps)} app(s):\n")
-    for app in apps[:10]:
-        layer = app.layer.value if hasattr(app.layer, 'value') else str(app.layer)
-        print(f"  {app.id}")
-        print(f"    Name: {app.name}")
-        print(f"    Layer: {layer}")
-        print(f"    Category: {app.category}")
-        print()
-
-def cmd_info(args):
-    """Show app information."""
-    from store.app_catalog import AppCatalog
-
-    catalog = AppCatalog()
-    app = catalog.get(args.app_id)
-
-    if not app:
-        print(f"App not found: {args.app_id}")
-        sys.exit(1)
-
-    print(f"Name: {app.name}")
-    print(f"ID: {app.id}")
-    print(f"Description: {app.description}")
-    print(f"Category: {app.category}")
-    print(f"Layer: {app.layer.value if hasattr(app.layer, 'value') else app.layer}")
-    if hasattr(app, 'compatibility_rating') and app.compatibility_rating:
-        print(f"Compatibility: {app.compatibility_rating}")
-
-def cmd_install(args):
-    """Install an app."""
-    from store.app_catalog import AppCatalog
-    from store.installer import AppInstaller, InstallProgress
-
-    catalog = AppCatalog()
-    app = catalog.get(args.app_id)
-
-    if not app:
-        print(f"App not found: {args.app_id}")
-        sys.exit(1)
-
-    print(f"Installing {app.name}...")
-
-    progress = InstallProgress()
-    installer = AppInstaller()
-
-    success = installer.install(app, progress)
-
-    if success:
-        print(f"Successfully installed {app.name}")
-    else:
-        print(f"Failed to install {app.name}")
-        sys.exit(1)
-
-def cmd_list(args):
-    """List installed apps."""
-    from store.installer import AppInstaller
-    from store.app_catalog import AppCatalog
-
-    catalog = AppCatalog()
-    installer = AppInstaller()
-
-    installed = []
-    for app in catalog.list_all():
-        if installer.is_installed(app):
-            installed.append(app)
-
-    if not installed:
-        print("No apps installed via NeuronOS Store")
-        return
-
-    print(f"Installed apps ({len(installed)}):\n")
-    for app in installed:
-        print(f"  {app.id}: {app.name}")
-
-def cmd_categories(args):
-    """List app categories."""
-    from store.app_catalog import AppCatalog
-
-    catalog = AppCatalog()
-    categories = catalog.get_categories()
-
-    print("Categories:")
-    for cat in sorted(categories):
-        count = len(catalog.filter_by_category(cat))
-        print(f"  {cat}: {count} apps")
-
-def main():
-    parser = argparse.ArgumentParser(
-        prog='neuron-store',
-        description='NeuronOS Application Store'
-    )
-    subparsers = parser.add_subparsers(dest='command', help='Commands')
-
-    # search
-    search_parser = subparsers.add_parser('search', help='Search for apps')
-    search_parser.add_argument('query', help='Search query')
-    search_parser.set_defaults(func=cmd_search)
-
-    # info
-    info_parser = subparsers.add_parser('info', help='Show app info')
-    info_parser.add_argument('app_id', help='App ID')
-    info_parser.set_defaults(func=cmd_info)
-
-    # install
-    install_parser = subparsers.add_parser('install', help='Install an app')
-    install_parser.add_argument('app_id', help='App ID')
-    install_parser.set_defaults(func=cmd_install)
-
-    # list
-    list_parser = subparsers.add_parser('list', help='List installed apps')
-    list_parser.set_defaults(func=cmd_list)
-
-    # categories
-    cat_parser = subparsers.add_parser('categories', help='List categories')
-    cat_parser.set_defaults(func=cmd_categories)
-
-    args = parser.parse_args()
-
-    if args.command is None:
-        parser.print_help()
-        sys.exit(1)
-
-    args.func(args)
-
-if __name__ == '__main__':
-    main()
-```
-
-### Test CLI
-
-```bash
-cd /home/user/NeuronOS
-
-# Test search
-python3 -m store.cli search firefox
-
-# Test info
-python3 -m store.cli info firefox
-
-# Test categories
-python3 -m store.cli categories
-
-# Test list installed
-python3 -m store.cli list
-```
-
-### Verification Criteria for 6.6
-- [ ] search command finds apps
-- [ ] info command shows details
-- [ ] install command works
-- [ ] list command shows installed apps
-- [ ] categories command lists all categories
-
----
-
-## Step 6.7: Integration into ISO
-
-Add store to the ISO.
-
-### Update packages.x86_64
-
-The store GUI needs GTK4:
-```text
-# Already included from Phase 1
-python-gobject
-gtk4
-libadwaita
-```
-
-### Create Entry Point
-
-Create `iso-profile/airootfs/usr/bin/neuron-store`:
+The entry point at `iso-profile/airootfs/usr/bin/neuron-store` should call this CLI:
 
 ```bash
 #!/usr/bin/env python3
@@ -601,26 +293,127 @@ from store.cli import main
 main()
 ```
 
-### Create Desktop Entry
+### Verification
 
-Create `iso-profile/airootfs/etc/skel/Desktop/neuron-store.desktop`:
+- [ ] `python3 -m store.cli search firefox` finds Firefox
+- [ ] `python3 -m store.cli info gimp` shows GIMP details
+- [ ] `python3 -m store.cli categories` lists all categories with counts
+- [ ] `python3 -m store.cli layers` shows apps grouped by compatibility layer
+- [ ] `python3 -m store.cli list` shows installed apps (or "none installed")
+- [ ] Error messages are user-friendly, not Python tracebacks
 
-```ini
-[Desktop Entry]
-Type=Application
-Name=NeuronOS Store
-Comment=Install applications
-Exec=neuron-store-gui
-Icon=system-software-install
-Terminal=false
-Categories=System;
+---
+
+## Step 6.7: Store GUI Scaffold
+
+The store needs a GTK4/Adwaita graphical interface. This is the most significant new work in this phase.
+
+### Architecture
+
+The store GUI should be a standalone GTK4/Adwaita application:
+
+- **Main window**: App catalog browser with search, categories, and featured apps
+- **App detail view**: Shows description, screenshots, compatibility info, install button
+- **Install progress**: Progress bar during installation
+- **Settings**: Flatpak remote configuration, Wine prefix management
+
+### Required Files
+
+| File | Purpose |
+|------|---------|
+| `src/store/gui/__init__.py` | Package init |
+| `src/store/gui/main_window.py` | Main store window (Adw.ApplicationWindow) |
+| `src/store/gui/app_card.py` | Individual app card widget |
+| `src/store/gui/app_detail.py` | App detail/install page |
+| `src/store/gui/search_bar.py` | Search and filter controls |
+
+### Key Design Decisions
+
+1. **Use libadwaita** (`Adw.ApplicationWindow`) for GNOME integration
+2. **Category sidebar** with app grid on the right
+3. **Compatibility badges** — colored badges showing "Native", "Wine", "VM Required"
+4. **One-click install** — single button, installer routing is invisible to user
+5. **Progress tracking** — non-blocking installation with progress updates
+
+### GUI Entry Point
+
+Create `iso-profile/airootfs/usr/bin/neuron-store-gui`:
+
+```bash
+#!/usr/bin/env python3
+import sys
+sys.path.insert(0, '/usr/lib/neuron-os')
+from store.gui.main_window import main
+main()
 ```
 
-### Verification Criteria for 6.7
-- [ ] Store CLI available in ISO
-- [ ] Desktop shortcut works
-- [ ] Can search for apps
-- [ ] Can install apps
+### Verification
+
+- [ ] Store GUI launches without errors
+- [ ] Shows app catalog with categories
+- [ ] Search filters apps in real-time
+- [ ] Clicking an app shows detail view
+- [ ] Install button triggers correct installer
+- [ ] Progress shown during installation
+
+---
+
+## Step 6.8: ISO Integration
+
+### Verify Entry Points
+
+```bash
+# Check entry point exists and is executable
+ls -la iso-profile/airootfs/usr/bin/neuron-store
+
+# Check desktop file
+cat iso-profile/airootfs/usr/share/applications/neuron-store.desktop
+
+# Check skel desktop shortcut
+cat iso-profile/airootfs/etc/skel/Desktop/neuron-store.desktop
+```
+
+### Verify Build Script
+
+The `build-iso.sh` `copy_python_modules` function must copy the store module:
+
+```bash
+grep -n "store" build-iso.sh
+# Should show store in the module copy loop
+```
+
+### Verify Package Dependencies
+
+Ensure `iso-profile/packages.x86_64` includes:
+
+```
+python-gobject    # GTK bindings
+gtk4              # GTK4 toolkit
+libadwaita        # Adwaita widgets
+python-requests   # HTTP downloads (for WineInstaller)
+flatpak           # Flatpak support
+```
+
+### Verification
+
+- [ ] `neuron-store` entry point exists at `/usr/bin/neuron-store`
+- [ ] Desktop shortcut works from GNOME desktop
+- [ ] Store module copied to `/usr/lib/neuron-os/store/`
+- [ ] All Python dependencies available in ISO
+- [ ] `data/apps.json` copied to `/usr/share/neuron-os/apps.json`
+
+---
+
+## Summary of Work Required
+
+| Item | Status | Effort |
+|------|--------|--------|
+| App Catalog (`app_catalog.py`) | DONE — verify only | 1 hour |
+| Installers (`installer.py`) | DONE — verify only | 2 hours |
+| App Data (`apps.json`) | DONE — may add apps | 1 hour |
+| Store CLI (`cli.py`) | NOT STARTED — create | 1 day |
+| Store GUI | NOT STARTED — create | 3-4 days |
+| ISO Integration | PARTIAL — verify | 2 hours |
 
 ---
 
@@ -628,46 +421,38 @@ Categories=System;
 
 ### Phase 6 is COMPLETE when ALL boxes are checked:
 
-**App Catalog**
-- [ ] apps.json loads correctly
-- [ ] All apps have required fields
-- [ ] Search works
-- [ ] Category filtering works
+**Catalog**
+- [ ] `AppCatalog.load()` loads all 46+ apps
+- [ ] Search by name works
+- [ ] Filter by category works
+- [ ] Filter by layer works
 
-**Installer Routing**
-- [ ] All layers have installers registered
-- [ ] Correct installer selected for each layer
-- [ ] No missing installer errors
-
-**Native Installer**
-- [ ] pacman is_installed() works
-- [ ] pacman install() works
-- [ ] Error handling works
-
-**Flatpak Installer**
-- [ ] Flatpak available
-- [ ] Flathub configured
-- [ ] Installation works
-
-**Wine Installer**
-- [ ] Prefix creation works
-- [ ] Download with verification works
-- [ ] App installation works
+**Installers**
+- [ ] PacmanInstaller: `is_installed()` and `install()` work
+- [ ] FlatpakInstaller: Flathub setup and installation work
+- [ ] WineInstaller: Prefix creation and app installation work
+- [ ] ProtonInstaller: Steam detection works
+- [ ] VMInstaller: VM requirement checking works
+- [ ] AppInstaller: Routes to correct backend
 
 **CLI**
-- [ ] All commands work
-- [ ] Error messages helpful
-- [ ] Help text clear
+- [ ] `neuron-store search` works
+- [ ] `neuron-store info` works
+- [ ] `neuron-store install` works
+- [ ] `neuron-store list` works
 
-**ISO Integration**
-- [ ] Store available in live environment
-- [ ] Desktop shortcut works
-- [ ] Can install apps after OS install
+**GUI**
+- [ ] Store window launches
+- [ ] App browsing works
+- [ ] Installation from GUI works
+
+**ISO**
+- [ ] Entry points executable
+- [ ] Desktop shortcuts functional
+- [ ] All dependencies available
 
 ---
 
 ## Next Phase
 
-Once all verification checks pass, proceed to **[Phase 7: First-Run Experience](./PHASE_7_FIRST_RUN.md)**
-
-Phase 7 will create the onboarding wizard and file migration system.
+Proceed to **[Phase 7: Onboarding, Migration & Theming](./PHASE_7_ONBOARDING_MIGRATION.md)**
