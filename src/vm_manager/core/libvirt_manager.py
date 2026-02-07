@@ -96,9 +96,16 @@ class LibvirtManager:
         self._lifecycle = VMLifecycleManager(self._connection)
         self._creator = VMCreator(self._connection)
 
-        # Legacy direct connection (for backwards compatibility)
-        self._conn: Optional[libvirt.virConnect] = None
         self._event_callbacks: List[Callable] = []
+
+        # Template loading
+        self._template_loader = None
+        if template_dir:
+            try:
+                from ..templates.loader import TemplateLoader
+                self._template_loader = TemplateLoader()
+            except ImportError:
+                logger.warning("TemplateLoader not available")
 
     def connect(self) -> bool:
         """
@@ -144,22 +151,23 @@ class LibvirtManager:
         self._ensure_connected()
         vms = []
 
-        # Get active domains
-        for domain_id in self._conn.listDomainsID():
-            try:
-                domain = self._conn.lookupByID(domain_id)
-                vms.append(self._domain_to_info(domain))
-            except libvirt.libvirtError as e:
-                logger.warning(f"Error getting domain {domain_id}: {e}")
-
-        # Get inactive domains
-        if include_inactive:
-            for name in self._conn.listDefinedDomains():
+        with self._connection.get_connection() as conn:
+            # Get active domains
+            for domain_id in conn.listDomainsID():
                 try:
-                    domain = self._conn.lookupByName(name)
+                    domain = conn.lookupByID(domain_id)
                     vms.append(self._domain_to_info(domain))
                 except libvirt.libvirtError as e:
-                    logger.warning(f"Error getting domain {name}: {e}")
+                    logger.warning(f"Error getting domain {domain_id}: {e}")
+
+            # Get inactive domains
+            if include_inactive:
+                for name in conn.listDefinedDomains():
+                    try:
+                        domain = conn.lookupByName(name)
+                        vms.append(self._domain_to_info(domain))
+                    except libvirt.libvirtError as e:
+                        logger.warning(f"Error getting domain {name}: {e}")
 
         return vms
 
@@ -230,8 +238,9 @@ class LibvirtManager:
         """Get VM by name."""
         self._ensure_connected()
         try:
-            domain = self._conn.lookupByName(name)
-            return self._domain_to_info(domain)
+            with self._connection.get_connection() as conn:
+                domain = conn.lookupByName(name)
+                return self._domain_to_info(domain)
         except libvirt.libvirtError:
             return None
 
@@ -292,17 +301,19 @@ class LibvirtManager:
         """
         self._ensure_connected()
 
-        if self._jinja_env is None:
-            logger.error("Template environment not initialized")
+        if self._template_loader is None:
+            logger.error("Template loader not initialized (set template_dir)")
             return None
 
         try:
-            template = self._jinja_env.get_template(template_name)
-            xml = template.render(vm_name=vm_name, **template_vars)
+            xml = self._template_loader.render(
+                template_name, vm_name=vm_name, **template_vars
+            )
 
-            domain = self._conn.defineXML(xml)
-            logger.info(f"Created VM: {vm_name}")
-            return domain.UUIDString()
+            with self._connection.get_connection() as conn:
+                domain = conn.defineXML(xml)
+                logger.info(f"Created VM: {vm_name}")
+                return domain.UUIDString()
 
         except Exception as e:
             logger.error(f"Failed to create VM from template: {e}")
@@ -440,20 +451,21 @@ class LibvirtManager:
         """
         self._ensure_connected()
         try:
-            domain = self._conn.lookupByName(name)
+            with self._connection.get_connection() as conn:
+                domain = conn.lookupByName(name)
 
-            # Stop if running
-            if domain.isActive():
-                domain.destroy()
+                # Stop if running
+                if domain.isActive():
+                    domain.destroy()
 
-            # Optionally delete storage
-            if delete_storage:
-                self._delete_vm_storage(domain)
+                # Optionally delete storage
+                if delete_storage:
+                    self._delete_vm_storage(domain)
 
-            # Undefine the domain
-            domain.undefine()
-            logger.info(f"Deleted VM: {name}")
-            return True
+                # Undefine the domain
+                domain.undefine()
+                logger.info(f"Deleted VM: {name}")
+                return True
 
         except libvirt.libvirtError as e:
             logger.error(f"Failed to delete VM {name}: {e}")
@@ -512,21 +524,22 @@ class LibvirtManager:
         """
 
         try:
-            domain = self._conn.lookupByName(vm_name)
+            with self._connection.get_connection() as conn:
+                domain = conn.lookupByName(vm_name)
 
-            flags = libvirt.VIR_DOMAIN_AFFECT_CONFIG
-            if domain.isActive():
-                flags |= libvirt.VIR_DOMAIN_AFFECT_LIVE
+                flags = libvirt.VIR_DOMAIN_AFFECT_CONFIG
+                if domain.isActive():
+                    flags |= libvirt.VIR_DOMAIN_AFFECT_LIVE
 
-            domain.attachDeviceFlags(hostdev_xml, flags)
-            logger.info(f"Attached GPU {pci_address} to VM {vm_name}")
+                domain.attachDeviceFlags(hostdev_xml, flags)
+                logger.info(f"Attached GPU {pci_address} to VM {vm_name}")
 
-            # Attach audio device if requested
-            if include_audio:
-                audio_addr = pci_address[:-1] + "1"  # Usually .1 for audio
-                self._attach_pci_device(domain, audio_addr, flags)
+                # Attach audio device if requested
+                if include_audio:
+                    audio_addr = pci_address[:-1] + "1"  # Usually .1 for audio
+                    self._attach_pci_device(domain, audio_addr, flags)
 
-            return True
+                return True
 
         except libvirt.libvirtError as e:
             logger.error(f"Failed to attach GPU: {e}")

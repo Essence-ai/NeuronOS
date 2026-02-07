@@ -127,16 +127,16 @@ class IOMMUParser:
         return self._iommu_enabled
 
     def parse_all(self) -> Dict[int, IOMMUGroup]:
-        """Parse all IOMMU groups."""
+        """Parse all IOMMU groups.
+
+        Returns empty dict if IOMMU is not enabled. Callers should check
+        is_iommu_enabled to determine if IOMMU is available.
+        """
         self.groups = {}
 
         if not self.IOMMU_PATH.exists():
             self._iommu_enabled = False
-            raise RuntimeError(
-                "IOMMU not enabled! Add kernel parameter and reboot:\n"
-                "  Intel: intel_iommu=on iommu=pt\n"
-                "  AMD:   amd_iommu=on iommu=pt"
-            )
+            return self.groups
 
         self._iommu_enabled = True
 

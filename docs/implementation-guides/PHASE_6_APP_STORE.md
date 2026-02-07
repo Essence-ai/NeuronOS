@@ -80,7 +80,7 @@ import sys; sys.path.insert(0, 'src')
 from store.app_catalog import AppCatalog
 
 catalog = AppCatalog()
-catalog.load('data/apps.json')
+catalog.load()
 apps = catalog.all()
 print(f'Total apps: {len(apps)}')
 

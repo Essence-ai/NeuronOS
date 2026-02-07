@@ -49,7 +49,7 @@ print(f'Found {len(gpus)} GPU(s):')
 for gpu in gpus:
     boot = ' (boot VGA)' if gpu.is_boot_vga else ''
     print(f'  {gpu.pci_address}: {gpu.vendor_name} {gpu.device_name}{boot}')
-    print(f'    Driver: {gpu.driver}, IOMMU Group: {gpu.iommu_group}')
+    print(f'    Driver: {gpu.driver_in_use}, IOMMU Group: {gpu.iommu_group}')
 "
 ```
 
@@ -112,7 +112,8 @@ cpu = detector.detect()
 print(f'Vendor: {cpu.vendor}')
 print(f'Model: {cpu.model_name}')
 print(f'Cores: {cpu.cores}, Threads: {cpu.threads}')
-print(f'IOMMU Support: {cpu.has_iommu}')
+print(f'IOMMU Support: {cpu.has_iommu_support}')
+print(f'IOMMU Enabled: {cpu.iommu_enabled}')
 print(f'Required Param: {cpu.iommu_param}')
 "
 ```

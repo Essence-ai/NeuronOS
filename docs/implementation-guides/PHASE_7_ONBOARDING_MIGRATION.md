@@ -164,7 +164,7 @@ from hardware_detect.iommu_parser import IOMMUParser
 cpu = CPUDetector()
 info = cpu.detect()
 print(f'CPU: {info.vendor} - {info.model_name}')
-print(f'IOMMU capable: {info.has_iommu}')
+print(f'IOMMU capable: {info.has_iommu_support}')
 
 # GPUs
 scanner = GPUScanner()
