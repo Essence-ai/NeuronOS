@@ -868,13 +868,55 @@ if GTK_AVAILABLE:
         def _on_delete_response(self, dialog, response, vm):
             if response == "delete":
                 logger.info(f"Deleting VM: {vm.name}")
-                # TODO: Implement actual deletion
+                if MODULES_AVAILABLE:
+                    try:
+                        manager = LibvirtManager()
+                        manager.connect()
+                        manager.delete_vm(vm.name, delete_storage=True)
+                        toast = Adw.Toast.new(f"VM '{vm.name}' deleted")
+                        self.add_toast(toast)
+                    except Exception as e:
+                        logger.error(f"Failed to delete VM: {e}")
+                        self._show_error(f"Failed to delete VM: {e}")
                 self._load_vms()
 
         def _on_settings_clicked(self, button):
             """Open settings dialog."""
-            # TODO: Implement settings dialog
-            pass
+            dialog = Adw.PreferencesWindow(transient_for=self)
+            dialog.set_title("VM Manager Settings")
+
+            # General page
+            general_page = Adw.PreferencesPage(title="General", icon_name="preferences-system-symbolic")
+
+            # Connection group
+            conn_group = Adw.PreferencesGroup(title="Libvirt Connection")
+            uri_row = Adw.ActionRow(title="Connection URI", subtitle="qemu:///system")
+            uri_row.set_activatable(False)
+            conn_group.add(uri_row)
+            general_page.add(conn_group)
+
+            # VM defaults group
+            defaults_group = Adw.PreferencesGroup(title="VM Defaults")
+            ram_row = Adw.SpinRow.new_with_range(1024, 65536, 1024)
+            ram_row.set_title("Default RAM (MB)")
+            ram_row.set_value(8192)
+            defaults_group.add(ram_row)
+
+            cpu_row = Adw.SpinRow.new_with_range(1, 32, 1)
+            cpu_row.set_title("Default CPU Cores")
+            cpu_row.set_value(4)
+            defaults_group.add(cpu_row)
+            general_page.add(defaults_group)
+
+            # Display group
+            display_group = Adw.PreferencesGroup(title="Display")
+            lg_row = Adw.SwitchRow(title="Auto-start Looking Glass", subtitle="Start Looking Glass when launching GPU-passthrough VMs")
+            lg_row.set_active(True)
+            display_group.add(lg_row)
+            general_page.add(display_group)
+
+            dialog.add(general_page)
+            dialog.present()
 
 
     class VMManagerApp(Adw.Application):

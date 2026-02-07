@@ -44,6 +44,7 @@ gnome
 gnome-extra
 gnome-terminal
 gnome-tweaks
+nautilus
 gnome-shell-extensions
 xdg-user-dirs
 xdg-utils

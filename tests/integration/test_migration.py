@@ -46,7 +46,6 @@ class TestMigration:
         assert (target_home / "Documents/notes.txt").read_text() == "notes content"
         assert (target_home / "Pictures/photo.jpg").exists()
 
-    @pytest.mark.skip(reason="max_file_size feature not yet implemented")
     def test_migrate_with_size_limit(self, tmp_path: Path):
         """Test migration respects size limits."""
         from migration.migrator import create_migrator, MigrationSource, MigrationTarget
@@ -115,7 +114,6 @@ class TestMigration:
 class TestBrowserProfileMigration:
     """Integration tests for browser profile migration."""
 
-    @pytest.mark.skip(reason="browser profile migration has _copy_file signature bug")
     def test_chrome_profile_excludes_cache(self, tmp_path: Path):
         """Test Chrome profile migration excludes cache."""
         from migration.migrator import WindowsMigrator, MigrationSource, MigrationTarget
