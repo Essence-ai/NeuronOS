@@ -1,0 +1,7 @@
+#!/bin/bash
+# NeuronOS Store GUI - GTK4/Adwaita Application Store
+# Launches the graphical store for browsing and installing applications.
+
+export PYTHONPATH="/usr/lib/neuron-os:${PYTHONPATH}"
+
+exec python3 -m store.gui "$@"

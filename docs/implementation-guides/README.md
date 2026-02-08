@@ -41,13 +41,13 @@ This directory contains the complete implementation roadmap for building NeuronO
 |-------|------|-------|----------|--------|
 | **0** | [Foundation](./PHASE_0_FOUNDATION.md) | Environment setup, prerequisites | 2-4 hours | Reference |
 | **1** | [Bootable ISO](./PHASE_1_MINIMAL_ISO.md) | GNOME desktop, GDM, archinstall | 1-2 days | DONE |
-| **2** | [Hardware Detection](./PHASE_2_HARDWARE_DETECTION.md) | GPU/IOMMU/VFIO detection & config | 3-5 days | Code complete |
-| **3** | [VM Management](./PHASE_3_VM_MANAGEMENT.md) | Libvirt lifecycle, guest agent, GUI | 5-7 days | Backend complete |
-| **4** | [GPU Passthrough](./PHASE_4_GPU_PASSTHROUGH.md) | VFIO binding, Looking Glass, single-GPU | 5-7 days | Backend complete |
-| **5** | [Wine & Proton](./PHASE_5_WINE_PROTON.md) | Wine prefixes, Proton detection | 3-5 days | Packages ready |
-| **6** | [App Store](./PHASE_6_APP_STORE.md) | Catalog, installers, CLI, GUI | 5-7 days | Backend complete |
-| **7** | [Onboarding & Migration](./PHASE_7_ONBOARDING_MIGRATION.md) | Wizard, file migration, theming | 4-6 days | Code complete |
-| **8** | [Testing & Production](./PHASE_8_TESTING_PRODUCTION.md) | Tests, security, release process | 1-2 weeks | Tests exist |
+| **2** | [Hardware Detection](./PHASE_2_HARDWARE_DETECTION.md) | GPU/IOMMU/VFIO detection & config | 3-5 days | DONE |
+| **3** | [VM Management](./PHASE_3_VM_MANAGEMENT.md) | Libvirt lifecycle, guest agent, GUI | 5-7 days | DONE |
+| **4** | [GPU Passthrough](./PHASE_4_GPU_PASSTHROUGH.md) | VFIO binding, Looking Glass, single-GPU | 5-7 days | Code complete |
+| **5** | [Wine & Proton](./PHASE_5_WINE_PROTON.md) | Wine prefixes, Proton detection | 3-5 days | DONE |
+| **6** | [App Store](./PHASE_6_APP_STORE.md) | Catalog, installers, CLI, GUI | 5-7 days | DONE |
+| **7** | [Onboarding & Migration](./PHASE_7_ONBOARDING_MIGRATION.md) | Wizard, file migration, theming | 4-6 days | DONE |
+| **8** | [Testing & Production](./PHASE_8_TESTING_PRODUCTION.md) | Tests, security, release process | 1-2 weeks | In progress |
 
 **Total Estimated Time:** 5-8 weeks for full implementation
 
@@ -86,29 +86,31 @@ Start with Phase 0 to set up your development environment. Each phase is designe
 
 ## Codebase Status
 
-### Python Modules (~15,750 lines across 86 files)
+### Python Modules (~18,300 lines across 67+ source files, 15 test files)
 
 | Module | Files | Lines | Completion |
 |--------|-------|-------|------------|
-| `hardware_detect/` | 8 | ~2,200 | 95% — GPU, CPU, IOMMU, VFIO all working |
-| `vm_manager/` | 20 | ~4,500 | Backend 95%, GUI 25% |
-| `store/` | 5 | ~2,200 | Catalog + installers 100%, CLI 0%, GUI 0% |
-| `onboarding/` | 5 | ~800 | Wizard 100% (6 pages, GTK4/Adwaita) |
-| `migration/` | 4 | ~1,200 | Drive detection + migrators 100% |
-| `updater/` | 7 | ~1,000 | Verifier + rollback 90% |
-| `common/` | 6 | ~1,500 | Logging, config, permissions 100% |
-| `utils/` | 5 | ~700 | Atomic writes, helpers 100% |
+| `hardware_detect/` | 8 | ~2,200 | 100% — GPU, CPU, IOMMU, VFIO all working |
+| `vm_manager/` | 20 | ~4,500 | 95% — Backend + GTK4 GUI complete |
+| `store/` | 10 | ~3,200 | 100% — Catalog, installers, CLI, GUI, Wine manager, Steam detect |
+| `onboarding/` | 5 | ~800 | 100% — Wizard + pending-tasks executor |
+| `migration/` | 4 | ~1,200 | 100% — Drive detection + migrators + max_file_size |
+| `updater/` | 7 | ~1,000 | 95% — Verifier + rollback + snapshot |
+| `common/` | 6 | ~1,500 | 100% — Logging, config, permissions |
+| `utils/` | 5 | ~700 | 100% — Atomic writes, helpers |
 
 ### Other Components
 
 | Component | Status |
 |-----------|--------|
-| ISO Profile | GNOME + GDM configured, 186 packages |
+| ISO Profile | GNOME + GDM configured, 104 packages |
 | GTK4 Themes | 3 themes complete (neuron, win11, macos) |
-| App Catalog | 46 apps across 5 layers |
-| VM Templates | Jinja2 templates for Windows/macOS VMs |
+| App Catalog | 55+ apps across 7 layers |
+| VM Templates | Jinja2 templates for Windows VMs |
 | Guest Agent | C# agent for Windows VMs (~1,250 lines) |
-| Test Suite | 9 test files + integration tests |
+| Test Suite | 15 test files, 241 tests passing, 51 ISO validation checks |
+| Store GUI | GTK4/Adwaita app store browser |
+| Wine/Proton | Prefix manager + Steam/Proton detection |
 
 ---
 
