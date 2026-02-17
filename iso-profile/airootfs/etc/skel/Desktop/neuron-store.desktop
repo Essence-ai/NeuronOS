@@ -2,6 +2,7 @@
 Type=Application
 Name=NeuronStore
 Comment=Browse and install applications
-Icon=system-software-install
+Icon=gnome-software
 Exec=neuron-store
 Terminal=false
+Categories=System;

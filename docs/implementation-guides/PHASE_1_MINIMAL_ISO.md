@@ -1,4 +1,4 @@
-# Phase 1: Minimal Bootable ISO
+# Phase 1: Bootable NeuronOS ISO
 
 **Status:** FOUNDATION - Establishes working base
 **Estimated Time:** 1-2 days
@@ -13,23 +13,38 @@
 - Wine/Proton compatibility (15% of use cases)
 - GPU passthrough VMs (5% of use cases - professional software)
 
-**This Phase's Goal:** Create a minimal bootable ISO that:
-1. Boots to a working desktop (LXQt)
-2. Can be installed via Calamares
-3. Has NeuronOS branding
-4. Has NO custom NeuronOS features yet
+**This Phase's Goal:** Create a bootable ISO that:
+1. Boots to a working GNOME desktop
+2. Can be installed via archinstall
+3. Has NeuronOS branding, themes, and wallpaper
+4. Includes all NeuronOS entry points (VM Manager, Store, Hardware Detect)
+5. Has GDM auto-login for the live session
 
 ---
 
 ## Why This Phase Matters
 
-Many ISO builds fail because too many things are added at once. This phase establishes a **known working baseline**. Every future phase builds on this verified foundation.
+This phase establishes a **known working baseline**. Every future phase builds on this verified foundation.
+
+**IMPORTANT:** Do NOT strip down the codebase to a "minimal" package list. The existing packages and configurations represent the full NeuronOS feature set. Removing packages (virtualization, Wine, GPU drivers) will break the integration that makes NeuronOS unique.
 
 **This phase is complete when you have an ISO that:**
-- Boots in a VM
-- Shows a desktop
-- Can install to disk
+- Boots in a VM (QEMU)
+- Shows the GNOME desktop with NeuronOS theming
+- Can install to disk via archinstall
 - Reboots successfully after install
+
+---
+
+## Architecture Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Desktop Environment | **GNOME** | GTK4 themes, Zenity dialogs, modern touch support, Wayland-ready |
+| Display Manager | **GDM** | Native GNOME integration, auto-login support |
+| Installer | **archinstall** | Available in Arch repos, no AUR dependency |
+| Theme Engine | **GTK4 CSS** | Three themes: Neural, Clarity, Frost |
+| Boot Modes | **BIOS (syslinux) + UEFI (GRUB)** | Maximum hardware compatibility |
 
 ---
 
@@ -37,450 +52,210 @@ Many ISO builds fail because too many things are added at once. This phase estab
 
 | Objective | Description | Verification |
 |-----------|-------------|--------------|
-| 1.1 | Clean iso-profile directory | Files match expected structure |
-| 1.2 | Minimal packages.x86_64 | Only essential packages |
-| 1.3 | Working profiledef.sh | ISO builds without errors |
-| 1.4 | Bootable live environment | Boots in QEMU |
-| 1.5 | Calamares installation works | Can install to disk |
+| 1.1 | Clean iso-profile with no conflicts | No duplicate packages, consistent DE choice |
+| 1.2 | GNOME desktop with GDM auto-login | Live session boots to desktop automatically |
+| 1.3 | All desktop shortcuts work | Terminal, File Manager, System Monitor launch |
+| 1.4 | NeuronOS branding present | Wallpaper, themes, logo visible |
+| 1.5 | archinstall works from desktop | Can install to disk |
 | 1.6 | Post-install boot works | Installed system boots |
 
 ---
 
-## Step 1.1: Clean the iso-profile Directory
+## Step 1.1: Verify iso-profile Configuration
 
-The iso-profile may have accumulated broken configurations. Start fresh with a minimal setup.
+### profiledef.sh
 
-### Action Required
+The file should define:
+- `iso_name="neuronos"`
+- Boot modes for both BIOS and UEFI
+- squashfs with xz compression
+- File permissions for NeuronOS entry points
 
-1. **Read the current profiledef.sh**:
-```bash
-cat /home/user/NeuronOS/iso-profile/profiledef.sh
-```
+### packages.x86_64
 
-2. **Verify it has correct values**. The file should look like:
-
-```bash
-#!/usr/bin/env bash
-# NeuronOS ISO Profile
-
-iso_name="neuronos"
-iso_label="NEURONOS_$(date +%Y%m)"
-iso_publisher="NeuronOS Project"
-iso_application="NeuronOS Live/Install"
-iso_version="$(date +%Y.%m.%d)"
-install_dir="arch"
-buildmodes=('iso')
-bootmodes=('bios.syslinux.mbr' 'bios.syslinux.eltorito' 'uefi-x64.systemd-boot.esp' 'uefi-x64.systemd-boot.eltorito')
-arch="x86_64"
-pacman_conf="pacman.conf"
-airootfs_image_type="squashfs"
-airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M')
-file_permissions=(
-  ["/etc/shadow"]="0:0:400"
-)
-```
-
-3. **If it differs significantly**, update it to match.
+Must include these categories (do NOT remove any):
+- **Base system**: base, linux, linux-firmware, sudo, networkmanager
+- **Bootloader**: grub, efibootmgr, os-prober
+- **GNOME Desktop**: gdm, gnome, gnome-extra, gnome-terminal, gnome-tweaks, zenity
+- **Virtualization**: qemu-full, libvirt, virt-manager, edk2-ovmf
+- **GPU Drivers**: mesa, vulkan-icd-loader, Intel + AMD drivers
+- **Wine**: wine, wine-mono, wine-gecko, winetricks
+- **Python**: python, python-pyqt6, libvirt-python, python-gobject
+- **Looking Glass deps**: cmake, fontconfig, spice-protocol
+- **Audio**: pipewire stack
+- **Flatpak**: flatpak, xdg-desktop-portal-gnome
 
 ### Verification
 ```bash
-# profiledef.sh should source without errors
-bash -n /home/user/NeuronOS/iso-profile/profiledef.sh && echo "OK"
+# Check no duplicate packages
+sort iso-profile/packages.x86_64 | grep -v '^#' | grep -v '^$' | uniq -d
+# Expected: no output (no duplicates)
+
+# Check profiledef.sh syntax
+bash -n iso-profile/profiledef.sh && echo "OK"
 ```
 
 ---
 
-## Step 1.2: Create Minimal packages.x86_64
+## Step 1.2: Configure GDM Auto-Login
 
-The packages.x86_64 file should contain ONLY packages needed to boot and install. We will add more in later phases.
+GDM must auto-login the liveuser for the live session.
 
-### Action Required
-
-1. **Read the current packages file**:
-```bash
-cat /home/user/NeuronOS/iso-profile/packages.x86_64 | head -50
-```
-
-2. **Create a minimal version** with only these packages:
-
-```text
-# Base System
-base
-linux
-linux-firmware
-mkinitcpio
-mkinitcpio-archiso
-
-# Boot
-syslinux
-efibootmgr
-grub
-
-# Essential System
-sudo
-networkmanager
-dhcpcd
-iwd
-
-# Filesystem
-btrfs-progs
-dosfstools
-e2fsprogs
-ntfs-3g
-xfsprogs
-
-# Hardware
-pciutils
-usbutils
-
-# Desktop (LXQt - lightweight)
-xorg-server
-xorg-xinit
-lxqt
-sddm
-breeze-icons
-ttf-dejavu
-
-# Installer
-calamares
-os-prober
-arch-install-scripts
-rsync
-squashfs-tools
-
-# Basic Applications
-firefox
-konsole
-dolphin
-kate
-
-# Archive
-arch-install-scripts
-```
-
-3. **Write this minimal list** to packages.x86_64, replacing the old one.
-
-### Verification
-```bash
-# Count packages (should be 35-50 for minimal)
-wc -l /home/user/NeuronOS/iso-profile/packages.x86_64
-
-# Check no broken package names (no tabs, no empty lines in middle)
-grep -E "^[a-z0-9]" /home/user/NeuronOS/iso-profile/packages.x86_64 | wc -l
-```
-
----
-
-## Step 1.3: Configure pacman.conf
-
-The pacman.conf must include [multilib] for Wine (needed in later phases).
-
-### Action Required
-
-1. **Check current pacman.conf**:
-```bash
-grep -E "^\[" /home/user/NeuronOS/iso-profile/pacman.conf
-```
-
-2. **Ensure these sections exist**:
-- [core]
-- [extra]
-- [multilib]
-
-3. **If [multilib] is missing or commented**, add it:
+### Required File: `airootfs/etc/gdm/custom.conf`
 ```ini
-[multilib]
-Include = /etc/pacman.d/mirrorlist
+[daemon]
+AutomaticLoginEnable=True
+AutomaticLogin=liveuser
+WaylandEnable=false
+
+[security]
+
+[xdmcp]
+
+[chooser]
+
+[debug]
+```
+
+### Required: systemd service symlink
+The build script must create:
+```bash
+ln -sf /usr/lib/systemd/system/gdm.service airootfs/etc/systemd/system/display-manager.service
 ```
 
 ### Verification
 ```bash
-grep -A1 "\[multilib\]" /home/user/NeuronOS/iso-profile/pacman.conf
-# Should show [multilib] followed by Include line
+cat iso-profile/airootfs/etc/gdm/custom.conf | grep AutomaticLogin
+# Expected: AutomaticLoginEnable=True and AutomaticLogin=liveuser
 ```
 
 ---
 
-## Step 1.4: Configure SDDM for Auto-Login
+## Step 1.3: Configure Desktop Shortcuts
 
-For live environment, SDDM should auto-login to the live user.
+All desktop shortcuts must reference GNOME applications (NOT LXQt applications).
 
-### Action Required
+### Desktop Entries in `airootfs/etc/skel/Desktop/`
 
-1. **Create SDDM config directory**:
-```bash
-mkdir -p /home/user/NeuronOS/iso-profile/airootfs/etc/sddm.conf.d/
-```
-
-2. **Create autologin config** at `airootfs/etc/sddm.conf.d/autologin.conf`:
-```ini
-[Autologin]
-User=liveuser
-Session=lxqt
-```
-
-3. **Create the liveuser** in `airootfs/etc/passwd` (append if exists):
-```
-liveuser:x:1000:1000:Live User:/home/liveuser:/bin/bash
-```
-
-4. **Create group entry** in `airootfs/etc/group` (append):
-```
-liveuser:x:1000:
-```
-
-5. **Create shadow entry** in `airootfs/etc/shadow` (append):
-```
-liveuser::14871::::::
-```
-
-6. **Add liveuser to sudoers** - create `airootfs/etc/sudoers.d/liveuser`:
-```
-liveuser ALL=(ALL) NOPASSWD: ALL
-```
+| Shortcut | Exec Command | Icon |
+|----------|-------------|------|
+| Install NeuronOS | `gnome-terminal -- bash -c "sudo archinstall..."` | system-software-install |
+| File Manager | `nautilus` | org.gnome.Nautilus |
+| Terminal | `gnome-terminal` | org.gnome.Terminal |
+| System Monitor | `gnome-system-monitor` | org.gnome.SystemMonitor |
+| NeuronVM Manager | `neuron-vm-manager` | virt-manager |
+| NeuronStore | `neuron-store` | gnome-software |
 
 ### Verification
 ```bash
-ls -la /home/user/NeuronOS/iso-profile/airootfs/etc/sddm.conf.d/
-cat /home/user/NeuronOS/iso-profile/airootfs/etc/sddm.conf.d/autologin.conf
+grep -r "qterminal\|pcmanfm-qt\|sddm\|lxqt" iso-profile/airootfs/
+# Expected: no output (no LXQt references remaining)
 ```
 
 ---
 
-## Step 1.5: Create Desktop Entries
+## Step 1.4: Configure GNOME Defaults via dconf
 
-Create a desktop shortcut for the installer.
-
-### Action Required
-
-1. **Create Desktop directory**:
-```bash
-mkdir -p /home/user/NeuronOS/iso-profile/airootfs/etc/skel/Desktop/
+### Required File: `airootfs/etc/dconf/profile/user`
+```
+user-db:user
+system-db:local
 ```
 
-2. **Create installer shortcut** at `airootfs/etc/skel/Desktop/install-neuronos.desktop`:
-```ini
-[Desktop Entry]
-Type=Application
-Name=Install NeuronOS
-Comment=Install NeuronOS to your computer
-Exec=sudo calamares
-Icon=calamares
-Terminal=false
-Categories=System;
-```
-
-3. **Make it executable** - add to file_permissions in profiledef.sh:
-```bash
-file_permissions=(
-  ["/etc/shadow"]="0:0:400"
-  ["/etc/skel/Desktop/install-neuronos.desktop"]="0:0:755"
-)
-```
-
-### Verification
-```bash
-cat /home/user/NeuronOS/iso-profile/airootfs/etc/skel/Desktop/install-neuronos.desktop
-```
+### Required File: `airootfs/etc/dconf/db/local.d/00-neuronos`
+Sets defaults for:
+- Dark theme (materia-dark)
+- NeuronOS wallpaper
+- Window button layout (minimize, maximize, close)
+- Favorite apps in dock
+- Tap-to-click on touchpad
+- No screen lock in live session
 
 ---
 
-## Step 1.6: Configure Calamares
+## Step 1.5: NeuronOS Welcome Script
 
-Calamares needs a basic configuration to work.
+The `neuron-welcome` script (`airootfs/usr/bin/neuron-welcome`) runs on first login via XDG autostart and:
+1. Shows a theme selection dialog (Neural / Clarity / Frost)
+2. Applies the selected GTK4 CSS theme
+3. Optionally launches archinstall
 
-### Action Required
-
-1. **Create Calamares directories**:
-```bash
-mkdir -p /home/user/NeuronOS/iso-profile/airootfs/etc/calamares/branding/neuronos/
-mkdir -p /home/user/NeuronOS/iso-profile/airootfs/etc/calamares/modules/
-```
-
-2. **Create settings.conf** at `airootfs/etc/calamares/settings.conf`:
-```yaml
----
-modules-search: [ local, /usr/lib/calamares/modules ]
-
-instances:
-  - id: rootfs
-    module: unpackfs
-    config: unpackfs.conf
-
-sequence:
-  - show:
-    - welcome
-    - locale
-    - keyboard
-    - partition
-    - users
-    - summary
-  - exec:
-    - partition
-    - mount
-    - unpackfs
-    - machineid
-    - fstab
-    - locale
-    - keyboard
-    - localecfg
-    - users
-    - networkcfg
-    - hwclock
-    - grubcfg
-    - bootloader
-    - umount
-  - show:
-    - finished
-
-branding: neuronos
-prompt-install: true
-dont-chroot: false
-disable-cancel: false
-```
-
-3. **Create branding.desc** at `airootfs/etc/calamares/branding/neuronos/branding.desc`:
-```yaml
----
-componentName: neuronos
-welcomeStyleCalamares: true
-strings:
-    productName:         NeuronOS
-    shortProductName:    NeuronOS
-    version:             0.1.0
-    shortVersion:        0.1
-    versionedName:       NeuronOS 0.1.0
-    shortVersionedName:  NeuronOS 0.1
-    bootloaderEntryName: NeuronOS
-    productUrl:          https://github.com/your-repo/neuronos
-    supportUrl:          https://github.com/your-repo/neuronos/issues
-    releaseNotesUrl:     https://github.com/your-repo/neuronos/releases
-
-images:
-    productLogo:         "logo.png"
-    productIcon:         "logo.png"
-
-slideshow:               "show.qml"
-
-style:
-   sidebarBackground:    "#2B2B2B"
-   sidebarText:          "#FFFFFF"
-   sidebarTextSelect:    "#4DD0E1"
-```
-
-4. **Create a placeholder logo** (we'll replace with real one later):
-```bash
-# Create a simple placeholder
-cp /usr/share/icons/breeze/apps/48/system-software-install.svg /home/user/NeuronOS/iso-profile/airootfs/etc/calamares/branding/neuronos/logo.png 2>/dev/null || echo "Create logo manually"
-```
-
-5. **Create show.qml** at `airootfs/etc/calamares/branding/neuronos/show.qml`:
-```qml
-import QtQuick 2.0
-
-Rectangle {
-    id: root
-    color: "#2B2B2B"
-
-    Text {
-        anchors.centerIn: parent
-        text: "Installing NeuronOS..."
-        color: "white"
-        font.pixelSize: 24
-    }
-}
-```
-
-### Verification
-```bash
-ls -la /home/user/NeuronOS/iso-profile/airootfs/etc/calamares/
-cat /home/user/NeuronOS/iso-profile/airootfs/etc/calamares/settings.conf
-```
+This script uses Zenity (GNOME dialog tool) and gnome-terminal.
 
 ---
 
-## Step 1.7: Build the ISO
-
-Now build the ISO and verify it works.
-
-### Action Required
+## Step 1.6: Build the ISO
 
 ```bash
 cd /home/user/NeuronOS
 
-# Clean any previous build artifacts
-sudo rm -rf /tmp/neuronos-work /tmp/neuronos-out
+# Using the build script (recommended)
+sudo ./build-iso.sh --clean
 
-# Build the ISO
-sudo mkarchiso -v -w /tmp/neuronos-work -o /tmp/neuronos-out iso-profile/
+# Or using the scripts directory version
+sudo ./scripts/build-iso.sh
 
-# Check the ISO was created
-ls -lh /tmp/neuronos-out/*.iso
+# Or using make
+sudo make iso
 ```
 
+### What the Build Does
+1. Copies Python source modules to `airootfs/usr/lib/neuron-os/`
+2. Creates systemd service symlinks (GDM, NetworkManager, libvirtd)
+3. Copies skel configs to liveuser home
+4. Applies default Neural theme to liveuser
+5. Runs `mkarchiso` to produce the ISO
+
 ### Expected Output
-- Build should complete without errors
-- ISO file should be 1-2 GB
+- Build completes without errors
+- ISO file is 2-4 GB (full GNOME + virtualization stack)
 
 ### If Build Fails
-Common issues:
-1. **Package not found**: Remove the package from packages.x86_64 or fix the name
-2. **Syntax error in profiledef.sh**: Check bash syntax
-3. **Permission denied**: Use sudo
+1. **Package not found**: Check exact package name with `pacman -Ss <name>`
+2. **Syntax error in profiledef.sh**: Run `bash -n iso-profile/profiledef.sh`
+3. **Permission denied**: Run with sudo
+4. **Disk space**: Needs ~15GB free in /tmp
 
 ---
 
-## Step 1.8: Test the ISO in QEMU
-
-### Action Required
+## Step 1.7: Test the ISO in QEMU
 
 ```bash
-# Boot the ISO in QEMU (no KVM if nested virt not available)
 qemu-system-x86_64 \
   -enable-kvm \
   -m 4G \
   -cpu host \
   -smp 4 \
   -boot d \
-  -cdrom /tmp/neuronos-out/neuronos-*.iso \
+  -cdrom out/neuronos-*.iso \
   -vga virtio \
   -display gtk
 ```
 
 ### What Should Happen
-1. GRUB/bootloader appears
+1. GRUB bootloader appears with NeuronOS entries
 2. Linux boots
-3. SDDM login screen appears (may auto-login)
-4. LXQt desktop loads
-5. "Install NeuronOS" icon is on desktop
-
-### Verification Points
-- [ ] ISO boots without kernel panic
-- [ ] Desktop environment loads
-- [ ] Can open terminal (Konsole)
-- [ ] Can open file manager (Dolphin)
-- [ ] Install icon exists on desktop
+3. GDM auto-logs in as liveuser
+4. GNOME desktop loads with NeuronOS wallpaper
+5. Welcome dialog appears with theme selection
+6. Desktop shortcuts are visible
 
 ---
 
-## Step 1.9: Test Calamares Installation
-
-Test that the installer works by installing to a virtual disk.
-
-### Action Required
+## Step 1.8: Test Installation
 
 ```bash
-# Create a virtual disk for installation
+# Create a virtual disk
 qemu-img create -f qcow2 /tmp/neuronos-test.qcow2 32G
 
-# Boot with the disk attached
+# Boot with disk attached
 qemu-system-x86_64 \
   -enable-kvm \
   -m 4G \
   -cpu host \
   -smp 4 \
   -boot d \
-  -cdrom /tmp/neuronos-out/neuronos-*.iso \
+  -cdrom out/neuronos-*.iso \
   -drive file=/tmp/neuronos-test.qcow2,format=qcow2 \
   -vga virtio \
   -display gtk
@@ -488,33 +263,9 @@ qemu-system-x86_64 \
 
 ### In the VM
 1. Click "Install NeuronOS" on desktop
-2. Follow Calamares wizard
-3. Select the virtual disk for installation
-4. Create a user
-5. Complete installation
-6. Reboot (remove ISO when prompted)
-
-### After Reboot
-```bash
-# Boot from installed disk (no cdrom)
-qemu-system-x86_64 \
-  -enable-kvm \
-  -m 4G \
-  -cpu host \
-  -smp 4 \
-  -drive file=/tmp/neuronos-test.qcow2,format=qcow2 \
-  -vga virtio \
-  -display gtk
-```
-
-### Verification Points
-- [ ] Calamares launches without crash
-- [ ] Can partition the disk
-- [ ] Installation completes
-- [ ] System reboots
-- [ ] Installed system boots to login
-- [ ] Can log in with created user
-- [ ] Desktop loads after login
+2. Follow archinstall wizard in terminal
+3. Select the virtual disk
+4. Complete installation and reboot
 
 ---
 
@@ -523,68 +274,75 @@ qemu-system-x86_64 \
 ### Phase 1 is COMPLETE when ALL boxes are checked:
 
 **Build Success**
-- [ ] `mkarchiso` completes without errors
-- [ ] ISO file is created (1-2 GB)
+- [ ] ISO builds without errors
+- [ ] ISO file is created (2-4 GB)
 - [ ] No package errors during build
 
 **Live Environment**
 - [ ] ISO boots in QEMU
-- [ ] SDDM login appears (or auto-login works)
-- [ ] LXQt desktop loads
-- [ ] Terminal (Konsole) opens
-- [ ] File manager (Dolphin) opens
-- [ ] Network works (can ping)
+- [ ] GDM auto-login works (no login prompt)
+- [ ] GNOME desktop loads
+- [ ] NeuronOS wallpaper is visible
+- [ ] Welcome dialog appears with theme selection
+
+**Desktop Shortcuts**
+- [ ] Terminal (gnome-terminal) opens
+- [ ] File Manager (nautilus) opens
+- [ ] System Monitor (gnome-system-monitor) opens
+- [ ] NeuronVM Manager launches (or shows error if libvirtd not running)
+- [ ] NeuronStore launches
 
 **Installation**
-- [ ] Calamares launches from desktop icon
-- [ ] Partitioning works
+- [ ] archinstall launches from desktop icon
 - [ ] Installation completes without errors
 - [ ] System reboots successfully
 
 **Post-Install**
-- [ ] Installed system boots (GRUB appears)
+- [ ] GRUB appears
 - [ ] Login screen appears
-- [ ] Can log in with user created during install
+- [ ] Can log in
 - [ ] Desktop loads
 - [ ] Firefox opens
+
+**No LXQt Remnants**
+- [ ] No references to qterminal, pcmanfm-qt, sddm, or lxqt in airootfs
+- [ ] No .config/lxqt/ directories
+- [ ] No SDDM configuration files
 
 ---
 
 ## Troubleshooting
 
-### "Package X not found"
-Remove it from packages.x86_64 or check the exact package name with `pacman -Ss <name>`
+### "GDM doesn't auto-login"
+Check `airootfs/etc/gdm/custom.conf` has `AutomaticLoginEnable=True` and `AutomaticLogin=liveuser`.
 
-### "SDDM doesn't start"
-Check that xorg-server is in packages and sddm service is enabled. Add to airootfs:
+### "GNOME shows default wallpaper"
+Check dconf database at `airootfs/etc/dconf/db/local.d/00-neuronos` and verify the wallpaper path.
+
+### "Desktop shortcuts don't work"
+Verify `Exec=` lines use GNOME applications (gnome-terminal, nautilus, gnome-system-monitor).
+
+### "archinstall fails with key errors"
+The install script initializes pacman keys first. If it still fails, run manually:
 ```bash
-mkdir -p airootfs/etc/systemd/system/display-manager.service.d/
-ln -sf /usr/lib/systemd/system/sddm.service airootfs/etc/systemd/system/display-manager.service
+sudo pacman-key --init
+sudo pacman-key --populate archlinux
 ```
-
-### "Calamares crashes"
-Check settings.conf for YAML syntax errors. Ensure all referenced modules exist.
 
 ### "No network after install"
-Add NetworkManager to packages and enable it:
-```bash
-mkdir -p airootfs/etc/systemd/system/multi-user.target.wants/
-ln -sf /usr/lib/systemd/system/NetworkManager.service airootfs/etc/systemd/system/multi-user.target.wants/
-```
+Verify NetworkManager service is enabled in the build script.
 
 ---
 
-## What This Phase Does NOT Include
+## What This Phase Establishes
 
-- No NeuronOS custom applications
-- No VM manager
-- No Wine/Proton
-- No GPU passthrough
-- No custom themes (default LXQt theme)
-- No hardware detection
-- No onboarding wizard
-
-These are added in subsequent phases. This phase only establishes a **working bootable base**.
+- A bootable ISO with GNOME desktop and NeuronOS branding
+- GDM auto-login for live session
+- Theme selection (Neural / Clarity / Frost)
+- Working desktop shortcuts for GNOME apps and NeuronOS tools
+- archinstall-based installation
+- All NeuronOS Python modules copied to the ISO
+- Virtualization, Wine, and GPU driver packages pre-installed
 
 ---
 

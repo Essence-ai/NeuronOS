@@ -145,10 +145,12 @@ class Migrator:
         source: MigrationSource,
         target: MigrationTarget,
         categories: Optional[List[FileCategory]] = None,
+        max_file_size: Optional[int] = None,
     ):
         self.source = source
         self.target = target
         self.categories = categories or list(FileCategory)
+        self.max_file_size = max_file_size
         self.progress = MigrationProgress()
         self._cancelled = False
         self._progress_callback: Optional[Callable[[MigrationProgress], None]] = None
@@ -283,6 +285,15 @@ class Migrator:
         """Copy a single file."""
         try:
             self.progress.current_file = source.name
+
+            # Skip files exceeding max_file_size
+            if self.max_file_size is not None:
+                try:
+                    if source.stat().st_size > self.max_file_size:
+                        logger.debug(f"Skipping large file: {source.name} (exceeds {self.max_file_size} bytes)")
+                        return
+                except OSError:
+                    pass
 
             # Skip if target exists and is same size
             if target.exists():
@@ -510,7 +521,7 @@ class WindowsMigrator(Migrator):
 
             try:
                 if item.is_file():
-                    self._copy_file(item, target_item, FileCategory.BROWSER_CHROME)
+                    self._copy_file(item, target_item)
                 elif item.is_dir():
                     self._migrate_browser_profile(item, target_item, exclude_caches)
             except Exception as e:

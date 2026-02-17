@@ -59,7 +59,7 @@ def cmd_iommu(args):
         return 1
 
     print(f"\n=== Found {len(groups)} IOMMU Group(s) ===\n")
-    for group in groups:
+    for group in groups.values():
         print(f"IOMMU Group {group.group_id}:")
         for device in group.devices:
             clean_mark = "✓" if group.is_clean else "✗"
@@ -126,8 +126,8 @@ def cmd_check(args):
     cpu = CPUDetector().detect()
     print(f"CPU: {cpu.model_name}")
     print(f"  Vendor: {cpu.vendor}")
-    print(f"  IOMMU: {'✅ Enabled' if cpu.has_iommu else '❌ Disabled'}")
-    if not cpu.has_iommu:
+    print(f"  IOMMU: {'✅ Enabled' if cpu.iommu_enabled else '❌ Disabled'}")
+    if not cpu.iommu_enabled:
         issues.append(f"Enable IOMMU in BIOS and add kernel parameter: {cpu.iommu_param}")
 
     # Check GPUs

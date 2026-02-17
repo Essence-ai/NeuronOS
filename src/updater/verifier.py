@@ -29,8 +29,8 @@ class UpdateVerifier:
     """
     
     CRITICAL_SERVICES = [
-        "sddm",           # Display manager
-        "NetworkManager", # Networking
+        "gdm",            # Display manager (GNOME)
+        "NetworkManager",  # Networking
         "libvirtd",       # VM management
     ]
     

@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
 Name=Install NeuronOS
-Comment=Install NeuronOS to your computer
-Icon=system-software-install
+Comment=Install NeuronOS to your system using archinstall
 Exec=gnome-terminal -- bash -c "sudo pacman-key --init && sudo pacman-key --populate archlinux && sudo pacman -Sy --noconfirm archlinux-keyring && sudo archinstall; echo 'Press Enter to close.'; read"
+Icon=system-software-install
 Terminal=false
 Categories=System;

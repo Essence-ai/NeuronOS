@@ -2,7 +2,7 @@
 Type=Application
 Name=Terminal
 Comment=Command line interface
-Icon=utilities-terminal
-Exec=qterminal
+Icon=org.gnome.Terminal
+Exec=gnome-terminal
 Terminal=false
 Categories=System;

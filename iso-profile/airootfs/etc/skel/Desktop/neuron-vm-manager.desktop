@@ -1,7 +1,8 @@
 [Desktop Entry]
 Type=Application
 Name=NeuronVM Manager
-Comment=Manage Windows and macOS VMs
+Comment=Manage Windows and macOS virtual machines
 Icon=virt-manager
 Exec=neuron-vm-manager
 Terminal=false
+Categories=System;

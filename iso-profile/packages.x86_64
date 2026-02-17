@@ -35,11 +35,6 @@ efibootmgr
 os-prober
 
 # =============================================================================
-# DESKTOP ENVIRONMENT - LXQt (Lightweight, Windows-like)
-# =============================================================================
-xorg-server
-xorg-xinit
-# =============================================================================
 # DESKTOP ENVIRONMENT - GNOME (Modern, customizable, touch-friendly)
 # =============================================================================
 xorg-server
@@ -49,20 +44,19 @@ gnome
 gnome-extra
 gnome-terminal
 gnome-tweaks
+nautilus
 gnome-shell-extensions
 xdg-user-dirs
 xdg-utils
 zenity
 
-# Qt6 base (required for PyQt6 apps)
+# Qt6 base (required for PyQt6 apps like NeuronVM Manager)
 qt6-base
 qt6-svg
 
-# Premium theming
-# Premium theming
-# papirus-icon-theme (Optional, GNOME has Adwaita)
-# kvantum (Not needed for GNOME)
+# Theming
 materia-gtk-theme
+gnome-themes-extra
 
 # =============================================================================
 # VIRTUALIZATION CORE (The Heart of NeuronOS)
@@ -80,6 +74,8 @@ iptables-nft
 # INSTALLER
 # =============================================================================
 arch-install-scripts
+rsync
+squashfs-tools
 
 # =============================================================================
 # GPU DRIVERS
@@ -116,7 +112,7 @@ wget
 curl
 
 # =============================================================================
-# APPLICATIONS (Minimal for now)
+# APPLICATIONS
 # =============================================================================
 firefox
 
@@ -152,7 +148,6 @@ pciutils
 # FLATPAK (For sandboxed app installation)
 # =============================================================================
 flatpak
-xdg-desktop-portal
 xdg-desktop-portal
 xdg-desktop-portal-gnome
 

@@ -2,7 +2,7 @@
 Type=Application
 Name=File Manager
 Comment=Browse files and folders
-Icon=folder
-Exec=pcmanfm-qt
+Icon=org.gnome.Nautilus
+Exec=nautilus
 Terminal=false
 Categories=System;

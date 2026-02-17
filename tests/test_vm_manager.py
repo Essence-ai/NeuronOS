@@ -116,15 +116,24 @@ class TestLibvirtManager:
     @pytest.fixture
     def mock_libvirt(self):
         """Mock libvirt module."""
-        with patch.dict(sys.modules, {'libvirt': MagicMock()}):
-            yield
+        mock_lv = MagicMock()
+        with patch.dict(sys.modules, {'libvirt': mock_lv}):
+            yield mock_lv
 
     def test_manager_initialization(self, mock_libvirt):
         """Test manager initializes."""
-        from vm_manager.core.libvirt_manager import LibvirtManager
-
-        manager = LibvirtManager()
-        assert manager.uri == "qemu:///system"
+        import vm_manager.core.libvirt_manager as lm_mod
+        import vm_manager.core.connection as conn_mod
+        orig_lm = lm_mod.LIBVIRT_AVAILABLE
+        orig_conn = conn_mod.LIBVIRT_AVAILABLE
+        lm_mod.LIBVIRT_AVAILABLE = True
+        conn_mod.LIBVIRT_AVAILABLE = True
+        try:
+            manager = lm_mod.LibvirtManager()
+            assert manager.uri == "qemu:///system"
+        finally:
+            lm_mod.LIBVIRT_AVAILABLE = orig_lm
+            conn_mod.LIBVIRT_AVAILABLE = orig_conn
 
 
 class TestGPUPassthroughManager:

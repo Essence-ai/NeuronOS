@@ -233,14 +233,26 @@ class VMCreator:
         # Add GPU passthrough
         if config.gpu.enabled and config.gpu.pci_address:
             gpu = config.gpu
-            # Parse PCI address (format: 01:00.0)
+            # Parse PCI address (format: 0000:01:00.0 or 01:00.0)
             parts = gpu.pci_address.replace(":", ".").split(".")
             if len(parts) >= 3:
+                bus_val = f"0x{parts[-3]}" if len(parts) >= 3 else "0x00"
+                slot_val = f"0x{parts[-2]}" if len(parts) >= 2 else "0x00"
+                func_val = f"0x{parts[-1]}" if len(parts) >= 1 else "0x0"
+                domain_val = f"0x{parts[0]}" if len(parts) == 4 else "0x0000"
+
+                # Nested form (used by windows-passthrough.xml.j2)
                 vars["gpu_passthrough"] = {
-                    "bus": f"0x{parts[0]}",
-                    "slot": f"0x{parts[1]}",
-                    "function": f"0x{parts[2]}",
+                    "bus": bus_val,
+                    "slot": slot_val,
+                    "function": func_val,
                 }
+                # Flat form (used by windows11-passthrough.xml.j2)
+                vars["gpu_domain"] = domain_val
+                vars["gpu_bus"] = bus_val
+                vars["gpu_slot"] = slot_val
+                vars["gpu_function"] = func_val
+                vars["gpu_audio_function"] = "0x1"
 
         # Add Looking Glass
         if config.looking_glass and config.looking_glass.enabled:

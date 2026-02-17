@@ -36,6 +36,8 @@ if [ "$1" == "clean" ]; then
     echo -e "${YELLOW}Cleaning build artifacts...${NC}"
     rm -rf "$WORK_DIR"
     rm -rf "$OUTPUT_DIR"/*.iso
+    rm -rf "$PROFILE_DIR/airootfs/usr/lib/neuron-os"
+    rm -rf "$PROFILE_DIR/airootfs/home/liveuser"
     echo -e "${GREEN}Clean complete.${NC}"
     exit 0
 fi
@@ -71,7 +73,7 @@ AIROOTFS_LIB="$PROFILE_DIR/airootfs/usr/lib/neuron-os"
 mkdir -p "$AIROOTFS_LIB"
 
 # Copy source packages
-for pkg in hardware_detect vm_manager store onboarding migration updater; do
+for pkg in hardware_detect vm_manager store common onboarding migration updater utils; do
     if [ -d "$PROJECT_DIR/src/$pkg" ]; then
         echo "  Copying $pkg..."
         cp -r "$PROJECT_DIR/src/$pkg" "$AIROOTFS_LIB/"
@@ -85,6 +87,13 @@ if [ -d "$PROJECT_DIR/templates" ]; then
     cp -r "$PROJECT_DIR/templates"/* "$PROFILE_DIR/airootfs/usr/share/neuron-os/templates/"
 fi
 
+# Copy VM templates from src
+if [ -d "$PROJECT_DIR/src/vm_manager/templates" ]; then
+    echo "  Copying VM templates..."
+    mkdir -p "$PROFILE_DIR/airootfs/usr/share/neuron-os/templates"
+    cp "$PROJECT_DIR/src/vm_manager/templates"/*.j2 "$PROFILE_DIR/airootfs/usr/share/neuron-os/templates/" 2>/dev/null || true
+fi
+
 # Copy app catalog
 if [ -f "$PROJECT_DIR/data/apps.json" ]; then
     echo "  Copying app catalog..."
@@ -92,74 +101,33 @@ if [ -f "$PROJECT_DIR/data/apps.json" ]; then
     cp "$PROJECT_DIR/data/apps.json" "$PROFILE_DIR/airootfs/usr/share/neuron-os/data/"
 fi
 
-# Create entry point scripts
-echo -e "${BLUE}Creating entry point scripts...${NC}"
+# Enable systemd services
+echo -e "${BLUE}Enabling systemd services...${NC}"
+SYSTEMD_DIR="$PROFILE_DIR/airootfs/etc/systemd/system"
+mkdir -p "$SYSTEMD_DIR/multi-user.target.wants"
+mkdir -p "$SYSTEMD_DIR/graphical.target.wants"
 
-cat > "$PROFILE_DIR/airootfs/usr/bin/neuron-hardware-detect" << 'EOF'
-#!/usr/bin/env python3
-"""NeuronOS Hardware Detection CLI."""
-import sys
-sys.path.insert(0, "/usr/lib/neuron-os")
-from hardware_detect.cli import main
-if __name__ == "__main__":
-    main()
-EOF
-chmod +x "$PROFILE_DIR/airootfs/usr/bin/neuron-hardware-detect"
+# Enable GDM for graphical login
+ln -sf /usr/lib/systemd/system/gdm.service "$SYSTEMD_DIR/display-manager.service"
 
-cat > "$PROFILE_DIR/airootfs/usr/bin/neuron-vm-manager" << 'EOF'
-#!/usr/bin/env python3
-"""NeuronOS VM Manager."""
-import sys
-sys.path.insert(0, "/usr/lib/neuron-os")
-from vm_manager.gui.app import main
-if __name__ == "__main__":
-    main()
-EOF
-chmod +x "$PROFILE_DIR/airootfs/usr/bin/neuron-vm-manager"
+# Enable NetworkManager
+ln -sf /usr/lib/systemd/system/NetworkManager.service "$SYSTEMD_DIR/multi-user.target.wants/NetworkManager.service"
 
-cat > "$PROFILE_DIR/airootfs/usr/bin/neuron-store" << 'EOF'
-#!/usr/bin/env python3
-"""NeuronStore Application."""
-import sys
-sys.path.insert(0, "/usr/lib/neuron-os")
-from store.gui.store_window import main
-if __name__ == "__main__":
-    main()
-EOF
-chmod +x "$PROFILE_DIR/airootfs/usr/bin/neuron-store"
+# Enable libvirtd for VM management
+ln -sf /usr/lib/systemd/system/libvirtd.service "$SYSTEMD_DIR/multi-user.target.wants/libvirtd.service"
 
-cat > "$PROFILE_DIR/airootfs/usr/bin/neuron-onboarding" << 'EOF'
-#!/usr/bin/env python3
-"""NeuronOS First-Boot Onboarding Wizard."""
-import sys
-sys.path.insert(0, "/usr/lib/neuron-os")
-from onboarding.wizard import main
-if __name__ == "__main__":
-    main()
-EOF
-chmod +x "$PROFILE_DIR/airootfs/usr/bin/neuron-onboarding"
+# Setup liveuser home from skel
+echo -e "${BLUE}Setting up liveuser home directory...${NC}"
+LIVEUSER_HOME="$PROFILE_DIR/airootfs/home/liveuser"
+mkdir -p "$LIVEUSER_HOME"
+cp -r "$PROFILE_DIR/airootfs/etc/skel/." "$LIVEUSER_HOME/"
 
-cat > "$PROFILE_DIR/airootfs/usr/bin/neuron-migrate" << 'EOF'
-#!/usr/bin/env python3
-"""NeuronOS Migration Tool."""
-import sys
-sys.path.insert(0, "/usr/lib/neuron-os")
-from migration.cli import main
-if __name__ == "__main__":
-    main()
-EOF
-chmod +x "$PROFILE_DIR/airootfs/usr/bin/neuron-migrate"
-
-cat > "$PROFILE_DIR/airootfs/usr/bin/neuron-update" << 'EOF'
-#!/usr/bin/env python3
-"""NeuronOS Update Manager."""
-import sys
-sys.path.insert(0, "/usr/lib/neuron-os")
-from updater.cli import main
-if __name__ == "__main__":
-    main()
-EOF
-chmod +x "$PROFILE_DIR/airootfs/usr/bin/neuron-update"
+# Apply default theme
+GTK4_DIR="$LIVEUSER_HOME/.config/gtk-4.0"
+mkdir -p "$GTK4_DIR"
+if [ -f "$PROFILE_DIR/airootfs/usr/share/neuron-os/themes/neuron.css" ]; then
+    cp "$PROFILE_DIR/airootfs/usr/share/neuron-os/themes/neuron.css" "$GTK4_DIR/gtk.css"
+fi
 
 # Build ISO
 echo -e "${BLUE}Building ISO...${NC}"

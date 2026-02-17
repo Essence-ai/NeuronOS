@@ -46,44 +46,39 @@ lint:
 	$(PYTHON) -m ruff check src/ tests/
 	$(PYTHON) -m mypy src/
 
-# Build ISO
-iso: clean
+# Build ISO (preferred: use build-iso.sh directly)
+iso:
 	@echo "Building NeuronOS ISO..."
 	@if [ "$(shell id -u)" != "0" ]; then \
 		echo "Error: Building ISO requires root. Run: sudo make iso"; \
 		exit 1; \
 	fi
-	mkdir -p $(OUTPUT_DIR)
-	# Copy Python modules to airootfs
-	mkdir -p $(PROFILE_DIR)/airootfs/usr/lib/neuron-os
-	cp -r src/* $(PROFILE_DIR)/airootfs/usr/lib/neuron-os/
-	# Build ISO
-	mkarchiso -v -w $(WORK_DIR) -o $(OUTPUT_DIR) $(PROFILE_DIR)
-	@echo ""
-	@echo "ISO built successfully!"
-	@ls -lh $(OUTPUT_DIR)/neuron*.iso
+	./build-iso.sh --clean
 
 # Test ISO in QEMU
 test-vm:
 	@echo "Testing ISO in QEMU..."
-	@if [ ! -f $(OUTPUT_DIR)/neuron*.iso ]; then \
-		echo "Error: No ISO found. Run 'make iso' first."; \
+	@ISO_FILE=$$(ls -1t out/neuron*.iso $(OUTPUT_DIR)/neuron*.iso 2>/dev/null | head -1); \
+	if [ -z "$$ISO_FILE" ]; then \
+		echo "Error: No ISO found. Run 'sudo make iso' first."; \
 		exit 1; \
-	fi
+	fi; \
 	qemu-system-x86_64 \
 		-enable-kvm \
 		-m 4G \
 		-cpu host \
 		-smp 4 \
 		-boot d \
-		-cdrom $$(ls -1 $(OUTPUT_DIR)/neuron*.iso | head -1) \
+		-cdrom "$$ISO_FILE" \
 		-vga virtio
 
 # Clean build artifacts
 clean:
 	@echo "Cleaning..."
 	sudo rm -rf $(WORK_DIR) || true
-	rm -rf $(OUTPUT_DIR)/*.iso
+	rm -rf $(OUTPUT_DIR)/*.iso out/*.iso
+	rm -rf $(PROFILE_DIR)/airootfs/usr/lib/neuron-os
+	rm -rf $(PROFILE_DIR)/airootfs/home/liveuser
 	rm -rf __pycache__ src/**/__pycache__ tests/__pycache__
 	rm -rf *.egg-info build dist
 	rm -rf .pytest_cache .mypy_cache .ruff_cache

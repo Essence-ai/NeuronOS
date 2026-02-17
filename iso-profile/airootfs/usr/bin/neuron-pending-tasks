@@ -1,0 +1,600 @@
+#!/usr/bin/env python3
+"""
+NeuronOS Pending Tasks Processor
+
+Processes deferred tasks queued by the onboarding wizard:
+- VM creation (Windows/macOS)
+- File migration from detected drives
+- GPU passthrough configuration
+
+Designed to run at login via autostart, then remove itself once all
+tasks are complete. Safe to run multiple times (idempotent).
+"""
+
+import argparse
+import json
+import logging
+import os
+import shutil
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+
+# Add NeuronOS module path (same pattern as other neuron-* entry points)
+sys.path.insert(0, "/usr/lib/neuron-os")
+
+logger = logging.getLogger("neuron-pending-tasks")
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+CONFIG_DIR = Path.home() / ".config" / "neuronos"
+PENDING_VMS_DIR = CONFIG_DIR / "pending-vms"
+PENDING_MIGRATION_DIR = CONFIG_DIR / "pending-migration"
+PENDING_GPU_DIR = CONFIG_DIR / "pending-gpu-config"
+AUTOSTART_DESKTOP = Path.home() / ".config" / "autostart" / "neuron-pending-tasks.desktop"
+LOG_FILE = CONFIG_DIR / "pending-tasks.log"
+
+# Well-known GPU config file destinations (filename -> system path)
+GPU_CONFIG_DESTINATIONS = {
+    "vfio.conf": Path("/etc/modprobe.d/vfio.conf"),
+    "iommu.conf": Path("/etc/modprobe.d/iommu.conf"),
+}
+
+# Default VM parameters
+DEFAULT_VM_PARAMS = {
+    "windows": {"ram_gb": 8, "cpu_cores": 4, "disk_gb": 64},
+    "macos": {"ram_gb": 8, "cpu_cores": 4, "disk_gb": 64},
+}
+
+
+# ---------------------------------------------------------------------------
+# Notifications
+# ---------------------------------------------------------------------------
+def notify(summary: str, body: str = "", icon: str = "dialog-information") -> None:
+    """Send a desktop notification via notify-send."""
+    try:
+        cmd = ["notify-send", "--app-name=NeuronOS Setup", f"--icon={icon}", summary]
+        if body:
+            cmd.append(body)
+        subprocess.run(cmd, timeout=5, capture_output=True)
+    except Exception as exc:
+        logger.debug("notify-send failed: %s", exc)
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+def _read_json(path: Path) -> dict:
+    """Read and return a JSON file as a dict, or empty dict on failure."""
+    try:
+        return json.loads(path.read_text())
+    except Exception as exc:
+        logger.error("Failed to read %s: %s", path, exc)
+        return {}
+
+
+def _write_json(path: Path, data: dict) -> None:
+    """Atomically-ish write *data* as JSON to *path*."""
+    try:
+        path.write_text(json.dumps(data, indent=2))
+    except Exception as exc:
+        logger.error("Failed to write %s: %s", path, exc)
+
+
+def _mark_status(path: Path, status: str, extra: dict | None = None) -> None:
+    """Update the 'status' field inside a JSON task file."""
+    data = _read_json(path)
+    if not data:
+        return
+    data["status"] = status
+    data["completed_at"] = datetime.now().isoformat()
+    if extra:
+        data.update(extra)
+    _write_json(path, data)
+
+
+# ---------------------------------------------------------------------------
+# VM creation
+# ---------------------------------------------------------------------------
+def process_pending_vms(dry_run: bool = False) -> list[dict]:
+    """Process all pending VM creation requests.
+
+    Returns a list of result dicts: {"file": ..., "type": ..., "ok": bool, "error": ...}
+    """
+    results: list[dict] = []
+
+    if not PENDING_VMS_DIR.is_dir():
+        logger.info("No pending-vms directory found, skipping VM tasks")
+        return results
+
+    json_files = sorted(PENDING_VMS_DIR.glob("*.json"))
+    if not json_files:
+        logger.info("No pending VM task files found")
+        return results
+
+    for task_file in json_files:
+        data = _read_json(task_file)
+        if not data:
+            continue
+
+        vm_type = data.get("type", "unknown")
+        status = data.get("status", "")
+        result = {"file": str(task_file), "type": vm_type, "ok": False, "error": None}
+
+        # Skip non-pending tasks (idempotent)
+        if status != "pending":
+            logger.info("Skipping %s VM task (status=%s)", vm_type, status)
+            result["ok"] = status == "complete"
+            results.append(result)
+            continue
+
+        logger.info("Processing pending %s VM creation...", vm_type)
+
+        if dry_run:
+            logger.info("[dry-run] Would create %s VM", vm_type)
+            result["ok"] = True
+            results.append(result)
+            continue
+
+        try:
+            from vm_manager.core.libvirt_manager import LibvirtManager
+
+            template_dir = Path("/usr/lib/neuron-os/vm_manager/templates")
+            manager = LibvirtManager(template_dir=template_dir if template_dir.is_dir() else None)
+            if not manager.connect():
+                raise RuntimeError("Could not connect to libvirt. Is libvirtd running?")
+
+            params = DEFAULT_VM_PARAMS.get(vm_type, DEFAULT_VM_PARAMS["windows"])
+            vm_name = f"NeuronOS-{vm_type.capitalize()}"
+
+            if vm_type == "windows":
+                ok = manager.create_windows_vm(
+                    name=vm_name,
+                    ram_gb=params["ram_gb"],
+                    cpu_cores=params["cpu_cores"],
+                    disk_gb=params["disk_gb"],
+                )
+            elif vm_type == "macos":
+                # macOS uses the same high-level creation path; template may differ
+                ok = manager.create_windows_vm(
+                    name=vm_name,
+                    ram_gb=params["ram_gb"],
+                    cpu_cores=params["cpu_cores"],
+                    disk_gb=params["disk_gb"],
+                )
+            else:
+                raise ValueError(f"Unknown VM type: {vm_type}")
+
+            manager.disconnect()
+
+            if ok:
+                _mark_status(task_file, "complete")
+                notify(
+                    f"{vm_type.capitalize()} VM Ready",
+                    f'"{vm_name}" has been created successfully.',
+                    icon="computer",
+                )
+                result["ok"] = True
+                logger.info("Successfully created %s VM '%s'", vm_type, vm_name)
+            else:
+                raise RuntimeError(f"LibvirtManager.create_windows_vm returned False for {vm_type}")
+
+        except Exception as exc:
+            error_msg = str(exc)
+            logger.error("Failed to create %s VM: %s", vm_type, error_msg)
+            _mark_status(task_file, "failed", extra={"error": error_msg})
+            notify(
+                f"{vm_type.capitalize()} VM Setup Failed",
+                f"Error: {error_msg}",
+                icon="dialog-error",
+            )
+            result["error"] = error_msg
+
+        results.append(result)
+
+    return results
+
+
+# ---------------------------------------------------------------------------
+# File migration
+# ---------------------------------------------------------------------------
+def _detect_os_type(source_path: Path) -> str:
+    """Attempt to detect whether *source_path* is a Windows or macOS user directory."""
+    # Windows indicators
+    if (source_path / "AppData").is_dir() or (source_path / "NTUSER.DAT").exists():
+        return "windows"
+    # macOS indicators
+    if (source_path / "Library").is_dir():
+        return "macos"
+    # Fall back to drive-level detection
+    parent = source_path.parent  # e.g. /mnt/sda2/Users
+    mount_root = parent.parent if parent.name in ("Users", "home") else parent
+    if (mount_root / "Windows").is_dir():
+        return "windows"
+    if (mount_root / "System").is_dir() or (mount_root / "Applications").is_dir():
+        return "macos"
+    return "windows"  # default assumption
+
+
+def _detect_username(source_path: Path) -> str:
+    """Extract the username component from a user-profile path."""
+    return source_path.name or "unknown"
+
+
+def process_pending_migration(dry_run: bool = False) -> dict:
+    """Process the pending migration task.
+
+    Returns a result dict: {"ok": bool, "error": ..., "files_done": int}
+    """
+    result: dict = {"ok": False, "error": None, "files_done": 0}
+
+    migration_file = PENDING_MIGRATION_DIR / "migration.json"
+    if not migration_file.is_file():
+        logger.info("No pending migration task found")
+        result["ok"] = True  # nothing to do is not an error
+        return result
+
+    data = _read_json(migration_file)
+    if not data:
+        result["error"] = "Could not read migration.json"
+        return result
+
+    status = data.get("status", "")
+    if status != "pending":
+        logger.info("Migration task already processed (status=%s)", status)
+        result["ok"] = status == "complete"
+        return result
+
+    source_path_str = data.get("source_path", "")
+    if not source_path_str:
+        error = "migration.json missing 'source_path'"
+        logger.error(error)
+        _mark_status(migration_file, "failed", extra={"error": error})
+        result["error"] = error
+        return result
+
+    source_path = Path(source_path_str)
+    logger.info("Processing pending migration from %s ...", source_path)
+
+    if dry_run:
+        logger.info("[dry-run] Would migrate files from %s", source_path)
+        result["ok"] = True
+        return result
+
+    try:
+        from migration.migrator import MigrationSource, MigrationTarget, create_migrator
+
+        os_type = _detect_os_type(source_path)
+        username = _detect_username(source_path)
+        logger.info("Detected OS type: %s, user: %s", os_type, username)
+
+        source = MigrationSource(path=source_path, user=username, os_type=os_type)
+        target = MigrationTarget()  # defaults to current user home
+
+        migrator = create_migrator(source, target)
+
+        # Scan first to report totals
+        progress = migrator.scan()
+        logger.info(
+            "Migration scan: %d files, %.1f MB",
+            progress.files_total,
+            progress.bytes_total / (1024 * 1024),
+        )
+
+        notify(
+            "File Migration Starting",
+            f"Migrating {progress.files_total} files from {os_type.capitalize()} installation...",
+            icon="folder",
+        )
+
+        success = migrator.migrate()
+        files_done = migrator.progress.files_done
+        errors = migrator.progress.errors
+
+        result["files_done"] = files_done
+
+        if success:
+            _mark_status(migration_file, "complete", extra={"files_migrated": files_done})
+            notify(
+                "File Migration Complete",
+                f"Successfully migrated {files_done} files.",
+                icon="folder",
+            )
+            result["ok"] = True
+            logger.info("Migration complete: %d files migrated", files_done)
+        else:
+            error_summary = f"{len(errors)} error(s) during migration of {files_done} files"
+            _mark_status(
+                migration_file,
+                "complete",
+                extra={"files_migrated": files_done, "errors": errors[:20]},
+            )
+            notify(
+                "File Migration Complete (with errors)",
+                f"Migrated {files_done} files. {len(errors)} error(s) occurred.",
+                icon="dialog-warning",
+            )
+            # Still mark as ok=True since partial migration is acceptable
+            result["ok"] = True
+            result["error"] = error_summary
+            logger.warning("Migration finished with errors: %s", error_summary)
+
+    except Exception as exc:
+        error_msg = str(exc)
+        logger.error("Migration failed: %s", error_msg)
+        _mark_status(migration_file, "failed", extra={"error": error_msg})
+        notify("File Migration Failed", f"Error: {error_msg}", icon="dialog-error")
+        result["error"] = error_msg
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# GPU passthrough configuration
+# ---------------------------------------------------------------------------
+def process_pending_gpu_config(dry_run: bool = False) -> dict:
+    """Process pending GPU passthrough configuration.
+
+    Returns a result dict: {"ok": bool, "error": ..., "files_applied": list}
+    """
+    result: dict = {"ok": False, "error": None, "files_applied": []}
+
+    if not PENDING_GPU_DIR.is_dir():
+        logger.info("No pending GPU config directory found")
+        result["ok"] = True
+        return result
+
+    config_files = sorted(PENDING_GPU_DIR.iterdir())
+    if not config_files:
+        logger.info("No pending GPU config files found")
+        result["ok"] = True
+        return result
+
+    logger.info("Processing %d pending GPU config file(s)...", len(config_files))
+
+    if dry_run:
+        for cf in config_files:
+            logger.info("[dry-run] Would apply GPU config: %s", cf.name)
+        result["ok"] = True
+        return result
+
+    # Strategy: try the full ConfigGenerator.apply_to_target() first, since it
+    # re-detects hardware and writes all needed files atomically.  If that fails
+    # (e.g. hardware detect unavailable), fall back to copying the individual
+    # saved config files to their well-known system destinations.
+    applied_via_generator = False
+    try:
+        from hardware_detect.config_generator import ConfigGenerator
+
+        generator = ConfigGenerator()
+        applied_via_generator = generator.apply_to_target(Path("/"))
+        if applied_via_generator:
+            logger.info("GPU config applied via ConfigGenerator")
+            result["files_applied"].append("(via ConfigGenerator.apply_to_target)")
+    except Exception as exc:
+        logger.warning("ConfigGenerator.apply_to_target failed, falling back to manual copy: %s", exc)
+
+    if not applied_via_generator:
+        # Fallback: copy individual config files to system locations
+        for cf in config_files:
+            if not cf.is_file():
+                continue
+            dest = GPU_CONFIG_DESTINATIONS.get(cf.name)
+            if dest is None:
+                # For unrecognized filenames, place in /etc/modprobe.d/
+                dest = Path("/etc/modprobe.d") / cf.name
+            try:
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(cf, dest)
+                result["files_applied"].append(str(dest))
+                logger.info("Copied GPU config %s -> %s", cf.name, dest)
+            except PermissionError:
+                # May need sudo; try via subprocess
+                try:
+                    subprocess.run(
+                        ["sudo", "cp", str(cf), str(dest)],
+                        check=True,
+                        capture_output=True,
+                        timeout=10,
+                    )
+                    result["files_applied"].append(str(dest))
+                    logger.info("Copied GPU config %s -> %s (via sudo)", cf.name, dest)
+                except Exception as inner_exc:
+                    error_msg = f"Failed to copy {cf.name}: {inner_exc}"
+                    logger.error(error_msg)
+                    result["error"] = error_msg
+            except Exception as exc:
+                error_msg = f"Failed to copy {cf.name}: {exc}"
+                logger.error(error_msg)
+                result["error"] = error_msg
+
+    if result["error"] is None:
+        result["ok"] = True
+        notify(
+            "GPU Passthrough Configured",
+            "GPU configuration has been applied. A reboot is required.",
+            icon="video-display",
+        )
+    else:
+        notify(
+            "GPU Configuration Issue",
+            f"Some GPU config files could not be applied: {result['error']}",
+            icon="dialog-warning",
+        )
+
+    # Mark config files as applied by writing a status marker
+    status_file = PENDING_GPU_DIR / ".status"
+    _write_json(status_file, {
+        "status": "complete" if result["ok"] else "failed",
+        "completed_at": datetime.now().isoformat(),
+        "files_applied": result["files_applied"],
+        "error": result["error"],
+    })
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Cleanup
+# ---------------------------------------------------------------------------
+def cleanup(dry_run: bool = False) -> None:
+    """Remove autostart entry and clean up completed task directories."""
+    all_done = True
+
+    # Check if any tasks are still pending
+    for check_dir in (PENDING_VMS_DIR, PENDING_MIGRATION_DIR):
+        if check_dir.is_dir():
+            for jf in check_dir.glob("*.json"):
+                data = _read_json(jf)
+                if data.get("status") == "pending":
+                    all_done = False
+                    break
+
+    # Check GPU status
+    gpu_status_file = PENDING_GPU_DIR / ".status"
+    if PENDING_GPU_DIR.is_dir() and not gpu_status_file.is_file():
+        # Config files exist but no status marker yet
+        config_files = [f for f in PENDING_GPU_DIR.iterdir() if f.is_file() and f.name != ".status"]
+        if config_files:
+            all_done = False
+
+    if not all_done:
+        logger.info("Some tasks are still pending; keeping autostart entry")
+        return
+
+    logger.info("All tasks complete. Cleaning up...")
+
+    if dry_run:
+        logger.info("[dry-run] Would remove autostart entry and task directories")
+        return
+
+    # Remove autostart desktop entry
+    if AUTOSTART_DESKTOP.is_file():
+        try:
+            AUTOSTART_DESKTOP.unlink()
+            logger.info("Removed autostart entry: %s", AUTOSTART_DESKTOP)
+        except Exception as exc:
+            logger.warning("Could not remove autostart entry: %s", exc)
+
+    # Clean up completed task directories
+    for task_dir in (PENDING_VMS_DIR, PENDING_MIGRATION_DIR, PENDING_GPU_DIR):
+        if task_dir.is_dir():
+            try:
+                shutil.rmtree(task_dir)
+                logger.info("Removed task directory: %s", task_dir)
+            except Exception as exc:
+                logger.warning("Could not remove %s: %s", task_dir, exc)
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="NeuronOS Pending Tasks Processor - completes deferred onboarding tasks",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be done without making changes",
+    )
+    parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Enable verbose (DEBUG-level) logging",
+    )
+    args = parser.parse_args()
+
+    # Configure logging
+    log_level = logging.DEBUG if args.verbose else logging.INFO
+    log_format = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+    handlers: list[logging.Handler] = [logging.StreamHandler(sys.stderr)]
+
+    # Also log to file
+    try:
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        file_handler = logging.FileHandler(LOG_FILE, mode="a")
+        file_handler.setFormatter(logging.Formatter(log_format))
+        handlers.append(file_handler)
+    except Exception:
+        pass  # non-fatal; console logging still works
+
+    logging.basicConfig(level=log_level, format=log_format, handlers=handlers)
+
+    logger.info("=" * 60)
+    logger.info("NeuronOS Pending Tasks Processor starting")
+    logger.info("  dry_run=%s  verbose=%s", args.dry_run, args.verbose)
+    logger.info("  config_dir=%s", CONFIG_DIR)
+    logger.info("=" * 60)
+
+    if args.dry_run:
+        logger.info("*** DRY RUN - no changes will be made ***")
+
+    # Guard: skip if there is nothing to do
+    if not CONFIG_DIR.is_dir():
+        logger.info("Config directory does not exist; nothing to do")
+        return 0
+
+    has_work = any([
+        PENDING_VMS_DIR.is_dir() and any(PENDING_VMS_DIR.glob("*.json")),
+        PENDING_MIGRATION_DIR.is_dir() and (PENDING_MIGRATION_DIR / "migration.json").is_file(),
+        PENDING_GPU_DIR.is_dir() and any(
+            f for f in PENDING_GPU_DIR.iterdir() if f.is_file() and f.name != ".status"
+        ) if PENDING_GPU_DIR.is_dir() else False,
+    ])
+
+    if not has_work:
+        logger.info("No pending tasks found; cleaning up stale state if any")
+        cleanup(dry_run=args.dry_run)
+        return 0
+
+    # Process each task category independently so one failure does not block others
+    overall_ok = True
+
+    # 1. GPU configuration (do first -- may require reboot)
+    try:
+        gpu_result = process_pending_gpu_config(dry_run=args.dry_run)
+        logger.info("GPU config result: %s", gpu_result)
+        if not gpu_result["ok"]:
+            overall_ok = False
+    except Exception as exc:
+        logger.error("Unhandled error in GPU config processing: %s", exc, exc_info=True)
+        overall_ok = False
+
+    # 2. VM creation
+    try:
+        vm_results = process_pending_vms(dry_run=args.dry_run)
+        logger.info("VM results: %s", vm_results)
+        if any(not r["ok"] for r in vm_results):
+            overall_ok = False
+    except Exception as exc:
+        logger.error("Unhandled error in VM processing: %s", exc, exc_info=True)
+        overall_ok = False
+
+    # 3. File migration
+    try:
+        migration_result = process_pending_migration(dry_run=args.dry_run)
+        logger.info("Migration result: %s", migration_result)
+        if not migration_result["ok"]:
+            overall_ok = False
+    except Exception as exc:
+        logger.error("Unhandled error in migration processing: %s", exc, exc_info=True)
+        overall_ok = False
+
+    # Cleanup when everything is done
+    cleanup(dry_run=args.dry_run)
+
+    logger.info("=" * 60)
+    if overall_ok:
+        logger.info("All pending tasks completed successfully")
+    else:
+        logger.warning("Some tasks failed; check logs at %s", LOG_FILE)
+    logger.info("=" * 60)
+
+    return 0 if overall_ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,6 +1,11 @@
 #!/bin/bash
 # NeuronOS Welcome Script - Shows welcome dialog with theme selection on live boot
 
+# Only show in live session (check if liveuser)
+if [ "$(whoami)" != "liveuser" ]; then
+    exit 0
+fi
+
 # Theme selection dialog
 THEME=$(zenity --list \
     --title="Choose Your Style" \
@@ -26,17 +31,17 @@ if [ -n "$THEME" ]; then
             THEME_FILE="macos.css"
             ;;
     esac
-    
-    # Set the theme as default for the user
+
+    # Save theme selection
     mkdir -p ~/.config/neuron-os
     echo "$THEME_FILE" > ~/.config/neuron-os/selected-theme
-    
-    # Copy theme to GTK4 user config
+
+    # Copy theme to GTK4 user config (GNOME uses this)
     mkdir -p ~/.config/gtk-4.0
     if [ -f "/usr/share/neuron-os/themes/$THEME_FILE" ]; then
         cp "/usr/share/neuron-os/themes/$THEME_FILE" ~/.config/gtk-4.0/gtk.css
     fi
-    
+
     zenity --info \
         --title="Theme Applied" \
         --text="$THEME theme has been applied!\n\nYou can change this later in Settings." \
@@ -52,11 +57,6 @@ zenity --question \
     --width=400
 
 if [ $? -eq 0 ]; then
-    # Launch Calamares installer if available, otherwise archinstall
-    if command -v calamares &> /dev/null; then
-        pkexec calamares &
-    else
-        # Refresh keys to prevent installation errors
-        gnome-terminal -- bash -c "echo 'Initializing package keys...' && sudo pacman-key --init && sudo pacman-key --populate archlinux && sudo pacman -Sy --noconfirm archlinux-keyring && sudo archinstall; echo 'Installer finished. Press Enter to close.'; read" &
-    fi
+    # Refresh keys to prevent installation errors, then launch archinstall
+    gnome-terminal -- bash -c "echo 'Initializing package keys...' && sudo pacman-key --init && sudo pacman-key --populate archlinux && sudo pacman -Sy --noconfirm archlinux-keyring && sudo archinstall; echo 'Installer finished. Press Enter to close.'; read" &
 fi
