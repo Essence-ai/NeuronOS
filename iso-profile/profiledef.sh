@@ -42,5 +42,7 @@ file_permissions=(
   ["/usr/bin/neuron-hardware-detect"]="0:0:755"
   ["/usr/bin/neuron-vm-manager"]="0:0:755"
   ["/usr/bin/neuron-store"]="0:0:755"
+  ["/usr/bin/neuron-store-gui"]="0:0:755"
   ["/usr/bin/neuron-welcome"]="0:0:755"
+  ["/usr/bin/neuron-pending-tasks"]="0:0:755"
 )
