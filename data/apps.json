@@ -219,14 +219,18 @@
       "description": "Apple's professional video editing software",
       "category": "creative",
       "layer": "vm_macos",
-      "rating": "playable",
+      "rating": "unsupported",
       "publisher": "Apple",
       "website": "https://www.apple.com/final-cut-pro/",
       "tags": ["video", "editing", "apple", "professional"],
       "requires_gpu_passthrough": true,
       "min_ram_gb": 16,
-      "notes": ["Requires macOS VM (experimental)", "GPU passthrough support is limited"],
-      "known_issues": ["macOS VMs are fragile", "Limited GPU support"]
+      "notes": [
+        "Requires macOS VM (experimental)",
+        "GPU passthrough support is limited",
+        "LEGAL WARNING: Running macOS on non-Apple hardware violates Apple's EULA. NeuronOS does not provide or endorse this configuration."
+      ],
+      "known_issues": ["macOS VMs are fragile", "Limited GPU support", "Apple EULA prohibits macOS virtualization on non-Apple hardware"]
     },
     {
       "id": "logic-pro",
@@ -234,13 +238,16 @@
       "description": "Apple's professional music production software",
       "category": "creative",
       "layer": "vm_macos",
-      "rating": "playable",
+      "rating": "unsupported",
       "publisher": "Apple",
       "website": "https://www.apple.com/logic-pro/",
       "tags": ["audio", "music", "production", "daw", "apple"],
       "min_ram_gb": 8,
-      "notes": ["Requires macOS VM (experimental)"],
-      "known_issues": ["Audio latency may be higher in VM"]
+      "notes": [
+        "Requires macOS VM (experimental)",
+        "LEGAL WARNING: Running macOS on non-Apple hardware violates Apple's EULA. NeuronOS does not provide or endorse this configuration."
+      ],
+      "known_issues": ["Audio latency may be higher in VM", "Apple EULA prohibits macOS virtualization on non-Apple hardware"]
     },
     {
       "id": "spotify",

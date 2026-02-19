@@ -159,7 +159,7 @@ Variables:
     <!-- Looking Glass Shared Memory -->
     <shmem name='looking-glass-{{ vm_name }}'>
       <model type='ivshmem-plain'/>
-      <size unit='M'>128</size>
+      <size unit='M'>{{ looking_glass_size_mb | default(128) }}</size>
       <address type='pci' domain='0x0000' bus='0x10' slot='0x01' function='0x0'/>
     </shmem>
     {% endif %}

@@ -223,6 +223,7 @@ class OnboardingWizard(Adw.ApplicationWindow):
         def apply_settings():
             try:
                 self._save_preferences()
+                self._setup_nvidia_driver()
                 self._configure_gpu()
                 self._setup_vms()
                 self._start_migration()
@@ -260,6 +261,28 @@ class OnboardingWizard(Adw.ApplicationWindow):
         
         logger.info("Preferences saved")
 
+    def _setup_nvidia_driver(self):
+        """Install NVIDIA proprietary driver if needed."""
+        if not self._user_data.get("nvidia_needs_setup"):
+            return
+
+        logger.info("NVIDIA GPU detected without proprietary driver, queuing setup")
+
+        import json
+        config_dir = Path.home() / ".config/neuronos/pending-gpu-config"
+        config_dir.mkdir(parents=True, exist_ok=True)
+
+        nvidia_config = {
+            "action": "install_nvidia",
+            "packages": ["nvidia", "nvidia-utils", "nvidia-settings", "lib32-nvidia-utils"],
+            "post_install": [
+                "mkinitcpio -P",
+            ],
+            "needs_reboot": True,
+        }
+        (config_dir / "nvidia_setup.json").write_text(json.dumps(nvidia_config, indent=2))
+        logger.info("NVIDIA driver installation queued for next boot")
+
     def _configure_gpu(self):
         """Configure GPU passthrough if requested."""
         if not self._user_data.get("gpu_passthrough"):
@@ -270,16 +293,23 @@ class OnboardingWizard(Adw.ApplicationWindow):
             from hardware_detect.config_generator import ConfigGenerator
 
             generator = ConfigGenerator()
-            configs = generator.generate()
+            config = generator.detect_and_generate()
 
-            if configs:
+            if config.is_valid:
                 config_dir = Path.home() / ".config/neuronos/pending-gpu-config"
                 config_dir.mkdir(parents=True, exist_ok=True)
 
-                for filename, content in configs.items():
-                    (config_dir / filename).write_text(content)
+                (config_dir / "vfio.conf").write_text(config.vfio_conf)
+                (config_dir / "mkinitcpio_modules").write_text(config.mkinitcpio_modules)
+                (config_dir / "kernel_params").write_text(config.kernel_params)
+                (config_dir / "bootloader").write_text(config.bootloader)
 
                 logger.info("GPU passthrough config generated (pending apply)")
+            else:
+                for error in config.errors:
+                    logger.error(f"GPU config error: {error}")
+                for warning in config.warnings:
+                    logger.warning(f"GPU config warning: {warning}")
 
         except Exception as e:
             logger.error(f"GPU configuration failed: {e}")

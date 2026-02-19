@@ -360,6 +360,55 @@ def process_pending_gpu_config(dry_run: bool = False) -> dict:
         result["ok"] = True
         return result
 
+    # Handle NVIDIA driver installation if queued
+    nvidia_setup_file = PENDING_GPU_DIR / "nvidia_setup.json"
+    if nvidia_setup_file.is_file():
+        nvidia_data = _read_json(nvidia_setup_file)
+        if nvidia_data and nvidia_data.get("action") == "install_nvidia":
+            packages = nvidia_data.get("packages", ["nvidia", "nvidia-utils"])
+            logger.info("Installing NVIDIA driver packages: %s", packages)
+            if not dry_run:
+                try:
+                    notify(
+                        "Installing NVIDIA Drivers",
+                        "Installing proprietary NVIDIA drivers. This may take a moment...",
+                        icon="video-display",
+                    )
+                    subprocess.run(
+                        ["sudo", "pacman", "-S", "--noconfirm", "--needed"] + packages,
+                        check=True,
+                        capture_output=True,
+                        text=True,
+                        timeout=300,
+                    )
+                    # Regenerate initramfs
+                    for cmd in nvidia_data.get("post_install", []):
+                        subprocess.run(
+                            ["sudo", "bash", "-c", cmd],
+                            check=True,
+                            capture_output=True,
+                            timeout=120,
+                        )
+                    _mark_status(nvidia_setup_file, "complete")
+                    result["files_applied"].append("nvidia driver packages")
+                    logger.info("NVIDIA driver installation complete")
+                    if nvidia_data.get("needs_reboot"):
+                        notify(
+                            "NVIDIA Drivers Installed",
+                            "Proprietary NVIDIA drivers installed. A reboot is recommended.",
+                            icon="video-display",
+                        )
+                except subprocess.CalledProcessError as exc:
+                    error_msg = f"NVIDIA driver installation failed: {exc.stderr or exc}"
+                    logger.error(error_msg)
+                    _mark_status(nvidia_setup_file, "failed", extra={"error": error_msg})
+                    result["error"] = error_msg
+                except Exception as exc:
+                    error_msg = f"NVIDIA driver installation failed: {exc}"
+                    logger.error(error_msg)
+                    _mark_status(nvidia_setup_file, "failed", extra={"error": error_msg})
+                    result["error"] = error_msg
+
     # Strategy: try the full ConfigGenerator.apply_to_target() first, since it
     # re-detects hardware and writes all needed files atomically.  If that fails
     # (e.g. hardware detect unavailable), fall back to copying the individual
