@@ -37,8 +37,9 @@ cd "$LOOKING_GLASS_DIR"
 curl -sL "https://looking-glass.io/artifact/${LOOKING_GLASS_VERSION}/source" -o looking-glass.tar.gz \
     || curl -sL "https://github.com/gnif/LookingGlass/archive/refs/tags/${LOOKING_GLASS_VERSION}.tar.gz" -o looking-glass.tar.gz
 
-tar xzf looking-glass.tar.gz
-cd LookingGlass-${LOOKING_GLASS_VERSION}/client
+mkdir -p source
+tar xzf looking-glass.tar.gz -C source --strip-components=1
+cd source/client
 
 # Build
 mkdir build && cd build
