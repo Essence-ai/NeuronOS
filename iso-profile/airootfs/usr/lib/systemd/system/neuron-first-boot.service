@@ -1,0 +1,16 @@
+[Unit]
+Description=NeuronOS First-Boot Setup
+# Run after the graphical session is available
+After=graphical.target
+ConditionPathExists=!/etc/neuronos/.first-boot-done
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Create autostart entry for the onboarding wizard to run on first user login
+ExecStart=/bin/bash -c 'mkdir -p /etc/xdg/autostart && cp /usr/share/neuron-os/neuron-onboarding.desktop /etc/xdg/autostart/neuron-onboarding.desktop'
+# Mark first-boot service as done so it does not run again
+ExecStartPost=/bin/bash -c 'mkdir -p /etc/neuronos && touch /etc/neuronos/.first-boot-done'
+
+[Install]
+WantedBy=graphical.target

@@ -103,6 +103,9 @@ enable_services() {
     # Enable libvirtd for VM management
     ln -sf /usr/lib/systemd/system/libvirtd.service "${systemd_dir}/multi-user.target.wants/libvirtd.service"
 
+    # Enable NeuronOS first-boot onboarding wizard (runs once after install)
+    ln -sf /usr/lib/systemd/system/neuron-first-boot.service "${systemd_dir}/graphical.target.wants/neuron-first-boot.service"
+
     log_info "Systemd services configured"
 }
 

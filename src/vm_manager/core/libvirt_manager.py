@@ -568,8 +568,8 @@ class LibvirtManager:
 
         try:
             domain.attachDeviceFlags(hostdev_xml, flags)
-        except libvirt.libvirtError:
-            pass  # Audio device may not exist
+        except libvirt.libvirtError as e:
+            logger.warning(f"Failed to attach PCI device {pci_address}: {e}")
 
 
 # Convenience function for simple use cases
