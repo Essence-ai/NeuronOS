@@ -187,9 +187,27 @@ class HardwareCheckPage(WizardPage):
                         "is_boot": gpu.is_boot_vga,
                         "is_integrated": gpu.is_integrated,
                         "pci_address": gpu.pci_address,
+                        "vendor_id": gpu.vendor_id,
                     }
                     for gpu in gpus
                 ]
+
+                # Detect NVIDIA GPUs that need proprietary driver
+                nvidia_gpus = [g for g in gpus if g.vendor_id == "10de"]
+                if nvidia_gpus:
+                    # Check if proprietary nvidia driver is installed
+                    import subprocess
+                    try:
+                        result = subprocess.run(
+                            ["pacman", "-Qi", "nvidia"],
+                            capture_output=True, text=True
+                        )
+                        results["nvidia_driver_installed"] = result.returncode == 0
+                    except Exception:
+                        results["nvidia_driver_installed"] = False
+                    results["has_nvidia"] = True
+                else:
+                    results["has_nvidia"] = False
 
                 candidate = scanner.get_passthrough_candidate()
                 if candidate:
@@ -301,6 +319,26 @@ class HardwareCheckPage(WizardPage):
                 False,
                 warning_if_false="VMs will use software rendering",
             )
+
+        # NVIDIA driver status
+        if results.get("has_nvidia"):
+            driver_installed = results.get("nvidia_driver_installed", False)
+            if driver_installed:
+                self._add_result_row(
+                    list_box,
+                    "NVIDIA Driver",
+                    "Proprietary driver installed",
+                    True,
+                )
+            else:
+                self._add_result_row(
+                    list_box,
+                    "NVIDIA Driver",
+                    "Using nouveau (open-source)",
+                    False,
+                    warning_if_false="Install nvidia package for GPU passthrough and gaming",
+                )
+                self.wizard.set_user_data("nvidia_needs_setup", True)
 
         self.wizard.set_can_proceed(True)
 

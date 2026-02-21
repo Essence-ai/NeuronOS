@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+"""
+NeuronOS First-Boot Onboarding Wizard
+
+Launches the GTK4 onboarding wizard on first boot of the installed system.
+Checks for the .first-boot-complete marker file and exits early if
+onboarding has already been completed.
+"""
+import sys
+sys.path.insert(0, '/usr/lib/neuron-os')
+
+from onboarding.wizard import main
+
+if __name__ == '__main__':
+    sys.exit(main())

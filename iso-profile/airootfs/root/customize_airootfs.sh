@@ -20,5 +20,43 @@ if [ -d /home/liveuser ]; then
     chown -R 1000:1000 /home/liveuser
 fi
 
+# ------------------------------------------------------------------
+# Build Looking Glass client from source
+# Looking Glass is not in the Arch repos. Without this, GPU passthrough
+# VMs have no display — the entire differentiator is dead.
+# Build deps are already in packages.x86_64.
+# ------------------------------------------------------------------
+LOOKING_GLASS_VERSION="B7-rc1"
+LOOKING_GLASS_DIR="/tmp/looking-glass-build"
+
+echo "[NeuronOS] Building Looking Glass client ${LOOKING_GLASS_VERSION}..."
+mkdir -p "$LOOKING_GLASS_DIR"
+cd "$LOOKING_GLASS_DIR"
+
+# Download source
+curl -sL "https://looking-glass.io/artifact/${LOOKING_GLASS_VERSION}/source" -o looking-glass.tar.gz \
+    || curl -sL "https://github.com/gnif/LookingGlass/archive/refs/tags/${LOOKING_GLASS_VERSION}.tar.gz" -o looking-glass.tar.gz
+
+tar xzf looking-glass.tar.gz
+cd LookingGlass-${LOOKING_GLASS_VERSION}/client
+
+# Build
+mkdir build && cd build
+cmake \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DENABLE_WAYLAND=ON \
+    -DENABLE_X11=ON \
+    -DENABLE_PULSEAUDIO=ON \
+    -DENABLE_PIPEWIRE=ON \
+    ..
+make -j"$(nproc)"
+make install
+
+echo "[NeuronOS] Looking Glass client installed to /usr/bin/looking-glass-client"
+
+# Cleanup build artifacts
+cd /
+rm -rf "$LOOKING_GLASS_DIR"
+
 # Self-cleanup — archiso expects this script to remove itself
 rm -- "$0"

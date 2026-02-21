@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=NeuronOS Setup Wizard
+Comment=First-boot configuration wizard for NeuronOS
+Exec=/usr/bin/neuron-onboarding
+Icon=preferences-system
+Terminal=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Phase=Application
