@@ -67,7 +67,6 @@ virt-manager
 edk2-ovmf
 swtpm
 dnsmasq
-bridge-utils
 iptables-nft
 
 # =============================================================================
