@@ -92,6 +92,9 @@ vulkan-intel
 # AMD GPU
 vulkan-radeon
 
+# VirtualBox (auto-detected at boot, harmless on bare metal)
+virtualbox-guest-utils
+
 # =============================================================================
 # PYTHON & DEVELOPMENT TOOLS
 # =============================================================================
