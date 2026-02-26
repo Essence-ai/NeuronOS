@@ -171,6 +171,7 @@ libxi
 wayland
 wayland-protocols
 spice-protocol
+libxpresent
 
 # =============================================================================
 # USB PASSTHROUGH
