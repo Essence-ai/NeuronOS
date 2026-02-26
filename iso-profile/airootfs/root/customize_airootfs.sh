@@ -59,7 +59,3 @@ echo "[NeuronOS] Looking Glass client installed to /usr/bin/looking-glass-client
 # Cleanup build artifacts
 cd /
 rm -rf "$LOOKING_GLASS_DIR"
-
-# Self-cleanup — remove the script from inside the chroot
-# ($0 resolves to the host-side path, not the chroot path)
-rm -f /root/customize_airootfs.sh
