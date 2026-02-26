@@ -60,5 +60,6 @@ echo "[NeuronOS] Looking Glass client installed to /usr/bin/looking-glass-client
 cd /
 rm -rf "$LOOKING_GLASS_DIR"
 
-# Self-cleanup — archiso expects this script to remove itself
-rm -- "$0"
+# Self-cleanup — remove the script from inside the chroot
+# ($0 resolves to the host-side path, not the chroot path)
+rm -f /root/customize_airootfs.sh
